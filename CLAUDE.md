@@ -20,10 +20,10 @@ LIHER/
 │
 ├── projects/                <- todos los proyectos
 │   └── web/                 <- stack web
-│       ├── web1-astro/      <- Astro 5 + React + Vue  -> web1.test
-│       ├── web2-nuxt/       <- Nuxt 3 (Vue SSR)       -> web2.test
-│       ├── web3-next/       <- Next.js 14 (React SSR) -> web3.test
-│       └── api-laravel/     <- Laravel 11 + MongoDB    -> api.test
+│       ├── web1-astro/      <- Astro 6 + React 19 + Vue 3  -> web1.test
+│       ├── web2-nuxt/       <- Nuxt 4 (Vue SSR)           -> web2.test
+│       ├── web3-next/       <- Next.js 16 (React 19 SSR)  -> web3.test
+│       └── api-laravel/     <- Laravel 13 + MongoDB        -> api.test
 │
 └── docs/                    <- notas Obsidian de documentacion
 ```
@@ -57,9 +57,9 @@ make logs-api    # logs del API
 | DB | MongoDB 7 | interno (backend_net) |
 | Gestion contenedores | Portainer CE | portainer.test / :9100 |
 | Web 1 | Astro 6 (React + Vue) | web1.test |
-| Web 2 | Nuxt 3 (Vue SSR) | web2.test |
-| Web 3 | Next.js 14 (React SSR) | web3.test |
-| API | Laravel 11 | api.test |
+| Web 2 | Nuxt 4 (Vue SSR) | web2.test |
+| Web 3 | Next.js 16 (React SSR) | web3.test |
+| API | Laravel 13 | api.test |
 
 ## Arquitectura Docker
 
@@ -72,6 +72,19 @@ Portainer :9100 <- gestion visual
 **Redes Docker (WSL2):**
 - `traefik_net` — Traefik + todos los servicios web
 - `backend_net` — Laravel + MongoDB
+
+## Protocolo SDD
+
+Al inicio de cada sesion de trabajo:
+
+1. **Identificar proyecto**: determinar en que proyecto(s) se va a trabajar
+2. **Cargar gobernanza**: leer el CLAUDE.md del proyecto para conocer modo,
+   branching, y nivel de review
+3. **Confirmar si es ambiguo**: solo preguntar si el contexto no queda claro
+   (proyecto no identificable, cambio que afecta a multiples proyectos, o
+   cambio estructural que contradice la gobernanza definida)
+4. **Ejecutar**: trabajar segun los defaults del proyecto. Los defaults se
+   ajustan editando el CLAUDE.md del proyecto cuando las necesidades cambien.
 
 ## Hosts (en cada equipo de la red)
 
