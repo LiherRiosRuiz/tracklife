@@ -101,24 +101,18 @@ function showSplash() {
   console.log(`${c.dim}ΠΛΑΤΩΝ · Spec-Driven Development v1.0.0${c.nc}`);
   console.log();
 
-  // Active Model
+  // Mode & Model
+  console.log(`${c.bold}Mode:${c.nc}`);
+  console.log(`  ${c.yellow}PLAN ONLY${c.nc}  ${c.dim}·${c.nc}  Platon piensa y planifica. No ejecuta.`);
+  console.log();
   console.log(`${c.bold}Active Model:${c.nc}`);
-  console.log(`  claude-opus-4.6  ${c.dim}·${c.nc}  provider: anthropic ${c.dim}(Claude Pro)${c.nc}`);
+  console.log(`  claude-opus-4.6  ${c.dim}·${c.nc}  effort: ${c.bold}max${c.nc}  ${c.dim}·${c.nc}  provider: anthropic`);
   console.log();
 
-  // Available Tools
-  console.log(`${c.bold}Available Tools:${c.nc}`);
-  console.log(`  ${c.cyan}files:${c.nc}          Read, Edit, Write, Glob, Grep`);
-  console.log(`  ${c.cyan}system:${c.nc}         Bash`);
+  // Available Tools (read-only for analysis)
+  console.log(`${c.bold}Available Tools:${c.nc}  ${c.dim}(read-only — analysis only)${c.nc}`);
+  console.log(`  ${c.cyan}read:${c.nc}           Read, Glob, Grep`);
   console.log(`  ${c.cyan}web:${c.nc}            WebFetch, WebSearch`);
-  console.log(`  ${c.cyan}mcp:${c.nc}            filesystem, github, playwright, memory, context7`);
-  console.log();
-
-  // Available Skills
-  console.log(`${c.bold}Available Skills:${c.nc}`);
-  console.log(`  ${c.cyan}orchestration:${c.nc}  make up|down|ps|restart|clean`);
-  console.log(`  ${c.cyan}per-project:${c.nc}    web1-up, web2-up, web3-up, api-up`);
-  console.log(`  ${c.cyan}user:${c.nc}           /commit, /review, /security-review, /simplify`);
   console.log();
 
   // Status
@@ -134,7 +128,7 @@ function showSplash() {
     console.log(`  ${c.cyan}no tests:${c.nc}    ${c.dim}${notReady.join(", ")}${c.nc}`);
   }
   console.log();
-  console.log(`  ${c.dim}hint:        escribe tu mensaje, /model, /help, o /exit${c.nc}`);
+  console.log(`  ${c.dim}hint:        describe tu objetivo y Platon creara el plan${c.nc}`);
   console.log();
 }
 
@@ -145,20 +139,16 @@ function loadSystemPrompt() {
   return "Eres ΠΛΑΤΩΝ — framework SDD. Sigue: Preflight → Calibracion → Strict TDD.";
 }
 
-// ── Models ──────────────────────────────────────────────────────────────────
-const MODELS = {
-  opus:   "claude-opus-4-6",
-  sonnet: "claude-sonnet-4-6",
-  haiku:  "claude-haiku-4-5-20251001",
-};
+// ── Config (Platon: solo planifica, nunca actua) ────────────────────────────
+const MODEL = "claude-opus-4-6";
+const EFFORT = "max";
 
 // ── Slash commands ──────────────────────────────────────────────────────────
 function showHelp() {
   console.log(`\n  ${c.bold}Commands:${c.nc}`);
-  console.log(`  ${c.cyan}/model${c.nc} [name]    Show or change model (opus, sonnet, haiku)`);
-  console.log(`  ${c.cyan}/clear${c.nc}           Clear screen and show splash`);
-  console.log(`  ${c.cyan}/help${c.nc}            Show this help`);
-  console.log(`  ${c.cyan}/exit${c.nc}            End session\n`);
+  console.log(`  ${c.cyan}/clear${c.nc}     Clear screen and show splash`);
+  console.log(`  ${c.cyan}/help${c.nc}      Show this help`);
+  console.log(`  ${c.cyan}/exit${c.nc}      End session\n`);
 }
 
 // ── Interactive session ─────────────────────────────────────────────────────
@@ -166,7 +156,6 @@ async function main() {
   showSplash();
 
   const systemPrompt = loadSystemPrompt();
-  let currentModel = "claude-opus-4-6";
   let done = false;
   let userResolve = null;
   let sessionAbort = null;
@@ -204,11 +193,12 @@ async function main() {
     const session = query({
       prompt: userMessages(),
       options: {
-        allowedTools: ["Read", "Edit", "Write", "Bash", "Glob", "Grep", "WebFetch", "WebSearch"],
-        permissionMode: "acceptEdits",
+        allowedTools: ["Read", "Glob", "Grep", "WebFetch", "WebSearch"],
+        permissionMode: "default",
         cwd: ROOT,
         systemPrompt,
-        model: currentModel,
+        model: MODEL,
+        effort: EFFORT,
         abortController,
       },
     });
@@ -271,39 +261,6 @@ async function main() {
         showSplash();
         promptNextInput();
         return true;
-
-      case "/model":
-        if (!arg) {
-          // Show current model and options
-          const modelName = Object.entries(MODELS).find(([,v]) => v === currentModel)?.[0] || currentModel;
-          console.log(`\n  ${c.bold}Current model:${c.nc} ${c.green}${modelName}${c.nc} (${currentModel})`);
-          console.log(`  ${c.dim}Available: opus, sonnet, haiku${c.nc}\n`);
-          promptNextInput();
-          return true;
-        }
-        if (MODELS[arg]) {
-          const oldModel = currentModel;
-          currentModel = MODELS[arg];
-          if (oldModel !== currentModel) {
-            // Kill current session and start new one with new model
-            console.log(`\n  ${c.yellow}Model → ${arg}${c.nc} (${currentModel})`);
-            console.log(`  ${c.dim}Reiniciando sesion...${c.nc}\n`);
-            if (sessionAbort) sessionAbort.abort();
-            if (userResolve) userResolve(null);
-            // Small delay to let the old session clean up
-            setTimeout(() => startSession(), 100);
-            setTimeout(() => promptNextInput(), 200);
-          } else {
-            console.log(`\n  ${c.dim}Ya estas usando ${arg}.${c.nc}\n`);
-            promptNextInput();
-          }
-          return true;
-        } else {
-          console.log(`\n  ${c.red}Modelo desconocido: ${arg}${c.nc}`);
-          console.log(`  ${c.dim}Available: opus, sonnet, haiku${c.nc}\n`);
-          promptNextInput();
-          return true;
-        }
 
       default:
         return false; // Not a known command, send to agent
