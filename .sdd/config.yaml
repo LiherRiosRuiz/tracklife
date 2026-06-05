@@ -244,16 +244,177 @@ testing:
       - Testeo interactivo de formularios y navegacion
     limitation: "No genera test files persistentes — es interactivo por sesion"
 
+# ── Calibracion ─────────────────────────────────────────────────────────────
+# Verificacion activa de lo detectado en preflight. No se construye nada.
+# Cada check tiene: comando, resultado esperado, criticidad (blocker/warning).
+# Se ejecuta POR PROYECTO antes de entrar en strict TDD mode.
+
+calibration:
+  description: >
+    Verifica que lo detectado en el preflight es real y funciona.
+    No se pasa a strict TDD hasta que los checks blocker pasen.
+
+  checks:
+    # ── 1. Integridad de dependencias ──
+    dependencies:
+      description: Lock file coherente con manifest, deps instaladas
+      criticality: blocker
+      per_project:
+        web1-astro:
+          manifest: package.json
+          lockfile: package-lock.json
+          verify: "ls projects/web/web1-astro/package-lock.json"
+          deps_dir: node_modules      # montado en volumen Docker, verificar en contenedor
+          edge_cases:
+            - lock file mas viejo que package.json (stale)
+            - node_modules vacio tras recrear volumen Docker
+        web2-nuxt:
+          manifest: package.json
+          lockfile: package-lock.json
+          verify: "ls projects/web/web2-nuxt/package-lock.json"
+          deps_dir: node_modules
+          edge_cases:
+            - lock file mas viejo que package.json (stale)
+            - .nuxt/ desactualizado tras cambio de nuxt.config.ts
+        web3-next:
+          manifest: package.json
+          lockfile: package-lock.json
+          verify: "ls projects/web/web3-next/package-lock.json"
+          deps_dir: node_modules
+          edge_cases:
+            - lock file mas viejo que package.json (stale)
+            - .next/ corrupto tras interrupcion de build
+        api-laravel:
+          manifest: composer.json
+          lockfile: composer.lock
+          verify: "ls projects/web/api-laravel/composer.lock"
+          deps_dir: vendor
+          edge_cases:
+            - composer.lock desincronizado con composer.json
+            - vendor vacio tras recrear volumen Docker
+            - extension pecl mongodb no cargada en PHP
+
+    # ── 2. Test runner ──
+    test_runner:
+      description: Si ready=true, ejecutar tests existentes y confirmar que pasan
+      criticality: blocker
+      per_project:
+        web1-astro:
+          ready: false
+          action: verificar que install recomendado es viable (npm install -D vitest)
+          check: "npm info vitest version"  # confirma que el paquete existe en registry
+        web2-nuxt:
+          ready: false
+          action: verificar nuxi test CLI + que @nuxt/test-utils existe en registry
+          check: "npm info @nuxt/test-utils version"
+        web3-next:
+          ready: false
+          action: verificar que vitest es instalable
+          check: "npm info vitest version"
+        api-laravel:
+          ready: true
+          action: ejecutar tests existentes
+          check: "php artisan test"
+          expected: "2 tests, 2 assertions, 0 failures"
+          edge_cases:
+            - sqlite extension no disponible en container
+            - vendor/autoload.php no generado
+            - APP_KEY no configurado (tests fallan en cifrado)
+
+    # ── 3. Lint ──
+    lint:
+      description: Si lint instalado, ejecutar y confirmar 0 errores
+      criticality: warning
+      per_project:
+        web1-astro:
+          installed: false
+          action: skip
+        web2-nuxt:
+          installed: false
+          action: skip
+        web3-next:
+          installed: true
+          check: "npm run lint"
+          expected: exit code 0
+          edge_cases:
+            - eslint.config.mjs importa modulos de node_modules (requiere deps instaladas)
+        api-laravel:
+          installed: true
+          check: "./vendor/bin/pint --test"
+          expected: exit code 0
+
+    # ── 4. Build ──
+    build:
+      description: Verificar que el proyecto compila sin errores
+      criticality: warning
+      per_project:
+        web1-astro:
+          check: "npm run build"
+          expected: exit code 0
+          note: "requiere contenedor Docker corriendo o node_modules local"
+        web2-nuxt:
+          check: "npm run build"
+          expected: exit code 0
+        web3-next:
+          check: "npm run build"
+          expected: exit code 0
+        api-laravel:
+          check: "php artisan config:clear"
+          expected: exit code 0
+          note: "config:clear como smoke test de integridad Laravel"
+
+    # ── 5. Coherencia config ──
+    config_coherence:
+      description: CLAUDE.md del proyecto coincide con config.yaml
+      criticality: warning
+      checks:
+        - versiones de framework en CLAUDE.md == versiones en config.yaml
+        - scripts documentados en CLAUDE.md == scripts reales en package.json/composer.json
+        - dominios .test en CLAUDE.md == dominios en docker-compose labels
+
+    # ── 6. Edge cases del entorno ──
+    environment:
+      description: Verificaciones del entorno de ejecucion
+      criticality: blocker
+      checks:
+        docker_running:
+          check: "docker info > /dev/null 2>&1"
+          expected: exit code 0
+          note: "requiere Docker Engine WSL2 activo"
+        networks_exist:
+          check: "docker network ls --filter name=traefik_net --filter name=backend_net -q"
+          expected: dos IDs de red
+        env_files:
+          - path: infra/mongodb/.env
+            required: true
+            edge_case: "si falta, MongoDB no arranca"
+          - path: projects/web/api-laravel/.env
+            required: true
+            edge_case: "si falta APP_KEY, artisan test falla"
+        ports_free:
+          check: "netstat -an | grep -E ':(80|3000|4321|8000|8080|9100) '"
+          note: "verificar conflictos antes de levantar servicios"
+        disk_space:
+          note: "volumenes Docker en WSL2 ext4 — verificar espacio libre"
+
+  # ── Resultado de calibracion ──
+  status:
+    last_run: null                # se actualiza al ejecutar calibracion
+    result: pending               # pending | pass | fail
+    blockers: []                  # lista de checks blocker que fallaron
+    warnings: []                  # lista de checks warning que fallaron
+
 # ── Strict TDD Mode ─────────────────────────────────────────────────────────
-# Se activa despues del preflight cuando el runner esta ready o recien instalado
+# Solo se activa cuando calibration.status.result == pass
 
 strict_tdd:
   description: >
     Modo de desarrollo donde el test se escribe ANTES que la implementacion.
     Ciclo: RED (test falla) -> GREEN (implementacion minima) -> REFACTOR (limpiar).
   activation:
-    prerequisite: runner.ready == true para el proyecto objetivo
-    if_not_ready: instalar runner recomendado antes de entrar en TDD
+    prerequisite: calibration.status.result == pass
+    gate: no se entra en TDD si hay blockers pendientes en calibracion
+    if_runner_not_ready: instalar runner recomendado y recalibrar
   cycle:
     red:
       - Escribir test que describe el comportamiento esperado
