@@ -3,7 +3,7 @@
 # Generado por preflight 2026-06-05
 # =============================================================================
 
-version: "1.0"
+version: "1.1"
 workspace: LIHER
 path: D:\Compartida\LIHER
 
@@ -119,43 +119,166 @@ phases:
       per-project: "make {project}-up"
 
 # ── Testing Capabilities ────────────────────────────────────────────────────
+# Deteccion profunda: runners instalados, configs, scripts, transitive deps
 
 testing:
   web1-astro:
-    framework: none
-    runner: none
-    commands: []
-    coverage: none
-    status: sin configurar
+    runner:
+      installed: false
+      recommended: vitest         # Astro usa Vite -> Vitest es nativo
+      install: "npm install -D vitest @testing-library/dom"
+    browser_testing:
+      installed: false
+      recommended: "@vitest/browser + playwright"
+      install: "npm install -D @vitest/browser @playwright/test"
+    config_file: null             # no existe vitest.config.* ni jest.config.*
+    scripts: {}                   # no hay scripts test en package.json
+    test_dirs: []                 # no existen test/, __tests__/, *.test.*
+    lint:
+      installed: false
+    coverage:
+      installed: false
+      recommended: "@vitest/coverage-v8"
+    status: no-runner
+    ready: false
 
   web2-nuxt:
-    framework: none
-    runner: none
-    commands: []
-    coverage: none
-    status: sin configurar
+    runner:
+      installed: false
+      cli_available: true         # nuxi test existe en @nuxt/cli
+      cli_requires: "@nuxt/test-utils"  # falla sin este package
+      recommended: "@nuxt/test-utils + vitest"
+      install: "npm install -D @nuxt/test-utils vitest"
+    browser_testing:
+      installed: false
+      recommended: "@vitest/browser + playwright"
+      install: "npm install -D @vitest/browser @playwright/test"
+    config_file: null
+    scripts: {}
+    test_dirs: []
+    lint:
+      installed: false
+    coverage:
+      installed: false
+      recommended: "@vitest/coverage-v8"
+    status: cli-available-but-missing-deps
+    ready: false
 
   web3-next:
-    framework: none
-    runner: none
-    lint: "npm run lint"
-    lint_tool: eslint-9
-    commands:
-      - npm run lint
-    coverage: none
-    status: solo linting
+    runner:
+      installed: false
+      recommended: vitest         # mas ligero que jest para Next.js moderno
+      alt: jest                   # opcion clasica de Next.js
+      install: "npm install -D vitest @vitejs/plugin-react @testing-library/react @testing-library/dom"
+      install_alt: "npm install -D jest @testing-library/react @testing-library/jest-dom"
+    browser_testing:
+      installed: false
+      recommended: "@playwright/test"
+      install: "npm install -D @playwright/test"
+    config_file: null
+    scripts:
+      lint: "npm run lint"
+    test_dirs: []
+    lint:
+      installed: true
+      tool: eslint-9
+      config: eslint.config.mjs
+      command: "npm run lint"
+    coverage:
+      installed: false
+      recommended: "@vitest/coverage-v8"
+    status: lint-only
+    ready: false
 
   api-laravel:
-    framework: phpunit
-    version: "12.5"
-    runner: "php artisan test"
-    lint: "./vendor/bin/pint"
-    lint_tool: laravel-pint
-    commands:
-      - php artisan test
-      - ./vendor/bin/pint
-    suites:
-      unit: tests/Unit
-      feature: tests/Feature
-    coverage: none
-    status: stubs (ExampleTest solamente)
+    runner:
+      installed: true
+      name: phpunit
+      version: "12.5.12"
+      alt_available: pest         # pestphp/pest disponible como transitive dep
+    browser_testing:
+      installed: false
+      note: "Playwright MCP cubre E2E sin instalacion local"
+    config_file: phpunit.xml
+    config_details:
+      bootstrap: vendor/autoload.php
+      db_connection: sqlite
+      db_database: ":memory:"
+      env: testing
+      disabled: [PULSE, TELESCOPE, NIGHTWATCH]
+    scripts:
+      test: "php artisan test"
+      test_unit: "php artisan test tests/Unit"
+      test_feature: "php artisan test tests/Feature"
+      test_parallel: "php artisan test --parallel"
+      composer_test: "composer test"   # config:clear + artisan test
+      lint: "./vendor/bin/pint"
+    test_dirs:
+      - tests/Unit        # 1 archivo: ExampleTest.php (stub)
+      - tests/Feature     # 1 archivo: ExampleTest.php (stub)
+    mocking: mockery@^1.6
+    fixtures: fakerphp/faker@^1.23
+    lint:
+      installed: true
+      tool: laravel-pint
+      command: "./vendor/bin/pint"
+    coverage:
+      installed: false
+      recommended: "php artisan test --coverage"  # requiere pcov o xdebug
+    status: ready
+    ready: true
+
+  # ── Playwright MCP (workspace-wide) ──────────────────────────────────────
+  playwright_mcp:
+    available: true
+    scope: workspace              # no requiere instalacion por proyecto
+    capabilities:
+      navigation: [browser_navigate, browser_navigate_back, browser_tabs]
+      interaction: [browser_click, browser_fill_form, browser_type, browser_select_option, browser_hover, browser_drag, browser_drop, browser_press_key]
+      observation: [browser_snapshot, browser_take_screenshot, browser_console_messages, browser_network_requests]
+      control: [browser_wait_for, browser_handle_dialog, browser_resize, browser_evaluate]
+    use_cases:
+      - E2E smoke tests sin instalacion local
+      - Verificacion visual de UI despues de cambios
+      - Captura de screenshots para review
+      - Testeo interactivo de formularios y navegacion
+    limitation: "No genera test files persistentes — es interactivo por sesion"
+
+# ── Strict TDD Mode ─────────────────────────────────────────────────────────
+# Se activa despues del preflight cuando el runner esta ready o recien instalado
+
+strict_tdd:
+  description: >
+    Modo de desarrollo donde el test se escribe ANTES que la implementacion.
+    Ciclo: RED (test falla) -> GREEN (implementacion minima) -> REFACTOR (limpiar).
+  activation:
+    prerequisite: runner.ready == true para el proyecto objetivo
+    if_not_ready: instalar runner recomendado antes de entrar en TDD
+  cycle:
+    red:
+      - Escribir test que describe el comportamiento esperado
+      - Ejecutar test — debe FALLAR (confirma que el test detecta ausencia)
+      - Si el test pasa sin implementacion, el test no testea nada util
+    green:
+      - Escribir la implementacion MINIMA para que el test pase
+      - Ejecutar test — debe PASAR
+      - No optimizar, no refactorizar, no agregar extras
+    refactor:
+      - Limpiar duplicacion, mejorar nombres, simplificar
+      - Ejecutar test — debe seguir PASANDO
+      - Si falla, el refactor rompio algo: revertir y reintentar
+  rules:
+    - No se escribe codigo de produccion sin un test que lo exija
+    - Los tests se ejecutan despues de cada cambio (red, green, refactor)
+    - Un test que nunca falla no aporta confianza — verificar el RED
+    - Commits frecuentes: al menos uno por ciclo GREEN exitoso
+  scripts_by_project:
+    web1-astro: "npx vitest run"          # tras instalacion
+    web2-nuxt: "npx nuxi test"            # tras instalacion de @nuxt/test-utils
+    web3-next: "npx vitest run"           # tras instalacion
+    api-laravel: "php artisan test"       # ya disponible
+  watch_mode:
+    web1-astro: "npx vitest"              # vitest watch por defecto
+    web2-nuxt: "npx nuxi test --watch"
+    web3-next: "npx vitest"
+    api-laravel: "php artisan test --watch"  # requiere phpunit-watcher

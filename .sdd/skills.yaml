@@ -1,13 +1,12 @@
 # =============================================================================
 # Skill Registry — LIHER Workspace
 # Indice de skills disponibles (proyecto + usuario)
-# Generado por preflight 2026-06-05
+# Generado por preflight 2026-06-05 | testing scan 2026-06-05
 # =============================================================================
 
-version: "1.0"
+version: "1.1"
 
 # ── Skills de Proyecto ───────────────────────────────────────────────────────
-# Capacidades disponibles en el workspace por herramienta/area
 
 project:
   orchestration:
@@ -27,18 +26,66 @@ project:
     - name: eslint
       version: "9"
       scope: web3-next
-      config: eslint.config.mjs (flat config)
-      command: npm run lint
+      config: eslint.config.mjs
+      command: "npm run lint"
     - name: laravel-pint
       scope: api-laravel
-      command: ./vendor/bin/pint
+      command: "./vendor/bin/pint"
 
   testing:
+    # ── Runners instalados ──
     - name: phpunit
-      version: "12.5"
+      version: "12.5.12"
       scope: api-laravel
-      command: php artisan test
+      ready: true
+      commands:
+        run: "php artisan test"
+        unit: "php artisan test tests/Unit"
+        feature: "php artisan test tests/Feature"
+        parallel: "php artisan test --parallel"
+        composer: "composer test"
+      config: phpunit.xml
       suites: [Unit, Feature]
+      fixtures: fakerphp/faker@^1.23
+      mocking: mockery/mockery@^1.6
+
+    # ── Runners recomendados (no instalados) ──
+    - name: vitest
+      scope: [web1-astro, web3-next]
+      ready: false
+      recommended_for: unit + component tests
+      install:
+        web1-astro: "npm install -D vitest @testing-library/dom"
+        web3-next: "npm install -D vitest @vitejs/plugin-react @testing-library/react @testing-library/dom"
+      commands_after_install:
+        run: "npx vitest run"
+        watch: "npx vitest"
+        ui: "npx vitest --ui"
+
+    - name: "@nuxt/test-utils + vitest"
+      scope: web2-nuxt
+      ready: false
+      recommended_for: unit + component + nuxt-specific tests
+      note: "nuxi test CLI existe pero requiere @nuxt/test-utils"
+      install: "npm install -D @nuxt/test-utils vitest"
+      commands_after_install:
+        run: "npx nuxi test"
+        watch: "npx nuxi test --watch"
+        vitest_direct: "npx vitest run"
+
+    - name: vitest-browser
+      scope: [web1-astro, web2-nuxt, web3-next]
+      ready: false
+      recommended_for: component tests en browser real (no jsdom)
+      install: "npm install -D @vitest/browser playwright"
+      note: "Requiere vitest base instalado primero"
+
+    - name: "@playwright/test"
+      scope: [web1-astro, web2-nuxt, web3-next, api-laravel]
+      ready: false
+      recommended_for: E2E tests persistentes (CI/CD)
+      install: "npm install -D @playwright/test && npx playwright install"
+      note: "Para E2E interactivo, usar Playwright MCP (ya disponible)"
 
   styling:
     - name: tailwind
@@ -49,16 +96,16 @@ project:
   build:
     - name: astro-build
       scope: web1-astro
-      command: npm run build
+      command: "npm run build"
     - name: nuxt-build
       scope: web2-nuxt
-      command: npm run build
+      command: "npm run build"
     - name: next-build
       scope: web3-next
-      command: npm run build
+      command: "npm run build"
     - name: vite-build
       scope: api-laravel
-      command: npm run build
+      command: "npm run build"
 
   port_forwarding:
     - name: wsl-portforward
@@ -67,7 +114,6 @@ project:
       ports: [80, 8080, 9100]
 
 # ── Skills de Usuario (Claude Code) ─────────────────────────────────────────
-# Skills invocables con / en la sesion de trabajo
 
 user:
   session:
@@ -97,22 +143,37 @@ user:
       description: Build/debug apps con Claude API / Anthropic SDK
 
 # ── MCP Servers Disponibles ──────────────────────────────────────────────────
-# Herramientas externas conectadas via MCP
 
 mcp:
   - name: filesystem
     capabilities: [read, write, edit, search, directory_tree]
+
   - name: github
     capabilities: [issues, pull_requests, code_search, repositories]
+
   - name: playwright
-    capabilities: [browser_navigation, screenshots, form_filling, testing]
+    capabilities:
+      navigation: [browser_navigate, browser_navigate_back, browser_tabs]
+      interaction: [browser_click, browser_fill_form, browser_type, browser_select_option, browser_hover, browser_drag, browser_press_key]
+      observation: [browser_snapshot, browser_take_screenshot, browser_console_messages, browser_network_requests]
+      control: [browser_wait_for, browser_handle_dialog, browser_resize, browser_evaluate]
+    testing_use:
+      - E2E smoke tests sin instalacion local por proyecto
+      - Verificacion visual de UI post-cambio
+      - Captura de screenshots para review
+      - Testeo interactivo de formularios y navegacion
+
   - name: memory
     capabilities: [entities, relations, observations, graph]
+
   - name: context7
     capabilities: [library_docs, api_reference]
+
   - name: google_calendar
     capabilities: [events, scheduling]
+
   - name: gmail
     capabilities: [threads, drafts, labels]
+
   - name: google_drive
     capabilities: [authentication, file_access]

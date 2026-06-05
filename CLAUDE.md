@@ -91,8 +91,26 @@ Al inicio de cada sesion de trabajo:
 5. **Confirmar si es ambiguo**: solo preguntar si el contexto no queda claro
    (proyecto no identificable, cambio multi-proyecto, o cambio que contradice
    la gobernanza definida)
-6. **Ejecutar**: trabajar segun los defaults. Ajustar editando el CLAUDE.md
+6. **Detectar testing**: verificar `testing.<proyecto>.ready` en config.yaml.
+   Si el runner esta listo, activar strict TDD mode. Si no, instalar el
+   runner recomendado antes de escribir codigo.
+7. **Ejecutar**: trabajar segun los defaults. Ajustar editando el CLAUDE.md
    del proyecto o `.sdd/config.yaml` cuando las necesidades cambien.
+
+### Strict TDD Mode
+
+Cuando el runner esta `ready: true`, todo codigo nuevo sigue el ciclo:
+
+1. **RED**: escribir test que describe el comportamiento esperado -> ejecutar
+   -> debe FALLAR
+2. **GREEN**: escribir implementacion MINIMA para que pase -> ejecutar ->
+   debe PASAR
+3. **REFACTOR**: limpiar sin cambiar comportamiento -> ejecutar -> sigue
+   PASANDO
+
+Reglas: no se escribe codigo de produccion sin test que lo exija. Commits
+frecuentes (al menos uno por ciclo GREEN). Scripts en `.sdd/config.yaml`
+seccion `strict_tdd.scripts_by_project`.
 
 ## Hosts (en cada equipo de la red)
 
