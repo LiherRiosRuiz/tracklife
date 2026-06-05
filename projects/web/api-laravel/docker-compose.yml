@@ -1,0 +1,38 @@
+services:
+  api-laravel:
+    build: .
+    container_name: api-laravel
+    restart: unless-stopped
+    volumes:
+      - .:/app
+      - api_vendor:/app/vendor
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      DB_CONNECTION: sqlite
+      MONGO_HOST: mongodb
+      MONGO_PORT: 27017
+      MONGO_DATABASE: ${MONGO_DB:-laravel}
+      MONGO_USERNAME: ${MONGO_USER:-admin}
+      MONGO_PASSWORD: ${MONGO_PASSWORD:-changeme_in_production}
+    networks:
+      - traefik_net
+      - backend_net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.api.rule=Host(`api.test`)"
+      - "traefik.http.routers.api.entrypoints=web"
+      - "traefik.http.services.api.loadbalancer.server.port=8000"
+      - "traefik.http.middlewares.api-cors.headers.accesscontrolalloworiginlist=http://web1.test,http://web2.test,http://web3.test"
+      - "traefik.http.middlewares.api-cors.headers.accesscontrolallowmethods=GET,POST,PUT,DELETE,OPTIONS"
+      - "traefik.http.middlewares.api-cors.headers.accesscontrolallowheaders=Content-Type,Authorization"
+      - "traefik.http.routers.api.middlewares=api-cors"
+
+volumes:
+  api_vendor:
+
+networks:
+  traefik_net:
+    external: true
+  backend_net:
+    external: true

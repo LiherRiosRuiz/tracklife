@@ -1,0 +1,25 @@
+services:
+  portainer:
+    image: portainer/portainer-ce:lts
+    container_name: portainer-linux
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    networks:
+      - traefik_net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.portainer.rule=Host(`portainer.test`)"
+      - "traefik.http.routers.portainer.entrypoints=web"
+      - "traefik.http.services.portainer.loadbalancer.server.port=9000"
+    # Acceso directo sin Traefik: http://192.168.20.123:9100
+    ports:
+      - "9100:9000"
+
+volumes:
+  portainer_data:
+
+networks:
+  traefik_net:
+    external: true

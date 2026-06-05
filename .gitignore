@@ -1,0 +1,26 @@
+# Dependencias
+node_modules/
+vendor/
+
+# Build / cache
+.next/
+.nuxt/
+.astro/
+*.sqlite
+
+# Env (mantener .env.example)
+.env
+!.env.example
+
+# Obsidian estado local
+.obsidian/workspace*
+.obsidian/cache/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# IDE
+.idea/
+*.swp
+*.swo

@@ -1,0 +1,23 @@
+services:
+  mongodb:
+    image: mongo:7
+    container_name: mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-changeme_in_production}
+    volumes:
+      # Named volume: datos en filesystem nativo WSL2, no en NTFS (rendimiento)
+      - mongodb_data:/data/db
+    networks:
+      - backend_net
+    # Descomenta para acceder con MongoDB Compass desde Windows:
+    # ports:
+    #   - "27017:27017"
+
+volumes:
+  mongodb_data:
+
+networks:
+  backend_net:
+    external: true
