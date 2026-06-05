@@ -7,6 +7,17 @@ version: "1.1"
 workspace: LIHER
 path: D:\Compartida\LIHER
 
+# ── Identity ────────────────────────────────────────────────────────────────
+
+identity:
+  name: "Platon"
+  symbol: "ΠΛΑΤΩΝ"
+  meaning: >
+    Alegoria de la Caverna. Ver con claridad antes de construir.
+    Verificacion precede a la construccion.
+  launcher: platon.sh
+  claude_session: platon
+
 # ── Stack Context ────────────────────────────────────────────────────────────
 
 stack:

@@ -10,7 +10,8 @@ LIHER/
 ├── CLAUDE.md
 ├── Makefile                 <- make up / make down / make ps
 ├── setup.sh                 <- primera vez: redes + env + infra
-├── .sdd/                    <- config SDD (config.yaml, skills.yaml)
+├── platon.sh                <- launcher SDD (ΠΛΑΤΩΝ)
+├── .sdd/                    <- config SDD (config.yaml, skills.yaml, registries/)
 ├── .obsidian/               <- este directorio ES un vault de Obsidian
 │
 ├── infra/                   <- infraestructura compartida (Docker via WSL2)
@@ -39,6 +40,9 @@ vive aqui. Las notas estan en `docs/` y enlazan entre si con `[[wikilinks]]`.
 ```bash
 cd /mnt/d/Compartida/LIHER
 
+# Iniciar sesion SDD
+bash platon.sh
+
 # Primera vez
 bash setup.sh
 
@@ -57,10 +61,10 @@ make logs-api    # logs del API
 | Reverse proxy | Traefik v3 | traefik.test / :8080 |
 | DB | MongoDB 7 | interno (backend_net) |
 | Gestion contenedores | Portainer CE | portainer.test / :9100 |
-| Web 1 | Astro 6 (React + Vue) | web1.test |
+| TRACKLIFE App | Next.js 16 (React SSR) | app.tracklife.test |
+| TRACKLIFE Landing | Astro 6 | www.tracklife.test |
 | Web 2 | Nuxt 4 (Vue SSR) | web2.test |
-| Web 3 | Next.js 16 (React SSR) | web3.test |
-| API | Laravel 13 | api.test |
+| TRACKLIFE API | Laravel 13 + MongoDB | api.tracklife.test |
 
 ## Arquitectura Docker
 
@@ -73,6 +77,12 @@ Portainer :9100 <- gestion visual
 **Redes Docker (WSL2):**
 - `traefik_net` — Traefik + todos los servicios web
 - `backend_net` — Laravel + MongoDB
+
+## Platon (ΠΛΑΤΩΝ)
+
+El framework SDD se llama Platon, por la Alegoria de la Caverna.
+Cada sesion se inicia con `bash platon.sh` desde la raiz del workspace.
+El launcher muestra el estado del workspace antes de iniciar Claude Code.
 
 ## Protocolo SDD
 
