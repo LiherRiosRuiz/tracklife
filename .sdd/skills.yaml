@@ -1,179 +1,82 @@
 # =============================================================================
-# Skill Registry — LIHER Workspace
-# Indice de skills disponibles (proyecto + usuario)
-# Generado por preflight 2026-06-05 | testing scan 2026-06-05
+# Skill Registry Index — LIHER Workspace
+# Indice ligero. NO es un dump de skills.
+# El orquestador lee este indice, identifica el proyecto, y pasa al subagente
+# el path del registry especifico: .sdd/registries/{proyecto}.yaml
 # =============================================================================
 
-version: "1.1"
+version: "2.0"
 
-# ── Skills de Proyecto ───────────────────────────────────────────────────────
+# ── Registries por proyecto ──────────────────────────────────────────────────
+# Cada proyecto tiene su propio registry con solo SUS skills.
+# El orquestador carga SOLO el del proyecto objetivo.
 
-project:
-  orchestration:
-    - name: make
-      scope: workspace
-      commands: [up, down, restart, ps, clean, setup, help]
-      per_project: [web1-up, web2-up, web3-up, api-up]
-      logs: [logs-web1, logs-web2, logs-web3, logs-api, logs-traefik, logs-mongo]
+registries:
+  web1-astro:
+    path: .sdd/registries/web1-astro.yaml
+    manifest: package.json
+    lang: typescript
+    test_ready: false
 
-  docker:
-    - name: docker-compose
-      scope: per-service
-      pattern: each service has its own docker-compose.yml
-      networks: [traefik_net, backend_net]
+  web2-nuxt:
+    path: .sdd/registries/web2-nuxt.yaml
+    manifest: package.json
+    lang: typescript
+    test_ready: false
 
-  linting:
-    - name: eslint
-      version: "9"
-      scope: web3-next
-      config: eslint.config.mjs
-      command: "npm run lint"
-    - name: laravel-pint
-      scope: api-laravel
-      command: "./vendor/bin/pint"
+  web3-next:
+    path: .sdd/registries/web3-next.yaml
+    manifest: package.json
+    lang: typescript
+    test_ready: false
 
-  testing:
-    # ── Runners instalados ──
-    - name: phpunit
-      version: "12.5.12"
-      scope: api-laravel
-      ready: true
-      commands:
-        run: "php artisan test"
-        unit: "php artisan test tests/Unit"
-        feature: "php artisan test tests/Feature"
-        parallel: "php artisan test --parallel"
-        composer: "composer test"
-      config: phpunit.xml
-      suites: [Unit, Feature]
-      fixtures: fakerphp/faker@^1.23
-      mocking: mockery/mockery@^1.6
+  api-laravel:
+    path: .sdd/registries/api-laravel.yaml
+    manifest: composer.json
+    lang: php
+    test_ready: true
 
-    # ── Runners recomendados (no instalados) ──
-    - name: vitest
-      scope: [web1-astro, web3-next]
-      ready: false
-      recommended_for: unit + component tests
-      install:
-        web1-astro: "npm install -D vitest @testing-library/dom"
-        web3-next: "npm install -D vitest @vitejs/plugin-react @testing-library/react @testing-library/dom"
-      commands_after_install:
-        run: "npx vitest run"
-        watch: "npx vitest"
-        ui: "npx vitest --ui"
+# ── Skills compartidas (workspace) ──────────────────────────────────────────
+# Solo las que aplican a nivel workspace, no por proyecto.
 
-    - name: "@nuxt/test-utils + vitest"
-      scope: web2-nuxt
-      ready: false
-      recommended_for: unit + component + nuxt-specific tests
-      note: "nuxi test CLI existe pero requiere @nuxt/test-utils"
-      install: "npm install -D @nuxt/test-utils vitest"
-      commands_after_install:
-        run: "npx nuxi test"
-        watch: "npx nuxi test --watch"
-        vitest_direct: "npx vitest run"
+shared:
+  orchestration: make up|down|ps|restart|clean|{project}-up|logs-{service}
+  docker: docker compose (per-service, redes traefik_net + backend_net)
+  port_forward: infra/scripts/wsl-portforward.ps1
 
-    - name: vitest-browser
-      scope: [web1-astro, web2-nuxt, web3-next]
-      ready: false
-      recommended_for: component tests en browser real (no jsdom)
-      install: "npm install -D @vitest/browser playwright"
-      note: "Requiere vitest base instalado primero"
+# ── Skills de usuario (Claude Code) ─────────────────────────────────────────
 
-    - name: "@playwright/test"
-      scope: [web1-astro, web2-nuxt, web3-next, api-laravel]
-      ready: false
-      recommended_for: E2E tests persistentes (CI/CD)
-      install: "npm install -D @playwright/test && npx playwright install"
-      note: "Para E2E interactivo, usar Playwright MCP (ya disponible)"
+user: [/init, /commit, /review, /security-review, /simplify, /loop, /schedule, /update-config, /claude-api]
 
-  styling:
-    - name: tailwind
-      version: "4"
-      scope: [web3-next, api-laravel]
-      via: postcss (web3-next), vite-plugin (api-laravel)
+# ── MCP disponibles ──────────────────────────────────────────────────────────
+# Solo nombres. Capacidades detalladas en docs de cada MCP server.
 
-  build:
-    - name: astro-build
-      scope: web1-astro
-      command: "npm run build"
-    - name: nuxt-build
-      scope: web2-nuxt
-      command: "npm run build"
-    - name: next-build
-      scope: web3-next
-      command: "npm run build"
-    - name: vite-build
-      scope: api-laravel
-      command: "npm run build"
+mcp: [filesystem, github, playwright, memory, context7, google_calendar, gmail, google_drive]
 
-  port_forwarding:
-    - name: wsl-portforward
-      scope: infra
-      path: infra/scripts/wsl-portforward.ps1
-      ports: [80, 8080, 9100]
+# ── Deteccion de manifests ───────────────────────────────────────────────────
+# Archivos que el preflight busca para auto-detectar tipo de proyecto.
+# Cuando aparece un proyecto nuevo en projects/, el preflight usa esta tabla.
 
-# ── Skills de Usuario (Claude Code) ─────────────────────────────────────────
-
-user:
-  session:
-    - name: /init
-      description: Inicializar CLAUDE.md con documentacion del codebase
-    - name: /commit
-      description: Crear commit con mensaje generado
-    - name: /review
-      description: Revisar un pull request
-    - name: /security-review
-      description: Revision de seguridad de cambios pendientes
-    - name: /simplify
-      description: Revisar codigo cambiado buscando mejoras de calidad
-
-  automation:
-    - name: /loop
-      description: Ejecutar prompt o skill en intervalo recurrente
-    - name: /schedule
-      description: Crear agentes remotos programados (cron)
-
-  configuration:
-    - name: /update-config
-      description: Configurar hooks, permisos, variables de entorno
-
-  api:
-    - name: /claude-api
-      description: Build/debug apps con Claude API / Anthropic SDK
-
-# ── MCP Servers Disponibles ──────────────────────────────────────────────────
-
-mcp:
-  - name: filesystem
-    capabilities: [read, write, edit, search, directory_tree]
-
-  - name: github
-    capabilities: [issues, pull_requests, code_search, repositories]
-
-  - name: playwright
-    capabilities:
-      navigation: [browser_navigate, browser_navigate_back, browser_tabs]
-      interaction: [browser_click, browser_fill_form, browser_type, browser_select_option, browser_hover, browser_drag, browser_press_key]
-      observation: [browser_snapshot, browser_take_screenshot, browser_console_messages, browser_network_requests]
-      control: [browser_wait_for, browser_handle_dialog, browser_resize, browser_evaluate]
-    testing_use:
-      - E2E smoke tests sin instalacion local por proyecto
-      - Verificacion visual de UI post-cambio
-      - Captura de screenshots para review
-      - Testeo interactivo de formularios y navegacion
-
-  - name: memory
-    capabilities: [entities, relations, observations, graph]
-
-  - name: context7
-    capabilities: [library_docs, api_reference]
-
-  - name: google_calendar
-    capabilities: [events, scheduling]
-
-  - name: gmail
-    capabilities: [threads, drafts, labels]
-
-  - name: google_drive
-    capabilities: [authentication, file_access]
+manifest_detection:
+  - file: package.json
+    indicates: node/npm
+    framework_hints: [astro, nuxt, next, react, vue, svelte, angular]
+  - file: composer.json
+    indicates: php/composer
+    framework_hints: [laravel, symfony]
+  - file: go.mod
+    indicates: go
+    framework_hints: [gin, echo, fiber]
+  - file: pyproject.toml
+    indicates: python
+    framework_hints: [django, fastapi, flask]
+  - file: Cargo.toml
+    indicates: rust
+    framework_hints: [actix, axum, rocket]
+  - file: tsconfig.json
+    indicates: typescript
+    note: "complementario — confirma TS si ya hay otro manifest"
+  - file: Dockerfile
+    indicates: containerized
+  - file: docker-compose.yml
+    indicates: docker-compose service

@@ -1,0 +1,31 @@
+# Skill Registry — web3-next
+# Solo skills aplicables a este proyecto
+
+project: web3-next
+manifest: package.json
+language: typescript
+framework: nextjs@16.2.7
+
+skills:
+  dev:
+    command: "npm run dev"
+    alt: "make web3-up"
+  build:
+    command: "npm run build"
+  test:
+    ready: false
+    recommended: vitest
+    install: "npm install -D vitest @vitejs/plugin-react @testing-library/react @testing-library/dom"
+    run: "npx vitest run"
+    watch: "npx vitest"
+  browser_test:
+    ready: false
+    install: "npm install -D @playwright/test && npx playwright install"
+    note: "Playwright MCP disponible para E2E interactivo sin instalar"
+  lint:
+    ready: true
+    tool: eslint@9
+    config: eslint.config.mjs
+    command: "npm run lint"
+  format:
+    ready: false

@@ -77,8 +77,13 @@ Portainer :9100 <- gestion visual
 ## Protocolo SDD
 
 Artefactos en `.sdd/`:
-- `config.yaml` — stack, fases, testing capabilities, calibracion, strict TDD
-- `skills.yaml` — skills disponibles (proyecto + usuario + MCP)
+- `config.yaml` — stack, fases, testing, calibracion, strict TDD
+- `skills.yaml` — registry index (punteros a registries por proyecto)
+- `registries/{proyecto}.yaml` — skills especificas de cada proyecto
+
+Arquitectura: el orquestador lee `skills.yaml` (indice), identifica el
+proyecto, y pasa al subagente el path `.sdd/registries/{proyecto}.yaml`.
+El subagente recibe SOLO las skills de su proyecto, sin ruido.
 
 Tres fases obligatorias antes de escribir codigo. No se salta ninguna.
 
@@ -87,9 +92,10 @@ Tres fases obligatorias antes de escribir codigo. No se salta ninguna.
 Detecta el estado del workspace y lo registra en `.sdd/config.yaml`:
 
 1. Leer config.yaml para contexto del stack
-2. Identificar proyecto objetivo
+2. Identificar proyecto objetivo (buscar manifests: package.json, composer.json,
+   go.mod, pyproject.toml, Cargo.toml — tabla en `manifest_detection` de skills.yaml)
 3. Leer CLAUDE.md del proyecto (gobernanza: modo, branching, review)
-4. Consultar skills.yaml si la tarea necesita herramientas concretas
+4. Cargar el registry del proyecto: `.sdd/registries/{proyecto}.yaml`
 
 Si el proyecto es ambiguo o el cambio contradice la gobernanza, preguntar.
 
@@ -98,15 +104,15 @@ Si el proyecto es ambiguo o el cambio contradice la gobernanza, preguntar.
 No se construye nada. Se verifica que lo detectado es real y funciona.
 Checklist por proyecto (ver `calibration` en config.yaml):
 
-- **Dependencias**: lock file coherente con manifest, node_modules/vendor poblados
-- **Runner de tests**: si `ready: true`, ejecutar en seco y confirmar que pasa.
+- **Dependencias**: lock file coherente con manifest, deps instaladas
+- **Runner de tests**: si `ready: true`, ejecutar y confirmar que pasa.
   Si `ready: false`, verificar que el install recomendado es viable
 - **Lint**: si instalado, ejecutar y confirmar 0 errores
-- **Build**: verificar que el proyecto compila o arranca sin errores
-- **Config**: CLAUDE.md del proyecto coherente con config.yaml (versiones, scripts)
-- **Edge cases**: .env requeridos presentes, puertos libres, permisos de escritura
+- **Build**: verificar que el proyecto compila sin errores
+- **Config**: CLAUDE.md y registry coherentes con config.yaml
+- **Edge cases**: .env, puertos, permisos, Docker, redes
 
-Si un check falla: resolver ANTES de seguir. No se pasa a TDD con fallos.
+Si un check blocker falla: resolver ANTES de seguir. No se pasa a TDD con fallos.
 
 ### Fase 3: Strict TDD Mode (construccion)
 
@@ -121,7 +127,7 @@ Reglas:
 - Tests se ejecutan en cada paso (red, green, refactor)
 - Un test que nunca falla no aporta confianza — verificar el RED
 - Commits frecuentes: al menos uno por ciclo GREEN
-- Scripts por proyecto en `strict_tdd.scripts_by_project` de config.yaml
+- Scripts: ver `skills.test` en el registry del proyecto
 
 ## Hosts (en cada equipo de la red)
 

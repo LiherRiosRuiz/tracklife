@@ -1,0 +1,29 @@
+# Skill Registry — web1-astro
+# Solo skills aplicables a este proyecto
+
+project: web1-astro
+manifest: package.json
+language: typescript
+framework: astro@6.4.4
+
+skills:
+  dev:
+    command: "npm run dev"
+    alt: "make web1-up"
+  build:
+    command: "npm run build"
+  test:
+    ready: false
+    recommended: vitest
+    install: "npm install -D vitest @testing-library/dom"
+    run: "npx vitest run"
+    watch: "npx vitest"
+  browser_test:
+    ready: false
+    install: "npm install -D @vitest/browser playwright"
+    note: "Playwright MCP disponible para E2E interactivo sin instalar"
+  lint:
+    ready: false
+    note: "sin linter configurado"
+  format:
+    ready: false
