@@ -124,39 +124,10 @@ echo ""
 
 # ── Lanzar Claude Code ───────────────────────────────────────────────────────
 
-# Resolver node y claude CLI. En WSL2 los binarios de Windows son .exe
-# y el wrapper npm "claude" hace `exec node` que falla sin el .exe.
-# Solucion: llamar a node.exe directamente con el CLI JS.
-
-find_node() {
-  command -v node 2>/dev/null && return
-  command -v node.exe 2>/dev/null && return
-  local p="/mnt/c/Program Files/nodejs/node.exe"
-  [ -x "$p" ] && echo "$p" && return
-  return 1
-}
-
-NODE_BIN=$(find_node) || {
-  echo -e "  ${RED}Error: node no encontrado${NC}"
-  echo -e "  ${DIM}Instalar Node.js o habilitar WSL interop${NC}"
-  exit 1
-}
-
-# Buscar el CLI JS de claude-code
-CLAUDE_CLI=""
-for d in \
-  "/mnt/c/Users/Administrador/AppData/Roaming/npm/node_modules/@anthropic-ai/claude-code/cli.js" \
-  "/mnt/c/Users/$USER/AppData/Roaming/npm/node_modules/@anthropic-ai/claude-code/cli.js" \
-  "$(npm root -g 2>/dev/null)/@anthropic-ai/claude-code/cli.js"
-do
-  [ -f "$d" ] && CLAUDE_CLI="$d" && break
-done
-
-if [ -z "$CLAUDE_CLI" ]; then
-  echo -e "  ${RED}Error: claude-code CLI no encontrado${NC}"
-  echo -e "  ${DIM}Instalar: npm install -g @anthropic-ai/claude-code${NC}"
-  exit 1
-fi
+# Detectar entorno: MINGW64/Git Bash, WSL2, o Linux nativo.
+# En MINGW64/Cygwin: claude esta en PATH, funciona directo.
+# En WSL2: node.exe no entiende paths /mnt/c/, hay que convertir con wslpath.
+# En Linux nativo: claude esta en PATH.
 
 # Futuro tmux:
 #   tmux new-session -d -s platon -n claude
@@ -164,4 +135,61 @@ fi
 #   tmux send-keys -t platon:claude.0 "claude --name platon" Enter
 #   tmux attach -t platon
 
-exec "$NODE_BIN" "$CLAUDE_CLI" --name "platon"
+case "$(uname -s)" in
+  MINGW*|MSYS*|CYGWIN*)
+    # Git Bash / MSYS2 / Cygwin — node y claude en PATH de Windows
+    exec claude --name "platon"
+    ;;
+  Linux*)
+    if grep -qi microsoft /proc/version 2>/dev/null; then
+      # ── WSL2 ──
+      # El wrapper npm "claude" hace `exec node` pero node.exe no esta en
+      # el PATH de Linux, y si lo encontramos, no entiende paths /mnt/c/.
+      # Solucion: encontrar node.exe y cli.js, convertir path con wslpath.
+
+      NODE_BIN=""
+      if command -v node &>/dev/null; then
+        NODE_BIN="node"
+      elif [ -x "/mnt/c/Program Files/nodejs/node.exe" ]; then
+        NODE_BIN="/mnt/c/Program Files/nodejs/node.exe"
+      fi
+
+      if [ -z "$NODE_BIN" ]; then
+        echo -e "  ${RED}Error: node no encontrado${NC}"
+        echo -e "  ${DIM}Instalar Node.js en WSL2 o habilitar appendWindowsPath${NC}"
+        exit 1
+      fi
+
+      # Buscar cli.js
+      CLAUDE_CLI=""
+      for d in \
+        "/mnt/c/Users/Administrador/AppData/Roaming/npm/node_modules/@anthropic-ai/claude-code/cli.js" \
+        "/mnt/c/Users/$USER/AppData/Roaming/npm/node_modules/@anthropic-ai/claude-code/cli.js"
+      do
+        [ -f "$d" ] && CLAUDE_CLI="$d" && break
+      done
+
+      if [ -z "$CLAUDE_CLI" ]; then
+        echo -e "  ${RED}Error: claude-code CLI no encontrado${NC}"
+        echo -e "  ${DIM}Instalar: npm install -g @anthropic-ai/claude-code${NC}"
+        exit 1
+      fi
+
+      # Convertir /mnt/c/... a C:/... para que node.exe lo entienda
+      if command -v wslpath &>/dev/null; then
+        WIN_CLI=$(wslpath -w "$CLAUDE_CLI")
+      else
+        # Fallback: /mnt/c/foo -> C:/foo (node.exe acepta forward slashes)
+        drive="${CLAUDE_CLI:5:1}"
+        WIN_CLI="${drive^^}:/${CLAUDE_CLI:7}"
+      fi
+      exec "$NODE_BIN" "$WIN_CLI" --name "platon"
+    else
+      # Linux nativo
+      exec claude --name "platon"
+    fi
+    ;;
+  *)
+    exec claude --name "platon"
+    ;;
+esac
