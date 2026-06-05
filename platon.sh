@@ -124,10 +124,34 @@ echo ""
 
 # ── Lanzar Claude Code ───────────────────────────────────────────────────────
 
+# En WSL2, node vive en el path de Windows. Asegurar que este accesible.
+if ! command -v node &>/dev/null; then
+  for p in "/mnt/c/Program Files/nodejs" "/usr/local/bin"; do
+    if [ -x "$p/node" ] || [ -x "$p/node.exe" ]; then
+      export PATH="$p:$PATH"
+      break
+    fi
+  done
+fi
+
+# Buscar claude en ubicaciones conocidas
+CLAUDE_BIN=""
+if command -v claude &>/dev/null; then
+  CLAUDE_BIN="claude"
+elif [ -x "/mnt/c/Users/Administrador/AppData/Roaming/npm/claude" ]; then
+  CLAUDE_BIN="/mnt/c/Users/Administrador/AppData/Roaming/npm/claude"
+fi
+
+if [ -z "$CLAUDE_BIN" ]; then
+  echo -e "  ${RED}Error: claude no encontrado en PATH${NC}"
+  echo -e "  ${DIM}Instalar: npm install -g @anthropic-ai/claude-code${NC}"
+  exit 1
+fi
+
 # Futuro tmux:
 #   tmux new-session -d -s platon -n claude
 #   tmux split-window -h
 #   tmux send-keys -t platon:claude.0 "claude --name platon" Enter
 #   tmux attach -t platon
 
-exec claude --name "platon"
+exec "$CLAUDE_BIN" --name "platon"
