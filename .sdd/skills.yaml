@@ -1,0 +1,118 @@
+# =============================================================================
+# Skill Registry — LIHER Workspace
+# Indice de skills disponibles (proyecto + usuario)
+# Generado por preflight 2026-06-05
+# =============================================================================
+
+version: "1.0"
+
+# ── Skills de Proyecto ───────────────────────────────────────────────────────
+# Capacidades disponibles en el workspace por herramienta/area
+
+project:
+  orchestration:
+    - name: make
+      scope: workspace
+      commands: [up, down, restart, ps, clean, setup, help]
+      per_project: [web1-up, web2-up, web3-up, api-up]
+      logs: [logs-web1, logs-web2, logs-web3, logs-api, logs-traefik, logs-mongo]
+
+  docker:
+    - name: docker-compose
+      scope: per-service
+      pattern: each service has its own docker-compose.yml
+      networks: [traefik_net, backend_net]
+
+  linting:
+    - name: eslint
+      version: "9"
+      scope: web3-next
+      config: eslint.config.mjs (flat config)
+      command: npm run lint
+    - name: laravel-pint
+      scope: api-laravel
+      command: ./vendor/bin/pint
+
+  testing:
+    - name: phpunit
+      version: "12.5"
+      scope: api-laravel
+      command: php artisan test
+      suites: [Unit, Feature]
+
+  styling:
+    - name: tailwind
+      version: "4"
+      scope: [web3-next, api-laravel]
+      via: postcss (web3-next), vite-plugin (api-laravel)
+
+  build:
+    - name: astro-build
+      scope: web1-astro
+      command: npm run build
+    - name: nuxt-build
+      scope: web2-nuxt
+      command: npm run build
+    - name: next-build
+      scope: web3-next
+      command: npm run build
+    - name: vite-build
+      scope: api-laravel
+      command: npm run build
+
+  port_forwarding:
+    - name: wsl-portforward
+      scope: infra
+      path: infra/scripts/wsl-portforward.ps1
+      ports: [80, 8080, 9100]
+
+# ── Skills de Usuario (Claude Code) ─────────────────────────────────────────
+# Skills invocables con / en la sesion de trabajo
+
+user:
+  session:
+    - name: /init
+      description: Inicializar CLAUDE.md con documentacion del codebase
+    - name: /commit
+      description: Crear commit con mensaje generado
+    - name: /review
+      description: Revisar un pull request
+    - name: /security-review
+      description: Revision de seguridad de cambios pendientes
+    - name: /simplify
+      description: Revisar codigo cambiado buscando mejoras de calidad
+
+  automation:
+    - name: /loop
+      description: Ejecutar prompt o skill en intervalo recurrente
+    - name: /schedule
+      description: Crear agentes remotos programados (cron)
+
+  configuration:
+    - name: /update-config
+      description: Configurar hooks, permisos, variables de entorno
+
+  api:
+    - name: /claude-api
+      description: Build/debug apps con Claude API / Anthropic SDK
+
+# ── MCP Servers Disponibles ──────────────────────────────────────────────────
+# Herramientas externas conectadas via MCP
+
+mcp:
+  - name: filesystem
+    capabilities: [read, write, edit, search, directory_tree]
+  - name: github
+    capabilities: [issues, pull_requests, code_search, repositories]
+  - name: playwright
+    capabilities: [browser_navigation, screenshots, form_filling, testing]
+  - name: memory
+    capabilities: [entities, relations, observations, graph]
+  - name: context7
+    capabilities: [library_docs, api_reference]
+  - name: google_calendar
+    capabilities: [events, scheduling]
+  - name: gmail
+    capabilities: [threads, drafts, labels]
+  - name: google_drive
+    capabilities: [authentication, file_access]

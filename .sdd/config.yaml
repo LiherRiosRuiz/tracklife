@@ -1,0 +1,161 @@
+# =============================================================================
+# SDD Config — LIHER Workspace
+# Generado por preflight 2026-06-05
+# =============================================================================
+
+version: "1.0"
+workspace: LIHER
+path: D:\Compartida\LIHER
+
+# ── Stack Context ────────────────────────────────────────────────────────────
+
+stack:
+  infra:
+    proxy:
+      name: traefik
+      version: "v3"
+      entrypoint: ":80"
+      dashboard: ":8080"
+      discovery: docker-labels
+    database:
+      name: mongodb
+      version: "7"
+      network: backend_net
+      auth: true
+    management:
+      name: portainer-ce
+      version: lts
+      port: 9100
+    networks:
+      - name: traefik_net
+        scope: all-services
+      - name: backend_net
+        scope: api + database
+
+  projects:
+    web1-astro:
+      framework: astro
+      version: "6.4.4"
+      language: typescript
+      runtime: node:22-alpine
+      integrations: [react-19, vue-3]
+      port: 4321
+      domain: web1.test
+      package_manager: npm
+
+    web2-nuxt:
+      framework: nuxt
+      version: "4.4.6"
+      language: typescript
+      runtime: node:22-alpine
+      port: 3000
+      domain: web2.test
+      package_manager: npm
+
+    web3-next:
+      framework: nextjs
+      version: "16.2.7"
+      language: typescript
+      runtime: node:22-alpine
+      styling: tailwind-4
+      port: 3000
+      domain: web3.test
+      package_manager: npm
+
+    api-laravel:
+      framework: laravel
+      version: "13.8"
+      language: php
+      runtime: php:8.3-cli
+      database:
+        driver: sqlite          # activo
+        target: mongodb         # pendiente de cablear
+        package: mongodb/laravel-mongodb@5.7
+      port: 8000
+      domain: api.test
+      package_manager: composer
+
+# ── Reglas por Fase ──────────────────────────────────────────────────────────
+
+phases:
+  spec:
+    description: Definir que se va a construir antes de escribir codigo
+    artifacts:
+      - CLAUDE.md del proyecto (gobernanza)
+      - Spec de endpoints o paginas (cuando aplique)
+    gate: el spec debe existir antes de pasar a implement
+
+  implement:
+    description: Escribir el codigo segun la spec
+    rules:
+      - Seguir la gobernanza del CLAUDE.md del proyecto
+      - No agregar features fuera del spec
+      - Respetar convenciones del framework detectadas
+    branching:
+      frontends: direct-to-main   # cambiar a feature-branches con codigo custom
+      api: feature-branches       # desde el inicio
+
+  test:
+    description: Verificar que el codigo cumple la spec
+    rules:
+      - Ejecutar tests existentes antes de cada commit
+      - Verificar build si el framework lo soporta
+      - Revisar edge cases segun nivel de review del proyecto
+
+  review:
+    description: Revisar cambios antes de integrar
+    levels:
+      light: funciona y compila
+      standard: funcionalidad + edge cases + tests existentes
+      exhaustive: standard + seguridad + rendimiento + accesibilidad
+    default: standard
+
+  deploy:
+    description: Desplegar cambios
+    current: docker-compose via Makefile (dev local)
+    commands:
+      up: make up
+      down: make down
+      per-project: "make {project}-up"
+
+# ── Testing Capabilities ────────────────────────────────────────────────────
+
+testing:
+  web1-astro:
+    framework: none
+    runner: none
+    commands: []
+    coverage: none
+    status: sin configurar
+
+  web2-nuxt:
+    framework: none
+    runner: none
+    commands: []
+    coverage: none
+    status: sin configurar
+
+  web3-next:
+    framework: none
+    runner: none
+    lint: "npm run lint"
+    lint_tool: eslint-9
+    commands:
+      - npm run lint
+    coverage: none
+    status: solo linting
+
+  api-laravel:
+    framework: phpunit
+    version: "12.5"
+    runner: "php artisan test"
+    lint: "./vendor/bin/pint"
+    lint_tool: laravel-pint
+    commands:
+      - php artisan test
+      - ./vendor/bin/pint
+    suites:
+      unit: tests/Unit
+      feature: tests/Feature
+    coverage: none
+    status: stubs (ExampleTest solamente)

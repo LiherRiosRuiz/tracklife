@@ -10,6 +10,7 @@ LIHER/
 ├── CLAUDE.md
 ├── Makefile                 <- make up / make down / make ps
 ├── setup.sh                 <- primera vez: redes + env + infra
+├── .sdd/                    <- config SDD (config.yaml, skills.yaml)
 ├── .obsidian/               <- este directorio ES un vault de Obsidian
 │
 ├── infra/                   <- infraestructura compartida (Docker via WSL2)
@@ -75,16 +76,23 @@ Portainer :9100 <- gestion visual
 
 ## Protocolo SDD
 
+Artefactos de configuracion en `.sdd/`:
+- `.sdd/config.yaml` — contexto del stack, reglas por fase, testing capabilities
+- `.sdd/skills.yaml` — registro de skills disponibles (proyecto + usuario + MCP)
+
 Al inicio de cada sesion de trabajo:
 
-1. **Identificar proyecto**: determinar en que proyecto(s) se va a trabajar
-2. **Cargar gobernanza**: leer el CLAUDE.md del proyecto para conocer modo,
-   branching, y nivel de review
-3. **Confirmar si es ambiguo**: solo preguntar si el contexto no queda claro
-   (proyecto no identificable, cambio que afecta a multiples proyectos, o
-   cambio estructural que contradice la gobernanza definida)
-4. **Ejecutar**: trabajar segun los defaults del proyecto. Los defaults se
-   ajustan editando el CLAUDE.md del proyecto cuando las necesidades cambien.
+1. **Cargar config**: leer `.sdd/config.yaml` para contexto del stack y reglas
+2. **Identificar proyecto**: determinar en que proyecto(s) se va a trabajar
+3. **Cargar gobernanza**: leer el CLAUDE.md del proyecto para modo, branching
+   y nivel de review
+4. **Verificar skills**: consultar `.sdd/skills.yaml` si la tarea requiere
+   una herramienta especifica (linting, testing, MCP, etc.)
+5. **Confirmar si es ambiguo**: solo preguntar si el contexto no queda claro
+   (proyecto no identificable, cambio multi-proyecto, o cambio que contradice
+   la gobernanza definida)
+6. **Ejecutar**: trabajar segun los defaults. Ajustar editando el CLAUDE.md
+   del proyecto o `.sdd/config.yaml` cuando las necesidades cambien.
 
 ## Hosts (en cada equipo de la red)
 
