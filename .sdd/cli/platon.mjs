@@ -82,34 +82,60 @@ function showSplash() {
   const calibration = getCalibration();
   const calColor = calibration === "pass" ? c.green : calibration === "fail" ? c.red : c.yellow;
 
+  // ASCII art banner
+  const banner = `${c.magenta}${c.bold}██████╗ ██╗      █████╗ ████████╗ ██████╗ ███╗   ██╗
+██╔══██╗██║     ██╔══██╗╚══██╔══╝██╔═══██╗████╗  ██║
+██████╔╝██║     ███████║   ██║   ██║   ██║██╔██╗ ██║
+██╔═══╝ ██║     ██╔══██║   ██║   ██║   ██║██║╚██╗██║
+██║     ███████╗██║  ██║   ██║   ╚██████╔╝██║ ╚████║
+╚═╝     ╚══════╝╚═╝  ╚═╝   ╚═╝    ╚═════╝ ╚═╝  ╚═══╝${c.nc}`;
+
+  // Test ready projects
+  const readyProjects = projects.filter(p => p.testReady).map(p => p.name);
+  const notReady = projects.filter(p => !p.testReady).map(p => p.name);
+
   console.clear();
-  console.log(`
-  ${c.magenta}${c.bold}╔══════════════════════════════════════╗${c.nc}
-  ${c.magenta}${c.bold}║${c.nc}           ${c.bold}Π Λ Α Τ Ω Ν${c.nc}              ${c.magenta}${c.bold}║${c.nc}
-  ${c.magenta}${c.bold}║${c.nc}       ${c.dim}Spec-Driven Development${c.nc}        ${c.magenta}${c.bold}║${c.nc}
-  ${c.magenta}${c.bold}╚══════════════════════════════════════╝${c.nc}
-  ${c.dim}"Primero, ver con claridad. Despues, construir."${c.nc}
+  console.log();
+  console.log(banner);
+  console.log();
+  console.log(`${c.dim}ΠΛΑΤΩΝ · Spec-Driven Development v1.0.0${c.nc}`);
+  console.log();
 
-  ${c.cyan}Workspace${c.nc}   ${c.bold}LIHER${c.nc}
-  ${c.cyan}Branch${c.nc}      ${c.green}${branch}${c.nc} ${c.dim}(${commits} commits)${c.nc}
+  // Active Model
+  console.log(`${c.bold}Active Model:${c.nc}`);
+  console.log(`  claude-opus-4.6  ${c.dim}·${c.nc}  provider: anthropic ${c.dim}(Claude Pro)${c.nc}`);
+  console.log();
 
-  ${c.bold}Projects          Tests    Skills${c.nc}
-  ${c.dim}─────────────────────────────────${c.nc}`);
+  // Available Tools
+  console.log(`${c.bold}Available Tools:${c.nc}`);
+  console.log(`  ${c.cyan}files:${c.nc}          Read, Edit, Write, Glob, Grep`);
+  console.log(`  ${c.cyan}system:${c.nc}         Bash`);
+  console.log(`  ${c.cyan}web:${c.nc}            WebFetch, WebSearch`);
+  console.log(`  ${c.cyan}mcp:${c.nc}            filesystem, github, playwright, memory, context7`);
+  console.log();
 
-  for (const p of projects) {
-    const skills = getSkillCount(p.name);
-    const padded = p.name.padEnd(18);
-    if (p.testReady) {
-      console.log(`  ${c.green}+${c.nc}  ${padded}ready    ${skills}`);
-    } else {
-      console.log(`  ${c.dim}.${c.nc}  ${padded}${c.dim}--${c.nc}       ${skills}`);
-    }
+  // Available Skills
+  console.log(`${c.bold}Available Skills:${c.nc}`);
+  console.log(`  ${c.cyan}orchestration:${c.nc}  make up|down|ps|restart|clean`);
+  console.log(`  ${c.cyan}per-project:${c.nc}    web1-up, web2-up, web3-up, api-up`);
+  console.log(`  ${c.cyan}user:${c.nc}           /commit, /review, /security-review, /simplify`);
+  console.log();
+
+  // Status
+  console.log(`${c.bold}Status:${c.nc}`);
+  console.log(`  ${c.cyan}workspace:${c.nc}   LIHER`);
+  console.log(`  ${c.cyan}branch:${c.nc}      ${c.green}${branch}${c.nc} ${c.dim}(${commits} commits)${c.nc}`);
+  console.log(`  ${c.cyan}sdd phase:${c.nc}   ${calColor}${calibration}${c.nc}`);
+  console.log(`  ${c.cyan}projects:${c.nc}    ${projects.map(p => p.name).join(" · ")}`);
+  if (readyProjects.length > 0) {
+    console.log(`  ${c.cyan}test ready:${c.nc}  ${c.green}${readyProjects.join(", ")}${c.nc}`);
   }
-
-  console.log(`
-  ${c.cyan}SDD Phase${c.nc}    ${calColor}${calibration}${c.nc}
-  ${c.dim}─────────────────────────────────${c.nc}
-`);
+  if (notReady.length > 0) {
+    console.log(`  ${c.cyan}no tests:${c.nc}    ${c.dim}${notReady.join(", ")}${c.nc}`);
+  }
+  console.log();
+  console.log(`  ${c.dim}hint:        escribe tu mensaje, o /exit para salir...${c.nc}`);
+  console.log();
 }
 
 // ── System prompt ───────────────────────────────────────────────────────────
@@ -141,7 +167,6 @@ async function main() {
     rl.question(`  ${c.magenta}❯${c.nc} `, (answer) => resolve(answer));
   });
 
-  console.log(`  ${c.dim}Sesion interactiva. /exit para salir.${c.nc}\n`);
 
   // Async generator that yields user messages — keeps session alive
   let userResolve = null;
