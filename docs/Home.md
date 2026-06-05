@@ -16,9 +16,9 @@ Ruta: `D:\Compartida\LIHER` | WSL2: `/mnt/d/Compartida/LIHER`
 ### Proyectos
 - [[Stack Web]] — Las 4 webs + API detras de Traefik
   - [[Web1 Astro]] — Astro 6 + React + Vue islands
-  - [[Web2 Nuxt]] — Nuxt 3, Vue SSR
-  - [[Web3 Next]] — Next.js 14, React SSR
-  - [[API Laravel]] — Laravel 11, backend REST
+  - [[Web2 Nuxt]] — Nuxt 4, Vue SSR
+  - [[Web3 Next]] — Next.js 16, React SSR
+  - [[API Laravel]] — Laravel 13, backend REST
 
 ### Operaciones
 - [[Comandos]] — make up, make down, logs, etc.

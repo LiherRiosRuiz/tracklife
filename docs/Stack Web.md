@@ -7,9 +7,9 @@ Grupo de 4 proyectos web + API detras de [[Traefik]], todos en `projects/web/`.
 | Proyecto | Framework | Dominio | Puerto interno | Ruta |
 |----------|-----------|---------|----------------|------|
 | [[Web1 Astro]] | Astro 6 + React + Vue | web1.test | 4321 | `projects/web/web1-astro/` |
-| [[Web2 Nuxt]] | Nuxt 3 (Vue SSR) | web2.test | 3000 | `projects/web/web2-nuxt/` |
-| [[Web3 Next]] | Next.js 14 (React SSR) | web3.test | 3000 | `projects/web/web3-next/` |
-| [[API Laravel]] | Laravel 11 | api.test | 8000 | `projects/web/api-laravel/` |
+| [[Web2 Nuxt]] | Nuxt 4 (Vue SSR) | web2.test | 3000 | `projects/web/web2-nuxt/` |
+| [[Web3 Next]] | Next.js 16 (React SSR) | web3.test | 3000 | `projects/web/web3-next/` |
+| [[API Laravel]] | Laravel 13 | api.test | 8000 | `projects/web/api-laravel/` |
 
 ## Patron comun
 

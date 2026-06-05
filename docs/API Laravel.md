@@ -1,11 +1,11 @@
 # API Laravel
 
-Backend REST basado en Laravel 11.
+Backend REST basado en Laravel 13.
 
 - **Dominio**: http://api.test
 - **Puerto interno**: 8000
 - **Ruta**: `projects/web/api-laravel/`
-- **Framework**: Laravel 11 (v13.13.0)
+- **Framework**: Laravel 13
 
 ## Archivos clave
 

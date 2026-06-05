@@ -3,7 +3,7 @@ set -e
 
 # Auto-scaffold si el proyecto no existe
 if [ ! -f "package.json" ]; then
-    echo "==> Scaffolding Nuxt 3 (via /tmp para evitar conflictos)..."
+    echo "==> Scaffolding Nuxt 4 (via /tmp para evitar conflictos)..."
     rm -rf /tmp/nuxt-scaffold
     cd /tmp
     # -t minimal evita el selector interactivo de template

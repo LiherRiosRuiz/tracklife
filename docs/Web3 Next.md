@@ -1,11 +1,11 @@
 # Web3 Next
 
-Proyecto web basado en Next.js 14 (React SSR).
+Proyecto web basado en Next.js 16 (React SSR).
 
 - **Dominio**: http://web3.test
 - **Puerto interno**: 3000
 - **Ruta**: `projects/web/web3-next/`
-- **Framework**: Next.js 14
+- **Framework**: Next.js 16
 
 ## Archivos clave
 

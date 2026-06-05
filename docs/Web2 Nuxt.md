@@ -1,11 +1,11 @@
 # Web2 Nuxt
 
-Proyecto web basado en Nuxt 3 (Vue SSR).
+Proyecto web basado en Nuxt 4 (Vue SSR).
 
 - **Dominio**: http://web2.test
 - **Puerto interno**: 3000
 - **Ruta**: `projects/web/web2-nuxt/`
-- **Framework**: Nuxt 3 (4.4.7)
+- **Framework**: Nuxt 4 (4.4.6)
 
 ## Archivos clave
 
