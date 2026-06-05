@@ -134,7 +134,7 @@ function showSplash() {
     console.log(`  ${c.cyan}no tests:${c.nc}    ${c.dim}${notReady.join(", ")}${c.nc}`);
   }
   console.log();
-  console.log(`  ${c.dim}hint:        escribe tu mensaje, o /exit para salir...${c.nc}`);
+  console.log(`  ${c.dim}hint:        escribe tu mensaje, /model, /help, o /exit${c.nc}`);
   console.log();
 }
 
@@ -145,18 +145,37 @@ function loadSystemPrompt() {
   return "Eres ΠΛΑΤΩΝ — framework SDD. Sigue: Preflight → Calibracion → Strict TDD.";
 }
 
+// ── Models ──────────────────────────────────────────────────────────────────
+const MODELS = {
+  opus:   "claude-opus-4-6",
+  sonnet: "claude-sonnet-4-6",
+  haiku:  "claude-haiku-4-5-20251001",
+};
+
+// ── Slash commands ──────────────────────────────────────────────────────────
+function showHelp() {
+  console.log(`\n  ${c.bold}Commands:${c.nc}`);
+  console.log(`  ${c.cyan}/model${c.nc} [name]    Show or change model (opus, sonnet, haiku)`);
+  console.log(`  ${c.cyan}/clear${c.nc}           Clear screen and show splash`);
+  console.log(`  ${c.cyan}/help${c.nc}            Show this help`);
+  console.log(`  ${c.cyan}/exit${c.nc}            End session\n`);
+}
+
 // ── Interactive session ─────────────────────────────────────────────────────
 async function main() {
   showSplash();
 
   const systemPrompt = loadSystemPrompt();
+  let currentModel = "claude-opus-4-6";
+  let done = false;
+  let userResolve = null;
+  let sessionAbort = null;
 
   const rl = createInterface({
     input: process.stdin,
     output: process.stdout,
   });
 
-  // Handle stdin close (piped mode)
   rl.on("close", () => {
     done = true;
     if (userResolve) userResolve(null);
@@ -167,72 +186,130 @@ async function main() {
     rl.question(`  ${c.magenta}❯${c.nc} `, (answer) => resolve(answer));
   });
 
+  // ── Session lifecycle ───────────────────────────────────────────────────
+  function startSession() {
+    userResolve = null;
 
-  // Async generator that yields user messages — keeps session alive
-  let userResolve = null;
-  let done = false;
+    async function* userMessages() {
+      while (!done) {
+        const input = await new Promise((res) => { userResolve = res; });
+        if (input === null) return;
+        yield { type: "user", message: { role: "user", content: input } };
+      }
+    }
 
-  async function* userMessages() {
-    while (!done) {
-      const input = await new Promise((res) => { userResolve = res; });
-      if (input === null) return; // Signal to end
-      yield {
-        type: "user",
-        message: { role: "user", content: input },
-      };
+    const abortController = new AbortController();
+    sessionAbort = abortController;
+
+    const session = query({
+      prompt: userMessages(),
+      options: {
+        allowedTools: ["Read", "Edit", "Write", "Bash", "Glob", "Grep", "WebFetch", "WebSearch"],
+        permissionMode: "acceptEdits",
+        cwd: ROOT,
+        systemPrompt,
+        model: currentModel,
+        abortController,
+      },
+    });
+
+    // Process messages in background
+    (async () => {
+      try {
+        for await (const message of session) {
+          if (message.type === "assistant" && message.message?.content) {
+            for (const block of message.message.content) {
+              if ("text" in block && block.text) {
+                const lines = block.text.split("\n");
+                for (const line of lines) {
+                  process.stdout.write(`  ${line}\n`);
+                }
+              } else if ("name" in block) {
+                console.log(`\n  ${c.dim}⚙ ${block.name}${c.nc}`);
+              }
+            }
+          }
+          if (message.type === "result") {
+            if (message.subtype === "error" || message.is_error) {
+              console.log(`\n  ${c.red}Error: ${message.result || message.errors?.join(", ") || "unknown"}${c.nc}`);
+            }
+            console.log();
+            promptNextInput();
+          }
+        }
+      } catch (err) {
+        if (!done && !err.message?.includes("aborted")) {
+          console.log(`\n  ${c.red}Sesion terminada: ${err.message}${c.nc}\n`);
+        }
+      } finally {
+        if (!done) promptNextInput();
+      }
+    })();
+  }
+
+  // ── Input handling ──────────────────────────────────────────────────────
+  function handleSlashCommand(input) {
+    const parts = input.trim().split(/\s+/);
+    const cmd = parts[0].toLowerCase();
+    const arg = parts[1]?.toLowerCase();
+
+    switch (cmd) {
+      case "/exit":
+      case "/quit":
+        console.log(`\n  ${c.dim}Sesion finalizada.${c.nc}\n`);
+        done = true;
+        if (userResolve) userResolve(null);
+        rl.close();
+        return true;
+
+      case "/help":
+        showHelp();
+        promptNextInput();
+        return true;
+
+      case "/clear":
+        showSplash();
+        promptNextInput();
+        return true;
+
+      case "/model":
+        if (!arg) {
+          // Show current model and options
+          const modelName = Object.entries(MODELS).find(([,v]) => v === currentModel)?.[0] || currentModel;
+          console.log(`\n  ${c.bold}Current model:${c.nc} ${c.green}${modelName}${c.nc} (${currentModel})`);
+          console.log(`  ${c.dim}Available: opus, sonnet, haiku${c.nc}\n`);
+          promptNextInput();
+          return true;
+        }
+        if (MODELS[arg]) {
+          const oldModel = currentModel;
+          currentModel = MODELS[arg];
+          if (oldModel !== currentModel) {
+            // Kill current session and start new one with new model
+            console.log(`\n  ${c.yellow}Model → ${arg}${c.nc} (${currentModel})`);
+            console.log(`  ${c.dim}Reiniciando sesion...${c.nc}\n`);
+            if (sessionAbort) sessionAbort.abort();
+            if (userResolve) userResolve(null);
+            // Small delay to let the old session clean up
+            setTimeout(() => startSession(), 100);
+            setTimeout(() => promptNextInput(), 200);
+          } else {
+            console.log(`\n  ${c.dim}Ya estas usando ${arg}.${c.nc}\n`);
+            promptNextInput();
+          }
+          return true;
+        } else {
+          console.log(`\n  ${c.red}Modelo desconocido: ${arg}${c.nc}`);
+          console.log(`  ${c.dim}Available: opus, sonnet, haiku${c.nc}\n`);
+          promptNextInput();
+          return true;
+        }
+
+      default:
+        return false; // Not a known command, send to agent
     }
   }
 
-  // Start the query session (single long-lived session)
-  const session = query({
-    prompt: userMessages(),
-    options: {
-      allowedTools: ["Read", "Edit", "Write", "Bash", "Glob", "Grep", "WebFetch", "WebSearch"],
-      permissionMode: "acceptEdits",
-      cwd: ROOT,
-      systemPrompt,
-    },
-  });
-
-  // Process messages in background
-  const messageProcessor = (async () => {
-    try {
-      for await (const message of session) {
-        if (message.type === "assistant" && message.message?.content) {
-          for (const block of message.message.content) {
-            if ("text" in block && block.text) {
-              // Indent text output
-              const lines = block.text.split("\n");
-              for (const line of lines) {
-                process.stdout.write(`  ${line}\n`);
-              }
-            } else if ("name" in block) {
-              // Tool use indicator
-              console.log(`\n  ${c.dim}⚙ ${block.name}${c.nc}`);
-            }
-          }
-        }
-
-        if (message.type === "result") {
-          if (message.subtype === "error" || message.is_error) {
-            console.log(`\n  ${c.red}Error: ${message.result || message.errors?.join(", ") || "unknown"}${c.nc}`);
-          }
-          // After each result, prompt for next input
-          console.log();
-          promptNextInput();
-        }
-      }
-    } catch (err) {
-      if (!done) {
-        console.log(`\n  ${c.red}Sesion terminada: ${err.message}${c.nc}\n`);
-      }
-    } finally {
-      done = true;
-      rl.close();
-    }
-  })();
-
-  // Input loop
   function promptNextInput() {
     if (done) return;
     askUser().then((input) => {
@@ -242,12 +319,12 @@ async function main() {
         return;
       }
       if (!input.trim()) { promptNextInput(); return; }
-      if (input.trim() === "/exit" || input.trim() === "/quit") {
-        console.log(`\n  ${c.dim}Sesion finalizada.${c.nc}\n`);
-        done = true;
-        userResolve(null);
-        return;
+
+      // Check for slash commands
+      if (input.trim().startsWith("/")) {
+        if (handleSlashCommand(input)) return;
       }
+
       console.log();
       userResolve(input);
     }).catch(() => {
@@ -256,11 +333,17 @@ async function main() {
     });
   }
 
-  // Kick off the first prompt
+  // ── Start ───────────────────────────────────────────────────────────────
+  startSession();
   promptNextInput();
 
-  // Wait for session to complete
-  await messageProcessor;
+  // Keep process alive until done
+  await new Promise((resolve) => {
+    const check = setInterval(() => {
+      if (done) { clearInterval(check); resolve(); }
+    }, 100);
+  });
+
   process.exit(0);
 }
 
