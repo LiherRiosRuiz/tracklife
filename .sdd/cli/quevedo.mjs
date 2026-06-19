@@ -256,7 +256,12 @@ function buildVaultGraph() {
   // Parse wikilinks (solo .md — canvas son JSON, no markdown)
   for (const f of mdFiles) {
     const name = f.replace(".md", "");
-    const content = readFileSync(resolve(DOCS_DIR, f), "utf-8");
+    const raw = readFileSync(resolve(DOCS_DIR, f), "utf-8");
+    // Strip code blocks y code spans antes de parsear wikilinks.
+    // Evita falsos positivos como `[[Nota\|Alias]]` documentado en comentarios.
+    const content = raw
+      .replace(/```[\s\S]*?```/g, "")   // bloques de codigo
+      .replace(/`[^`\n]+`/g, "");       // inline code spans
     // El .replace(/\\$/, "") elimina la barra invertida que Obsidian requiere en
     // tablas para escapar el pipe del alias: [[Nota\|Alias]] -> target "Nota"
     const links = [...content.matchAll(/\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g)]
