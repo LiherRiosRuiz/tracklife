@@ -1,58 +1,85 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+<div align="center">
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+# ⚙️ TrackLife — API
 
-## About Laravel
+**REST API · Laravel 13 · MongoDB 7 · Sanctum**
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+[![Laravel](https://img.shields.io/badge/Laravel-13-FF2D20?style=flat-square&logo=laravel&logoColor=white)](https://laravel.com)
+[![PHP](https://img.shields.io/badge/PHP-8.3-777BB4?style=flat-square&logo=php&logoColor=white)](https://php.net)
+[![MongoDB](https://img.shields.io/badge/MongoDB-7-47A248?style=flat-square&logo=mongodb&logoColor=white)](https://mongodb.com)
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+`api.tracklife.test`
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+</div>
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+Backend de TrackLife. API REST con autenticación Sanctum, integración MongoDB y servicios de IA para el coach y análisis de salud.
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Endpoints
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+| Grupo | Prefijo | Descripción |
+|-------|---------|-------------|
+| Auth | `/api/auth` | Login, registro, logout |
+| Entrenamientos | `/api/workouts` | Historial y sesiones |
+| Planes | `/api/workout-plans` | Planes de entrenamiento |
+| Ejercicios | `/api/exercises` | Catálogo completo |
+| Nutrición | `/api/meals` | Diario de comidas |
+| Macros | `/api/macros` | Objetivos nutricionales |
+| Recetas | `/api/recipes` | Recetas del usuario |
+| Alimentos | `/api/products` | Búsqueda OpenFoodFacts |
+| Biométricos | `/api/biometrics` | Lecturas de salud |
+| Actividad | `/api/activities` | Registro de actividad |
+| Coach | `/api/coach` | Insights y plan IA |
+| Comunidad | `/api/feed` `/api/clubs` `/api/challenges` | Social |
+| Dashboard | `/api/dashboard` | Resumen general |
 
-## Agentic Development
+## Servicios internos
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+| Servicio | Descripción |
+|---------|-------------|
+| `CoachService` | Generación de planes y recomendaciones IA |
+| `HealthScoreService` | Cálculo de puntuación de salud integral |
+| `OpenFoodFactsService` | Integración con base de datos de alimentos |
+| `StreakService` | Sistema de rachas y logros |
+| `FeedService` | Agregación del feed social |
+
+## Desarrollo
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+composer install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate
+php artisan db:seed              # ejercicios + datos de prueba
+php artisan serve                # http://localhost:8000
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+## Docker
 
-## Contributing
+```bash
+docker compose up --build
+# disponible en api.tracklife.test (vía Traefik)
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Variables de entorno clave
 
-## Code of Conduct
+```env
+DB_CONNECTION=mongodb
+DB_URI=mongodb://mongodb:27017
+DB_DATABASE=tracklife
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+SANCTUM_STATEFUL_DOMAINS=app.tracklife.test
+```
 
-## Security Vulnerabilities
+## Tests
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```bash
+php artisan test
+php artisan test --filter ExerciseTest
+php artisan test --filter WorkoutPlanTest
+```
 
-## License
+---
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Parte de [TrackLife](../) · Stack: Laravel 13 · PHP 8.3 · MongoDB 7 · Sanctum

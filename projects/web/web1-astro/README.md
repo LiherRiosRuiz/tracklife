@@ -1,43 +1,44 @@
-# Astro Starter Kit: Minimal
+<div align="center">
 
-```sh
-npm create astro@latest -- --template minimal
+# 🌐 TrackLife — Landing
+
+**Sitio de marketing estático · Astro 6 · TypeScript**
+
+[![Astro](https://img.shields.io/badge/Astro-6-BC52EE?style=flat-square&logo=astro&logoColor=white)](https://astro.build)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://typescriptlang.org)
+
+`www.tracklife.test`
+
+</div>
+
+---
+
+Landing page pública de TrackLife. Generada estáticamente (SSG) para máximo rendimiento.
+
+## Páginas
+
+| Ruta | Descripción |
+|------|-------------|
+| `/` | Home — presentación del producto |
+| `/como-funciona` | Explicación de la plataforma |
+| `/precios` | Planes y precios |
+
+## Desarrollo
+
+```bash
+npm install
+npm run dev        # http://localhost:4321
+npm run build      # build estático en ./dist/
+npm run preview    # previsualizar build
 ```
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+## Docker
 
-## 🚀 Project Structure
-
-Inside of your Astro project, you'll see the following folders and files:
-
-```text
-/
-├── public/
-├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
+```bash
+docker compose up --build
+# disponible en www.tracklife.test (vía Traefik)
 ```
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+---
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
-
-Any static assets, like images, can be placed in the `public/` directory.
-
-## 🧞 Commands
-
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+Parte de [TrackLife](../) · Stack: Astro 6 · TypeScript
