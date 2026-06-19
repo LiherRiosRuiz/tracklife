@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd \"D:/Compartida/LIHER\" && git status --short | grep -q . && git add . && git commit -m \"auto: sync $(date '+%Y-%m-%d %H:%M')\" && git push || true",
+            "timeout": 60,
+            "statusMessage": "Sincronizando repo con GitHub..."
+          }
+        ]
+      }
+    ]
+  }
+}
