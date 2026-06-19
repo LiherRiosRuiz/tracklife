@@ -10,7 +10,7 @@ services:
       - traefik_net
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.web1.rule=Host(`web1.test`)"
+      - "traefik.http.routers.web1.rule=Host(`www.tracklife.test`)"
       - "traefik.http.routers.web1.entrypoints=web"
       - "traefik.http.services.web1.loadbalancer.server.port=4321"
 

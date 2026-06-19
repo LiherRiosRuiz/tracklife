@@ -10,7 +10,9 @@ LIHER/
 ├── CLAUDE.md
 ├── Makefile                 <- make up / make down / make ps
 ├── setup.sh                 <- primera vez: redes + env + infra
-├── platon.sh                <- launcher SDD (ΠΛΑΤΩΝ)
+├── liher.sh                 <- launcher LIHER (gobernador multi-agente)
+├── platon.sh                <- launcher Platon (planificador SDD)
+├── quevedo.sh               <- launcher Quevedo (cronista del vault)
 ├── .sdd/                    <- config SDD (config.yaml, skills.yaml, registries/)
 ├── .obsidian/               <- este directorio ES un vault de Obsidian
 │
@@ -21,11 +23,15 @@ LIHER/
 │   └── scripts/             <- wsl-portforward.ps1, utilidades
 │
 ├── projects/                <- todos los proyectos
-│   └── web/                 <- stack web
-│       ├── web1-astro/      <- Astro 6 + React 19 + Vue 3  -> web1.test
-│       ├── web2-nuxt/       <- Nuxt 4 (Vue SSR)           -> web2.test
-│       ├── web3-next/       <- Next.js 16 (React 19 SSR)  -> web3.test
-│       └── api-laravel/     <- Laravel 13 + MongoDB        -> api.test
+│   ├── web/                 <- stack web
+│   │   ├── web1-astro/      <- Astro 6 + React 19 + Vue 3  -> web1.test
+│   │   ├── web2-nuxt/       <- Nuxt 4 (Vue SSR)           -> web2.test
+│   │   ├── web3-next/       <- Next.js 16 (React 19 SSR)  -> web3.test
+│   │   └── api-laravel/     <- Laravel 13 + MongoDB        -> api.test
+│   └── agentes/             <- agentes de IA personalizados
+│       ├── platon/          <- ΠΛΑΤΏΝ SDD (doc + entry point)
+│       ├── quevedo/         <- Quevedo cronista (doc + entry point)
+│       └── vinci/           <- Vinci ejecutor (subagente de Liher)
 │
 └── docs/                    <- notas Obsidian de documentacion
 ```
@@ -40,8 +46,14 @@ vive aqui. Las notas estan en `docs/` y enlazan entre si con `[[wikilinks]]`.
 ```bash
 cd /mnt/d/Compartida/LIHER
 
-# Iniciar sesion SDD
+# Iniciar sesion completa (gobernador multi-agente)
+bash liher.sh
+
+# Iniciar sesion SDD (solo planificacion)
 bash platon.sh
+
+# Iniciar sesion de documentacion (solo cronica)
+bash quevedo.sh
 
 # Primera vez
 bash setup.sh
@@ -78,11 +90,53 @@ Portainer :9100 <- gestion visual
 - `traefik_net` — Traefik + todos los servicios web
 - `backend_net` — Laravel + MongoDB
 
-## Platon (ΠΛΑΤΩΝ)
+## Sistema de Agentes
 
-El framework SDD se llama Platon, por la Alegoria de la Caverna.
-Cada sesion se inicia con `bash platon.sh` desde la raiz del workspace.
-El launcher muestra el estado del workspace antes de iniciar Claude Code.
+El workspace usa una jerarquia de agentes con roles diferenciados:
+
+```
+LIHER (gobernador, sonnet-4-6)
+  ├── Platon (pensador, opus-4-6)
+  ├── Quevedo (cronista, sonnet-4-6)
+  └── Vinci (ejecutor, sonnet-4-6)
+```
+
+**Entrada principal:** `bash liher.sh` — LIHER analiza la tarea y orquesta los agentes.
+Standalone: `bash platon.sh` (solo planificacion), `bash quevedo.sh` (solo cronica).
+
+### Platon (ΠΛΑΤΩΝ) v2.0
+
+Planificador SDD. Opus, max effort. Solo analiza y produce planes.
+
+**Memoria persistente** (inspirado en Engram):
+- Sesiones guardadas en `.sdd/memory/sessions/` al hacer `/end`
+- Entidades (decisiones, patrones) en `.sdd/memory/entities/` via `/mem save`
+- Se inyectan automaticamente en el system prompt de cada sesion
+- Busqueda: `/mem search <consulta>`
+
+**Skills del stack:**
+- 7 archivos de patrones en `.sdd/skills/` — uno por tecnologia del workspace
+- Cargados automaticamente en el system prompt de Platon
+- React 19, Next.js 16, Astro 6, Nuxt 4, Laravel 13, TypeScript strict, Tailwind 4
+- Referenciados desde cada registry en `skills_ref`
+
+### Quevedo v1.0
+
+Cronista del workspace. Sonnet, high effort. Documenta actividad y mantiene el vault.
+- Cronica de sesiones en `.sdd/chronicle/`
+- Auditoria del vault (huerfanas, enlaces rotos)
+- Actualizacion de notas en `docs/`
+
+### Vinci v1.0
+
+Ejecutor. Sonnet, high effort. Implementa planes de Platon.
+- Solo opera como subagente de LIHER (sin launcher standalone)
+- Sigue planes al pie de la letra, ejecuta tests
+
+**Guardian Angel** (pre-commit AI review):
+- Reglas en `.sdd/guard/AGENTS.md` — tailored al stack LIHER
+- Instalar: `bash .sdd/guard/install.sh`
+- Revisa cada commit contra las reglas antes de que llegue a git history
 
 ## Protocolo SDD
 

@@ -6,6 +6,12 @@ manifest: composer.json
 language: php
 framework: laravel@13.8
 
+skills_ref:
+  - .sdd/skills/laravel-13.md
+  - .sdd/skills/mongodb-laravel.md
+  - .sdd/skills/devops-docker.md
+  - .sdd/skills/security.md
+
 skills:
   dev:
     command: "php artisan serve"

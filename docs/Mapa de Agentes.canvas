@@ -1,0 +1,27 @@
+{
+	"nodes":[
+		{"id":"n-liher","type":"file","file":"docs/Liher Agente.md","x":-200,"y":-360,"width":280,"height":100,"color":"1"},
+		{"id":"n-platon","type":"file","file":"docs/Platon SDD.md","x":-560,"y":-180,"width":280,"height":100,"color":"5"},
+		{"id":"n-quevedo","type":"file","file":"docs/Quevedo.md","x":-200,"y":-180,"width":280,"height":100,"color":"4"},
+		{"id":"n-vinci","type":"file","file":"docs/Vinci.md","x":160,"y":-180,"width":280,"height":100,"color":"3"},
+		{"id":"n-estado","type":"file","file":"docs/Estado del Sistema.md","x":-200,"y":-560,"width":280,"height":120,"color":"6"},
+		{"id":"n-web1","type":"file","file":"docs/Web1 Astro.md","x":-780,"y":60,"width":260,"height":100,"color":"2"},
+		{"id":"n-web2","type":"file","file":"docs/Web2 Nuxt.md","x":-480,"y":60,"width":260,"height":100,"color":"2"},
+		{"id":"n-web3","type":"file","file":"docs/Web3 Next.md","x":-180,"y":60,"width":260,"height":100,"color":"2"},
+		{"id":"n-api","type":"file","file":"docs/API Laravel.md","x":120,"y":60,"width":260,"height":100,"color":"2"},
+		{"id":"n-grupo-agentes","type":"group","x":-620,"y":-240,"width":760,"height":200,"label":"Agentes (jerarquia)"},
+		{"id":"n-grupo-proyectos","type":"group","x":-840,"y":20,"width":1320,"height":180,"label":"Proyectos"}
+	],
+	"edges":[
+		{"id":"e-liher-platon","fromNode":"n-liher","fromSide":"left","toNode":"n-platon","toSide":"top","label":"delega plan"},
+		{"id":"e-liher-quevedo","fromNode":"n-liher","fromSide":"bottom","toNode":"n-quevedo","toSide":"top","label":"delega cronica"},
+		{"id":"e-liher-vinci","fromNode":"n-liher","fromSide":"right","toNode":"n-vinci","toSide":"top","label":"delega ejecucion"},
+		{"id":"e-estado-liher","fromNode":"n-estado","fromSide":"bottom","toNode":"n-liher","toSide":"top","label":"make status"},
+		{"id":"e-platon-vinci","fromNode":"n-platon","fromSide":"right","toNode":"n-vinci","toSide":"left","label":"plan -> ejecuta"},
+		{"id":"e-vinci-quevedo","fromNode":"n-vinci","fromSide":"left","toNode":"n-quevedo","toSide":"right","label":"implementa -> documenta"},
+		{"id":"e-vinci-web1","fromNode":"n-vinci","fromSide":"bottom","toNode":"n-web1","toSide":"top"},
+		{"id":"e-vinci-web2","fromNode":"n-vinci","fromSide":"bottom","toNode":"n-web2","toSide":"top"},
+		{"id":"e-vinci-web3","fromNode":"n-vinci","fromSide":"bottom","toNode":"n-web3","toSide":"top"},
+		{"id":"e-vinci-api","fromNode":"n-vinci","fromSide":"bottom","toNode":"n-api","toSide":"top"}
+	]
+}

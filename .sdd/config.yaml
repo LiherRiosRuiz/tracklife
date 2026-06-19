@@ -3,20 +3,104 @@
 # Generado por preflight 2026-06-05
 # =============================================================================
 
-version: "1.1"
+version: "2.0"
 workspace: LIHER
 path: D:\Compartida\LIHER
 
-# ── Identity ────────────────────────────────────────────────────────────────
+# ── Agents ──────────────────────────────────────────────────────────────────
 
-identity:
-  name: "Platon"
-  symbol: "ΠΛΑΤΩΝ"
-  meaning: >
-    Alegoria de la Caverna. Ver con claridad antes de construir.
-    Verificacion precede a la construccion.
-  launcher: platon.sh
-  claude_session: platon
+agents:
+  platon:
+    name: "Platon"
+    symbol: "ΠΛΑΤΩΝ"
+    meaning: >
+      Alegoria de la Caverna. Ver con claridad antes de construir.
+      Verificacion precede a la construccion.
+    launcher: platon.sh
+    cli: .sdd/cli/platon.mjs
+    model: claude-opus-4-6
+    effort: max
+    role: planner
+    tools: [Read, Glob, Grep, WebFetch, WebSearch]
+
+  quevedo:
+    name: "Quevedo"
+    symbol: "QUEVEDO"
+    meaning: >
+      Francisco de Quevedo y Villegas. Conceptismo: precision y densidad.
+      Cronista fiel del workspace.
+    launcher: quevedo.sh
+    cli: .sdd/cli/quevedo.mjs
+    model: claude-sonnet-4-6
+    effort: high
+    role: chronicler
+    tools: [Read, Write, Edit, Glob, Grep, Bash]
+    chronicle_dir: .sdd/chronicle/
+
+  liher:
+    name: "Liher"
+    symbol: "LIHER"
+    meaning: >
+      El gobernador. Punto de entrada unico al workspace.
+      Analiza, coordina agentes, presenta resultados.
+    launcher: liher.sh
+    cli: .sdd/cli/liher.mjs
+    model: claude-sonnet-4-6
+    effort: high
+    role: governor
+    tools: [Read, Glob, Grep]
+    subagents: [platon, quevedo, vinci]
+
+  vinci:
+    name: "Vinci"
+    symbol: "VINCI"
+    meaning: >
+      Leonardo da Vinci. Construye lo que otros imaginan.
+      Ejecutor pasivo: recibe plan, implementa, verifica.
+    cli: null
+    model: claude-sonnet-4-6
+    effort: high
+    role: executor
+    tools: [Read, Write, Edit, Glob, Grep, Bash]
+
+# ── Models ───────────────────────────────────────────────────────────────────
+# Platón planifica (Opus, max effort). Claude Code ejecuta (Sonnet, default).
+# La separación es intencional: pensamiento profundo vs ejecución ágil.
+
+models:
+  planner:
+    id: claude-opus-4-6
+    role: planner
+    effort: max
+    description: >
+      Platón — analiza, razona y produce planes. No ejecuta ni escribe código.
+      Máximo esfuerzo para análisis profundo y razonamiento arquitectónico.
+  executor:
+    id: claude-sonnet-4-6
+    role: implementer
+    description: >
+      Claude Code (sesión normal) — ejecuta los planes de Platón.
+      Recibe el plan via /delegate y lo implementa con Strict TDD.
+
+# ── Delegation Triggers ──────────────────────────────────────────────────────
+# Cuándo Platón debe producir un plan de delegación en lugar de dar pasos sueltos.
+# Inspirado en gentle-ai delegation system.
+
+delegation:
+  trigger_when:
+    - Leer 4+ archivos para entender un flujo completo
+    - Modificar 2+ archivos no triviales
+    - Operaciones git (commit, push, PR, merge)
+    - Setup de entorno o instalación de dependencias
+    - Confusión de entorno o Docker
+    - Acumulación de complejidad tras muchos turnos
+  how_to_delegate:
+    command: /delegate        # en Platón: formatea el plan para Claude Code
+    format: plan estructurado con pasos, tests por paso, criterio de "done"
+    target: claude-sonnet-4-6 via Claude Code (sesión normal)
+  workflow: >
+    Platón produce plan → usuario ejecuta /delegate → copia prompt →
+    pega en Claude Code → Claude Code implementa con TDD
 
 # ── Stack Context ────────────────────────────────────────────────────────────
 
@@ -410,10 +494,10 @@ calibration:
 
   # ── Resultado de calibracion ──
   status:
-    last_run: null                # se actualiza al ejecutar calibracion
-    result: pending               # pending | pass | fail
-    blockers: []                  # lista de checks blocker que fallaron
-    warnings: []                  # lista de checks warning que fallaron
+    last_run: "2026-06-09 00:45"
+    result: pass
+    blockers: []
+    warnings: ["api-laravel: lockfile potencialmente desincronizado", "web3-next: lint con hallazgos"]
 
 # ── Strict TDD Mode ─────────────────────────────────────────────────────────
 # Solo se activa cuando calibration.status.result == pass

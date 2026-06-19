@@ -1,17 +1,65 @@
 ---
-
+const appUrl = "http://app.tracklife.test";
 ---
 
-<html lang="en">
+<html lang="es">
 	<head>
 		<meta charset="utf-8" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
 		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
+		<meta name="description" content="TRACKLIFE — Control total de datos biométricos para tu transformación física. Nutrición, entrenamiento, recuperación y comunidad." />
+		<title>TRACKLIFE — Transformación física con datos</title>
+		<style>
+			:root { --bg: #0b1210; --fg: #f0fdf4; --accent: #22c55e; --muted: #94a3b8; }
+			* { box-sizing: border-box; margin: 0; }
+			body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--fg); line-height: 1.6; }
+			.hero { max-width: 960px; margin: 0 auto; padding: 4rem 1.5rem; text-align: center; }
+			h1 { font-size: 3rem; font-weight: 900; color: var(--accent); letter-spacing: 0.05em; }
+			.sub { margin-top: 1rem; font-size: 1.25rem; color: var(--muted); max-width: 600px; margin-inline: auto; }
+			.cta { display: inline-block; margin-top: 2rem; padding: 0.9rem 2rem; background: var(--accent); color: #000; font-weight: 700; border-radius: 12px; text-decoration: none; }
+			.cta:hover { filter: brightness(1.1); }
+			.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; max-width: 960px; margin: 3rem auto; padding: 0 1.5rem; }
+			.card { background: #111916; border: 1px solid #1e293b; border-radius: 16px; padding: 1.5rem; }
+			.card h3 { color: var(--accent); margin-bottom: 0.5rem; }
+			.card p { color: var(--muted); font-size: 0.9rem; }
+			nav { display: flex; justify-content: center; gap: 1.5rem; padding: 1rem; font-size: 0.9rem; }
+			nav a { color: var(--muted); text-decoration: none; }
+			nav a:hover { color: var(--accent); }
+			footer { text-align: center; padding: 2rem; color: var(--muted); font-size: 0.85rem; }
+		</style>
 	</head>
 	<body>
-		<h1>Astro</h1>
+		<nav>
+			<a href="/como-funciona">Cómo funciona</a>
+			<a href="/precios">Precios</a>
+			<a href={appUrl}>Entrar a la app</a>
+		</nav>
+		<section class="hero">
+			<h1>TRACKLIFE</h1>
+			<p class="sub">
+				Control total de tus datos biométricos. Nutrición, entrenamiento,
+				recuperación y comunidad en una sola plataforma.
+			</p>
+			<a class="cta" href={`${appUrl}/registro`}>Empieza gratis</a>
+		</section>
+		<section class="grid">
+			<div class="card">
+				<h3>Nutrición</h3>
+				<p>Diario de comidas, escáner de productos estilo Yuka y macros personalizados.</p>
+			</div>
+			<div class="card">
+				<h3>Entrenamiento</h3>
+				<p>Log de gym estilo Hevi y cardio estilo Strava con historial completo.</p>
+			</div>
+			<div class="card">
+				<h3>Biométricos</h3>
+				<p>Sueño, HRV, strain y recuperación. Compatible con Zepp, Whoop y más.</p>
+			</div>
+			<div class="card">
+				<h3>Comunidad</h3>
+				<p>Feed social, retos, clubs y rankings para mantener la motivación.</p>
+			</div>
+		</section>
+		<footer>TRACKLIFE © 2026 — Transformación física basada en datos</footer>
 	</body>
 </html>

@@ -1,35 +1,95 @@
-# Web1 Astro
+# Web1 Astro — TRACKLIFE Landing
 
-Proyecto web basado en Astro 6 con islands de React y Vue.
+Landing page de TRACKLIFE. Astro 6 con islands React 19 + Vue 3.
 
-- **Dominio**: http://web1.test
+- **Dominio**: `http://www.tracklife.test`
 - **Puerto interno**: 4321
+- **Contenedor**: `web1-astro`
 - **Ruta**: `projects/web/web1-astro/`
-- **Framework**: Astro 6.4 + `@astrojs/react` + `@astrojs/vue`
-
-## Archivos clave
-
-| Archivo | Funcion |
-|---------|---------|
-| `Dockerfile` | Imagen `node:22-alpine` + git + bash |
-| `docker-entrypoint.sh` | Scaffold via `/tmp` si no hay `package.json` |
-| `docker-compose.yml` | Labels Traefik, volumen anonimo para node_modules |
-| `astro.config.mjs` | Integraciones React/Vue, `allowedHosts: ['web1.test']` |
-
-## Scaffold automatico
-
-El entrypoint detecta si falta `package.json` y:
-1. Crea el proyecto en `/tmp/astro-scaffold` (evita conflicto con dir no vacio)
-2. Copia el resultado a `/app/`
-3. Anade React y Vue con `astro add`
-4. Arranca el dev server
-
-## Problema resuelto (2026-06-04)
-
-`create-astro` creaba subdirectorios aleatorios cuando el directorio no estaba
-vacio. Solucion: scaffoldear en `/tmp` y copiar. Ademas, Vite 6 bloquea hosts
-no permitidos — se anadio `allowedHosts` en `astro.config.mjs`.
 
 ---
 
-Ver tambien: [[Stack Web]], [[Traefik]]
+## Stack técnico
+
+| Paquete | Versión |
+|---------|---------|
+| astro | 6.4.4 |
+| @astrojs/react | 5.0.7 |
+| @astrojs/vue | 6.0.1 |
+| react | 19.2.7 |
+| vue | 3.5.35 |
+
+---
+
+## Páginas
+
+```
+src/pages/
+├── index.astro           /     → Landing page principal
+├── como-funciona.astro   /como-funciona
+└── precios.astro         /precios
+```
+
+### `/` — Landing principal
+
+Hero + grid de features + CTA de registro.
+
+**Contenido:**
+- Hero: "TRACKLIFE — Transformación física con datos"
+- Subtítulo: nutrición + entrenamiento + recuperación + comunidad
+- CTA: "Empieza gratis" → `http://app.tracklife.test/registro`
+- Grid de 4 cards:
+  - **Nutrición**: "Diario de comidas, escáner de productos estilo Yuka y macros personalizados"
+  - **Entrenamiento**: "Log de gym estilo Hevi y cardio estilo Strava con historial completo"
+  - **Biométricos**: "Sueño, HRV, strain y recuperación. Compatible con Zepp, Whoop y más"
+  - **Comunidad**: "Feed social, retos, clubs y rankings para mantener la motivación"
+- Nav: Cómo funciona | Precios | Entrar a la app
+- Footer: "TRACKLIFE © 2026 — Transformación física basada en datos"
+
+**Estilo**: dark tema inline (mismas variables que la app: `#0b1210`, `#22c55e`). Sin dependencias CSS externas.
+
+---
+
+## Configuración
+
+**`astro.config.mjs`**:
+```js
+integrations: [react(), vue()],
+vite: {
+  server: {
+    allowedHosts: ['www.tracklife.test', 'web1.test']
+  }
+}
+```
+
+Note: `allowedHosts` es necesario porque Vite 6 bloquea hosts no permitidos por defecto.
+
+---
+
+## Docker
+
+**Dockerfile**: `node:22-alpine` + git + bash.
+
+**`docker-entrypoint.sh`** — Scaffold automático:
+1. Si no hay `package.json`: crea proyecto Astro en `/tmp/astro-scaffold` (evita conflictos con directorio no vacío)
+2. Copia resultado a `/app/`
+3. Ejecuta `astro add react vue` (añade integraciones)
+4. Arranca: `npm run dev -- --host 0.0.0.0`
+
+**`docker-compose.yml`**:
+- Traefik rule: `Host(www.tracklife.test)`
+- Volumen: `web1_node_modules` para `node_modules` en ext4 WSL2
+
+---
+
+## Historial de problemas resueltos
+
+**2026-06-04** — `create-astro` creaba subdirectorios aleatorios cuando el directorio no estaba vacío.
+- Solución: scaffoldear en `/tmp` y copiar a `/app`
+
+**2026-06-04** — Vite 6 bloqueaba `web1.test` como host no permitido.
+- Solución: añadir `allowedHosts` en `astro.config.mjs`
+
+---
+
+Ver también: [[TRACKLIFE]], [[Arquitectura Docker]], [[Traefik]]

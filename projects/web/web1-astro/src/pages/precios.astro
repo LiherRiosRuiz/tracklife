@@ -1,0 +1,44 @@
+---
+const appUrl = "http://app.tracklife.test";
+---
+
+<html lang="es">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width" />
+		<title>Precios — TRACKLIFE</title>
+		<style>
+			body { font-family: system-ui, sans-serif; background: #0b1210; color: #f0fdf4; max-width: 720px; margin: 0 auto; padding: 2rem 1.5rem; }
+			h1 { color: #22c55e; }
+			.plan { background: #111916; border: 1px solid #1e293b; border-radius: 16px; padding: 1.5rem; margin-top: 1rem; }
+			.price { font-size: 2rem; font-weight: 800; }
+			ul { color: #94a3b8; margin-top: 1rem; padding-left: 1.2rem; }
+			a { display: inline-block; margin-top: 1rem; padding: 0.75rem 1.5rem; background: #22c55e; color: #000; font-weight: 700; border-radius: 12px; text-decoration: none; }
+		</style>
+	</head>
+	<body>
+		<h1>Precios</h1>
+		<div class="plan">
+			<h2>Free</h2>
+			<p class="price">0 €</p>
+			<ul>
+				<li>Diario de nutrición</li>
+				<li>10 escaneos/día</li>
+				<li>Feed social</li>
+				<li>Retos de comunidad</li>
+			</ul>
+			<a href={`${appUrl}/registro`}>Empezar gratis</a>
+		</div>
+		<div class="plan">
+			<h2>Pro</h2>
+			<p class="price">9,99 €/mes</p>
+			<ul>
+				<li>Escaneos ilimitados</li>
+				<li>Coach avanzado</li>
+				<li>Sync wearables</li>
+				<li>Clubs premium</li>
+			</ul>
+			<a href={`${appUrl}/registro`}>Próximamente</a>
+		</div>
+	</body>
+</html>

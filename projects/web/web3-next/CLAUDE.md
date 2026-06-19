@@ -1,6 +1,6 @@
-# Web3 Next
+# TRACKLIFE App (web3-next)
 
-Next.js 16 + React 19 + Tailwind 4. Puerto 3000, dominio web3.test.
+Next.js 16 + React 19 + Tailwind 4. Puerto 3000, dominio app.tracklife.test.
 
 Leer @AGENTS.md para advertencias sobre versiones de Next.js.
 

@@ -5,7 +5,24 @@
 # el path del registry especifico: .sdd/registries/{proyecto}.yaml
 # =============================================================================
 
-version: "2.0"
+version: "2.1"
+
+# ── Stack Skills ─────────────────────────────────────────────────────────────
+# Platon carga todos los skills al iniciar sesion (system prompt injection).
+# Los registries por proyecto referencian sus skills via skills_ref.
+
+skills_dir: .sdd/skills/
+skills:
+  astro-6:        { file: astro-6.md,          projects: [web1-astro] }
+  react-19:       { file: react-19.md,          projects: [web1-astro, web3-next] }
+  nextjs-16:      { file: nextjs-16.md,         projects: [web3-next] }
+  nuxt-4:         { file: nuxt-4.md,            projects: [web2-nuxt] }
+  laravel-13:     { file: laravel-13.md,        projects: [api-laravel] }
+  mongodb-laravel: { file: mongodb-laravel.md,  projects: [api-laravel] }
+  devops-docker:  { file: devops-docker.md,     projects: [api-laravel, web1-astro, web2-nuxt, web3-next] }
+  security:       { file: security.md,          projects: [api-laravel, web1-astro, web2-nuxt, web3-next] }
+  typescript:     { file: typescript-strict.md, projects: [web1-astro, web2-nuxt, web3-next] }
+  tailwind-4:     { file: tailwind-4.md,        projects: [web3-next] }
 
 # ── Registries por proyecto ──────────────────────────────────────────────────
 # Cada proyecto tiene su propio registry con solo SUS skills.

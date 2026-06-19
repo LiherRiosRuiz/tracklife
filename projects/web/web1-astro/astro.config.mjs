@@ -9,7 +9,7 @@ export default defineConfig({
   integrations: [react(), vue()],
   vite: {
     server: {
-      allowedHosts: ['web1.test']
+      allowedHosts: ['www.tracklife.test', 'web1.test']
     }
   }
 });

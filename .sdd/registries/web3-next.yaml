@@ -6,6 +6,14 @@ manifest: package.json
 language: typescript
 framework: nextjs@16.2.7
 
+skills_ref:
+  - .sdd/skills/nextjs-16.md
+  - .sdd/skills/react-19.md
+  - .sdd/skills/typescript-strict.md
+  - .sdd/skills/devops-docker.md
+  - .sdd/skills/security.md
+  - .sdd/skills/tailwind-4.md
+
 skills:
   dev:
     command: "npm run dev"

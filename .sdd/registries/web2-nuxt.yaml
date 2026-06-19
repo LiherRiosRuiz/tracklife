@@ -6,6 +6,12 @@ manifest: package.json
 language: typescript
 framework: nuxt@4.4.6
 
+skills_ref:
+  - .sdd/skills/nuxt-4.md
+  - .sdd/skills/typescript-strict.md
+  - .sdd/skills/devops-docker.md
+  - .sdd/skills/security.md
+
 skills:
   dev:
     command: "npm run dev"
