@@ -55,6 +55,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = () => {
+    // Llamada silenciosa a la API para revocar el token en servidor.
+    // Se ignoran errores de red — el usuario cierra sesión de todas formas.
+    const currentToken = token;
+    if (currentToken) {
+      api.logout(currentToken).catch(() => {});
+    }
     localStorage.removeItem(TOKEN_KEY);
     setToken(null);
     setUser(null);
