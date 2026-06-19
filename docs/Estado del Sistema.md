@@ -1,7 +1,7 @@
 # Estado del Sistema
 
-> Generado automaticamente por `update-status.sh` el 2026-06-08 11:50.
-> Ejecutar `make status` para actualizar.
+> Generado automaticamente por `update-status.sh`. Ultima edicion manual: 2026-06-19.
+> Ejecutar `make status` para actualizar los datos en tiempo real.
 
 ---
 
@@ -10,7 +10,9 @@
 | Campo | Valor |
 |-------|-------|
 | Branch | `master` |
-| Ultimo commit | 29d2825 — refactor: Platon is plan-only — no execution, Opus max effort (3 days ago) |
+| Ultimo commit | 29d2825 — refactor: Platon is plan-only — no execution, Opus max effort |
+| Remote | `https://github.com/LiherRiosRuiz/tracklife.git` (privado, configurado 2026-06-19) |
+| Auto-push | Stop hook activo en `.claude/settings.json` — commit + push al finalizar cada sesion |
 
 ---
 

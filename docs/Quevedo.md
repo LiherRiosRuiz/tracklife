@@ -117,6 +117,27 @@ que existe, pero se contaba como roto.
 
 Las notas del vault no se modificaron — el `\|` en tablas es sintaxis correcta.
 
+### 2026-06-19 — Falsos positivos por code spans en `buildVaultGraph`
+
+**Sintomas**: el splash del CLI mostraba 2 enlaces rotos que no eran rotos.
+
+**Causa**: `buildVaultGraph` parseaba wikilinks sobre el contenido raw del
+archivo, sin excluir bloques de codigo ni inline code spans. Las notas
+`docs/Cronica.md` y `docs/Quevedo.md` usan `[[Nota\|Alias]]` como ejemplo
+de sintaxis dentro de backticks. El parser lo trataba como enlace real y
+buscaba el nodo `Nota\` — inexistente.
+
+**Fix** en `.sdd/cli/quevedo.mjs`, funcion `buildVaultGraph`: strip de
+bloques de codigo e inline code spans antes de aplicar el regex de wikilinks:
+```javascript
+const content = raw
+  .replace(/```[\s\S]*?```/g, "")
+  .replace(/`[^`\n]+`/g, "");
+```
+
+El fix se aplica sobre la variable `content` que alimenta el regex —
+el contenido en disco de las notas no se toca.
+
 ---
 
 Ver tambien: [[Home]], [[Platon SDD]], [[Comandos]], [[Pendientes]]

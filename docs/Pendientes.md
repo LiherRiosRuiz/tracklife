@@ -1,6 +1,6 @@
 # Pendientes
 
-Tareas abiertas del workspace. Actualizado: 2026-06-06.
+Tareas abiertas del workspace. Actualizado: 2026-06-19.
 
 ---
 
@@ -25,6 +25,9 @@ Tareas abiertas del workspace. Actualizado: 2026-06-06.
 ## TRACKLIFE — App
 
 - [x] **Módulo Hevy** — completado 2026-06-10: biblioteca de ejercicios con imágenes, planes CRUD, workout activo con timer y RestTimer, flujo completo
+- [x] **Fix página ejercicios** — completado 2026-06-19: migración a `useApiData`, key bug corregido, filtros client-side, fix doble convención músculo, skeletons, ErrorState
+- [x] **Repo GitHub creado** — LiherRiosRuiz/tracklife (privado, 208 archivos, 17 commits, 2026-06-19)
+- [x] **Stop hook — auto git push** — `.claude/settings.json` con hook `Stop`; commit + push automático al finalizar cada sesión (2026-06-19)
 - [ ] **Páginas placeholder** — pendientes: `/app/entrenamiento/calendario` (con datos reales), `/app/entrenamiento/progreso` (gráficos recharts), `/app/nutricion/plan`, `/app/nutricion/favoritos`, `/app/comunidad/buscar`
 - [ ] **PWA** — manifest + service worker para instalación en móvil
 - [ ] **Tests frontend** — instalar Vitest + @testing-library/react para web3-next

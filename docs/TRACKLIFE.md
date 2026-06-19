@@ -194,6 +194,10 @@ Sanctum token-based authentication.
   - Fix en `app/Models/PersonalAccessToken.php`: una línea añadida — `protected $keyType = 'string';`
   - Login funcional end-to-end verificado: `/api/auth/me` y `/api/dashboard` retornan datos reales
   - Usuario de prueba creado: `liher@tracklife.test`
+- **Fix página ejercicios (2026-06-19)**:
+  - `gym/ejercicios/page.tsx`: migración a `useApiData` con `api.exercises()`, filtros client-side via `useMemo` (1 sola llamada API), key bug corregido (`key={e._id ?? e.name}`), fix doble convención de músculo (dataset mezcla `lower_back` y `lower back` — filtro prueba ambas variantes), `SkeletonGrid` en carga, `ErrorState` con "Reintentar" en error
+  - `gym/ejercicios/[id]/page.tsx`: migrado a `useApiData`, carga muestra `SkeletonCard`
+  - TypeScript: 0 errores
 
 **Pendiente:**
 - Migración SQLite → MongoDB cablear en API (package instalado, `DB_CONNECTION=mongodb` ya configurado)
