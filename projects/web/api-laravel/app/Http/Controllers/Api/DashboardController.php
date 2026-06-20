@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\SocialPost;
 use App\Services\CoachService;
 use App\Services\FeedService;
+use App\Services\MacroService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -14,13 +15,13 @@ class DashboardController extends Controller
     public function __construct(
         private CoachService $coachService,
         private FeedService $feedService,
+        private MacroService $macroService,
     ) {}
 
     public function index(Request $request): JsonResponse
     {
         $user = $request->user();
-        $macroResponse = app(MacroController::class)->dailyProgress($request);
-        $macros = $macroResponse->getData(true);
+        $macros = $this->macroService->dailyProgress($user, $request->query('date'));
 
         $feed = SocialPost::orderBy('created_at', 'desc')->limit(5)->get()
             ->map(fn ($p) => $this->feedService->formatPost($p));
