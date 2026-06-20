@@ -114,6 +114,9 @@ export const api = {
       token,
     ),
 
+  getMacroTargets: (token: string) =>
+    request<{ targets: MacroTargets }>("/api/macros/targets", {}, token),
+
   updateMacroTargets: (token: string, targets: MacroTargets) =>
     request<{ targets: MacroTargets }>("/api/macros/targets", {
       method: "PUT",
