@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\UpdateMacroTargetsRequest;
 use App\Models\User;
 use App\Services\MacroService;
 use Carbon\Carbon;
@@ -24,14 +25,9 @@ class MacroController extends Controller
         ]);
     }
 
-    public function updateTargets(Request $request): JsonResponse
+    public function updateTargets(UpdateMacroTargetsRequest $request): JsonResponse
     {
-        $data = $request->validate([
-            'calories' => 'required|numeric|min:800|max:10000',
-            'protein' => 'required|numeric|min:0|max:500',
-            'carbs' => 'required|numeric|min:0|max:1000',
-            'fat' => 'required|numeric|min:0|max:500',
-        ]);
+        $data = $request->validated();
 
         $user = $request->user();
         $user->macro_targets = $data;
