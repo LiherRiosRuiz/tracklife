@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/auth";
 import { Button, Card, MacroBar, PageHeader } from "@/components/ui";
 import { useApiData } from "@/hooks/use-api-data";
 import { SkeletonCard } from "@/components/Skeleton";
+import { macroTargetsSchema } from "@/lib/schemas";
 
 // ── Constantes ─────────────────────────────────────────────────────────────
 
@@ -56,16 +57,6 @@ const REFERENCE_GOALS = [
     deficit: "+200 a +400 kcal/día",
   },
 ];
-
-// ── Validación ──────────────────────────────────────────────────────────────
-
-function validate(t: MacroTargets): string | null {
-  if (t.calories < 800) return "Las calorías deben ser al menos 800 kcal.";
-  if (t.protein < 0) return "La proteína no puede ser negativa.";
-  if (t.carbs < 0) return "Los carbohidratos no pueden ser negativos.";
-  if (t.fat < 0) return "La grasa no puede ser negativa.";
-  return null;
-}
 
 // ── Componente de distribución ──────────────────────────────────────────────
 
@@ -177,9 +168,16 @@ function PlanForm({ initialTargets, token }: { initialTargets: MacroTargets; tok
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
 
-    const validationError = validate(targets);
-    if (validationError) {
-      setErrorMsg(validationError);
+    const result = macroTargetsSchema.safeParse(targets);
+    if (!result.success) {
+      const errs = result.error.flatten().fieldErrors;
+      setErrorMsg(
+        errs.calories?.[0] ??
+        errs.protein?.[0] ??
+        errs.carbs?.[0] ??
+        errs.fat?.[0] ??
+        "Datos no válidos"
+      );
       setStatus("error");
       return;
     }
