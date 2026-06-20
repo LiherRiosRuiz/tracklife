@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreMealRequest;
 use App\Http\Requests\UpdateMealRequest;
+use App\Http\Resources\MealResource;
 use App\Models\MealEntry;
 use App\Services\FeedService;
 use App\Services\StreakService;
@@ -28,7 +29,7 @@ class MealController extends Controller
             ->orderBy('created_at')
             ->get();
 
-        return response()->json(['meals' => $meals]);
+        return response()->json(['meals' => MealResource::collection($meals)]);
     }
 
     public function store(StoreMealRequest $request): JsonResponse
@@ -66,7 +67,7 @@ class MealController extends Controller
             ]);
         }
 
-        return response()->json(['meal' => $meal], 201);
+        return response()->json(['meal' => new MealResource($meal)], 201);
     }
 
     public function update(UpdateMealRequest $request, string $id): JsonResponse
@@ -83,7 +84,7 @@ class MealController extends Controller
 
         $meal->update($data);
 
-        return response()->json(['meal' => $meal->fresh()]);
+        return response()->json(['meal' => new MealResource($meal->fresh())]);
     }
 
     public function destroy(Request $request, string $id): JsonResponse

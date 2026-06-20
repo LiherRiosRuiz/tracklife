@@ -103,6 +103,14 @@ export const api = {
     request<{
       user: { name: string; streak_days: number };
       macros: MacroProgress;
+      weekly_calories: Array<{ date: string; day: string; calories: number }>;
+      recent_workouts: Array<{
+        id: string;
+        name: string;
+        date: string;
+        total_volume: number | null;
+        duration_minutes: number | null;
+      }>;
       insights: Array<{ type: string; severity: string; message: string }>;
       feed_preview: FeedPost[];
     }>("/api/dashboard", {}, token),

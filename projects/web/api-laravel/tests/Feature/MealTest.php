@@ -118,7 +118,9 @@ class MealTest extends TestCase
 
         $meals = $response->json('meals');
         $this->assertCount(1, $meals);
-        $this->assertSame((string) $userA->_id, $meals[0]['user_id']);
+        // MealResource no expone user_id — verificamos aislamiento por conteo
+        $this->assertArrayHasKey('id', $meals[0]);
+        $this->assertArrayNotHasKey('user_id', $meals[0]);
     }
 
     public function test_meals_can_be_filtered_by_date(): void
