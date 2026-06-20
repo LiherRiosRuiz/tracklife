@@ -1,44 +1,86 @@
 ---
+import Layout from "../layouts/Layout.astro";
 const appUrl = "http://app.tracklife.test";
+
+const plans = [
+  {
+    name: "Gratis",
+    price: "0€",
+    period: "para siempre",
+    desc: "Todo lo que necesitas para empezar tu transformación.",
+    features: [
+      "Diario nutricional completo",
+      "Registro de entrenamientos",
+      "Biométricos básicos (peso)",
+      "Coach IA con insights diarios",
+      "Comunidad y feed social",
+      "Sin límite de datos",
+    ],
+    cta: "Empezar gratis",
+    href: `${appUrl}/registro`,
+    highlighted: false,
+  },
+  {
+    name: "Pro",
+    price: "Próximamente",
+    period: "",
+    desc: "Funcionalidades avanzadas para atletas y coaches.",
+    features: [
+      "Todo lo de Gratis",
+      "Wearables (Garmin, Apple Watch)",
+      "Análisis avanzado de HRV",
+      "Planes de entrenamiento IA",
+      "Exportación de datos (CSV/PDF)",
+      "Soporte prioritario",
+    ],
+    cta: "Notificarme",
+    href: "#",
+    highlighted: true,
+  },
+];
 ---
 
-<html lang="es">
-	<head>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width" />
-		<title>Precios — TRACKLIFE</title>
-		<style>
-			body { font-family: system-ui, sans-serif; background: #0b1210; color: #f0fdf4; max-width: 720px; margin: 0 auto; padding: 2rem 1.5rem; }
-			h1 { color: #22c55e; }
-			.plan { background: #111916; border: 1px solid #1e293b; border-radius: 16px; padding: 1.5rem; margin-top: 1rem; }
-			.price { font-size: 2rem; font-weight: 800; }
-			ul { color: #94a3b8; margin-top: 1rem; padding-left: 1.2rem; }
-			a { display: inline-block; margin-top: 1rem; padding: 0.75rem 1.5rem; background: #22c55e; color: #000; font-weight: 700; border-radius: 12px; text-decoration: none; }
-		</style>
-	</head>
-	<body>
-		<h1>Precios</h1>
-		<div class="plan">
-			<h2>Free</h2>
-			<p class="price">0 €</p>
-			<ul>
-				<li>Diario de nutrición</li>
-				<li>10 escaneos/día</li>
-				<li>Feed social</li>
-				<li>Retos de comunidad</li>
-			</ul>
-			<a href={`${appUrl}/registro`}>Empezar gratis</a>
-		</div>
-		<div class="plan">
-			<h2>Pro</h2>
-			<p class="price">9,99 €/mes</p>
-			<ul>
-				<li>Escaneos ilimitados</li>
-				<li>Coach avanzado</li>
-				<li>Sync wearables</li>
-				<li>Clubs premium</li>
-			</ul>
-			<a href={`${appUrl}/registro`}>Próximamente</a>
-		</div>
-	</body>
-</html>
+<Layout
+  title="Precios TRACKLIFE — Empieza gratis"
+  description="TRACKLIFE es gratis para siempre en sus funcionalidades principales. Sin tarjeta de crédito, sin sorpresas."
+>
+  <section class="max-w-4xl mx-auto px-6 pt-20 pb-8 text-center">
+    <h1 class="text-4xl md:text-6xl font-black mb-4">Precios simples</h1>
+    <p class="text-muted text-lg">Empieza gratis. Siempre.</p>
+  </section>
+
+  <section class="max-w-3xl mx-auto px-6 py-16 grid md:grid-cols-2 gap-8">
+    {plans.map((plan) => (
+      <div class={`rounded-2xl border p-8 flex flex-col ${plan.highlighted ? 'border-accent bg-card shadow-xl shadow-accent/10' : 'border-border bg-card'}`}>
+        {plan.highlighted && (
+          <div class="mb-4 inline-block rounded-full bg-accent px-3 py-1 text-xs font-bold text-black">Próximamente</div>
+        )}
+        <h2 class="text-2xl font-black mb-1">{plan.name}</h2>
+        <div class="mb-1">
+          <span class={`text-4xl font-black ${plan.highlighted ? 'text-muted' : 'text-accent'}`}>{plan.price}</span>
+          {plan.period && <span class="text-sm text-muted ml-1">{plan.period}</span>}
+        </div>
+        <p class="text-muted text-sm mb-6">{plan.desc}</p>
+        <ul class="space-y-3 mb-8 flex-1">
+          {plan.features.map((f) => (
+            <li class="flex items-center gap-2 text-sm">
+              <span class={plan.highlighted ? 'text-muted' : 'text-accent'}>✓</span>
+              <span>{f}</span>
+            </li>
+          ))}
+        </ul>
+        <a href={plan.href}
+           class={`block rounded-xl py-3 text-center font-bold transition-colors ${plan.highlighted ? 'border border-border text-muted cursor-not-allowed' : 'bg-accent text-black hover:bg-green-400'}`}>
+          {plan.cta}
+        </a>
+      </div>
+    ))}
+  </section>
+
+  <section class="max-w-2xl mx-auto px-6 pb-20 text-center">
+    <p class="text-muted text-sm">
+      ¿Preguntas? El proyecto es open source —
+      <a href="https://github.com/LiherRiosRuiz/tracklife" class="text-accent hover:underline">revisa el código</a>.
+    </p>
+  </section>
+</Layout>
