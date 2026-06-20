@@ -96,6 +96,9 @@ export const api = {
   me: (token: string) =>
     request<{ user: User }>("/api/auth/me", {}, token),
 
+  logout: (token: string) =>
+    request<{ message: string }>("/api/auth/logout", { method: "POST" }, token),
+
   dashboard: (token: string) =>
     request<{
       user: { name: string; streak_days: number };
@@ -110,6 +113,9 @@ export const api = {
       {},
       token,
     ),
+
+  getMacroTargets: (token: string) =>
+    request<{ targets: MacroTargets }>("/api/macros/targets", {}, token),
 
   updateMacroTargets: (token: string, targets: MacroTargets) =>
     request<{ targets: MacroTargets }>("/api/macros/targets", {
