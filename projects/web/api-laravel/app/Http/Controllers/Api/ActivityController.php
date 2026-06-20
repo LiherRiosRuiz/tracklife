@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreActivityRequest;
+use App\Http\Resources\ActivityResource;
 use App\Models\Activity;
 use App\Services\FeedService;
 use Illuminate\Http\JsonResponse;
@@ -20,7 +21,7 @@ class ActivityController extends Controller
             ->limit(30)
             ->get();
 
-        return response()->json(['activities' => $activities]);
+        return response()->json(['activities' => ActivityResource::collection($activities)]);
     }
 
     public function store(StoreActivityRequest $request): JsonResponse
@@ -47,7 +48,7 @@ class ActivityController extends Controller
             ]);
         }
 
-        return response()->json(['activity' => $activity], 201);
+        return response()->json(['activity' => new ActivityResource($activity)], 201);
     }
 
     public function show(Request $request, string $id): JsonResponse
@@ -56,6 +57,6 @@ class ActivityController extends Controller
             ->where('user_id', (string) $request->user()->_id)
             ->firstOrFail();
 
-        return response()->json(['activity' => $activity]);
+        return response()->json(['activity' => new ActivityResource($activity)]);
     }
 }
