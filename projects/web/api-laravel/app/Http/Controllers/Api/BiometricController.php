@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreBiometricRequest;
+use App\Http\Resources\BiometricResource;
 use App\Models\BiometricReading;
 use App\Services\FeedService;
 use Carbon\Carbon;
@@ -28,7 +29,7 @@ class BiometricController extends Controller
 
         $readings = $query->orderBy('timestamp', 'desc')->get();
 
-        return response()->json(['readings' => $readings]);
+        return response()->json(['readings' => BiometricResource::collection($readings)]);
     }
 
     public function store(StoreBiometricRequest $request): JsonResponse
@@ -52,7 +53,7 @@ class BiometricController extends Controller
             ]);
         }
 
-        return response()->json(['reading' => $reading], 201);
+        return response()->json(['reading' => new BiometricResource($reading)], 201);
     }
 
     public function today(Request $request): JsonResponse
