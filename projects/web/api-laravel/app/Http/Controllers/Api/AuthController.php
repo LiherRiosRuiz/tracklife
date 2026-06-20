@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
+use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -41,7 +42,7 @@ class AuthController extends Controller
         $token = $user->createToken('tracklife')->plainTextToken;
 
         return response()->json([
-            'user' => $this->formatUser($user),
+            'user' => new UserResource($user),
             'token' => $token,
         ], 201);
     }
@@ -59,14 +60,14 @@ class AuthController extends Controller
         $token = $user->createToken('tracklife')->plainTextToken;
 
         return response()->json([
-            'user' => $this->formatUser($user),
+            'user' => new UserResource($user),
             'token' => $token,
         ]);
     }
 
     public function me(Request $request): JsonResponse
     {
-        return response()->json(['user' => $this->formatUser($request->user())]);
+        return response()->json(['user' => new UserResource($request->user())]);
     }
 
     public function logout(Request $request): JsonResponse
@@ -76,19 +77,4 @@ class AuthController extends Controller
         return response()->json(['message' => 'Sesión cerrada']);
     }
 
-    private function formatUser(User $user): array
-    {
-        return [
-            'id' => (string) $user->_id,
-            'name' => $user->name,
-            'username' => $user->username,
-            'email' => $user->email,
-            'bio' => $user->bio,
-            'avatar_url' => $user->avatar_url,
-            'streak_days' => $user->streak_days ?? 0,
-            'macro_targets' => $user->macro_targets ?? User::defaultMacroTargets(),
-            'transformation_goal' => $user->transformation_goal,
-            'privacy_settings' => $user->privacy_settings ?? User::defaultPrivacySettings(),
-        ];
-    }
 }
