@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreBiometricRequest;
 use App\Models\BiometricReading;
 use App\Services\FeedService;
 use Carbon\Carbon;
@@ -30,16 +31,9 @@ class BiometricController extends Controller
         return response()->json(['readings' => $readings]);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreBiometricRequest $request): JsonResponse
     {
-        $data = $request->validate([
-            'type' => 'required|in:sleep_score,hrv,resting_hr,recovery_score,strain,steps,weight,body_fat,muscle_mass,spO2',
-            'value' => 'required|numeric',
-            'unit' => 'nullable|string',
-            'timestamp' => 'nullable|date',
-            'source' => 'nullable|string',
-            'metadata' => 'nullable|array',
-        ]);
+        $data = $request->validated();
 
         $reading = BiometricReading::create([
             'user_id' => (string) $request->user()->_id,
