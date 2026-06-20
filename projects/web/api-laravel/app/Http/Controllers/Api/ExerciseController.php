@@ -65,23 +65,14 @@ class ExerciseController extends Controller
         return response()->json(['exercise' => $exercise], 201);
     }
 
-    public function update(Request $request, string $id): JsonResponse
+    public function update(UpdateExerciseRequest $request, string $id): JsonResponse
     {
         $exercise = Exercise::where('_id', $id)
             ->where('user_id', (string) $request->user()->_id)
             ->where('is_custom', true)
             ->firstOrFail();
 
-        $data = $request->validate([
-            'name' => 'sometimes|string|max:120',
-            'muscle_group' => 'nullable|string',
-            'equipment' => 'nullable|string',
-            'category' => 'nullable|string',
-            'instructions' => 'nullable|array',
-            'instructions.*' => 'string',
-            'tips' => 'nullable|array',
-            'tips.*' => 'string',
-        ]);
+        $data = $request->validated();
 
         $exercise->update($data);
 

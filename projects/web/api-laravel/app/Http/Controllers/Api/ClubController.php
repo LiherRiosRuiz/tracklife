@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreClubRequest;
 use App\Models\Club;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -16,13 +17,9 @@ class ClubController extends Controller
         return response()->json(['clubs' => $clubs]);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreClubRequest $request): JsonResponse
     {
-        $data = $request->validate([
-            'name' => 'required|string|max:120',
-            'description' => 'nullable|string',
-            'is_public' => 'nullable|boolean',
-        ]);
+        $data = $request->validated();
 
         $userId = (string) $request->user()->_id;
 
