@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth";
 import { Button, Card } from "@/components/ui";
+import { loginSchema } from "@/lib/schemas";
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -16,8 +17,16 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError("");
+
+    const result = loginSchema.safeParse({ email, password });
+    if (!result.success) {
+      const errors = result.error.flatten().fieldErrors;
+      setError(errors.email?.[0] ?? errors.password?.[0] ?? "Datos no válidos");
+      return;
+    }
+
+    setLoading(true);
     try {
       await login(email, password);
       router.push("/app");
