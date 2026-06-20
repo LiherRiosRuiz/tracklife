@@ -1,6 +1,6 @@
 # Estado del Sistema
 
-> Generado automaticamente por `update-status.sh`. Ultima edicion manual: 2026-06-19.
+> Generado automaticamente por `update-status.sh`. Ultima edicion manual: 2026-06-21.
 > Ejecutar `make status` para actualizar los datos en tiempo real.
 
 ---
@@ -10,7 +10,7 @@
 | Campo | Valor |
 |-------|-------|
 | Branch | `master` |
-| Ultimo commit | 29d2825 — refactor: Platon is plan-only — no execution, Opus max effort |
+| Ultimo commit | b31a793 — fix: quevedo buildVaultGraph — strip code spans antes de parsear wikilinks |
 | Remote | `https://github.com/LiherRiosRuiz/tracklife.git` (privado, configurado 2026-06-19) |
 | Auto-push | Stop hook activo en `.claude/settings.json` — commit + push al finalizar cada sesion |
 
@@ -22,7 +22,7 @@
 |--------|-----|--------|--------|------------------|
 | [[Liher Agente\|LIHER]] | Gobernador | sonnet-4-6 | high | (orquesta bajo demanda) |
 | [[Platon SDD\|Platon]] | Pensador | opus-4-6 | max | sin sesiones |
-| [[Quevedo]] | Cronista | sonnet-4-6 | high | 2026-06-07-panel-multiagente |
+| [[Quevedo]] | Cronista | sonnet-4-6 | high | 2026-06-21 |
 | [[Vinci]] | Ejecutor | sonnet-4-6 | high | (rastro en git diff) |
 
 ---
@@ -33,18 +33,18 @@
 |---------|--------|-----------|
 | Sesiones Platon | 0 | `.sdd/memory/sessions/` |
 | Entidades Platon | 0 | `.sdd/memory/entities/` |
-| Cronicas Quevedo | 1 | `.sdd/chronicle/daily/` |
+| Cronicas Quevedo | 8 | `.sdd/chronicle/daily/` |
 
 ---
 
 ## Proyectos — cambios pendientes
 
-| Proyecto | Framework | Dominio | Cambios |
-|----------|-----------|---------|---------|
-| [[Web1 Astro\|web1-astro]] | Astro 6 | web1.test | 5 |
-| [[Web2 Nuxt\|web2-nuxt]] | Nuxt 4 | web2.test | 0 |
-| [[Web3 Next\|web3-next]] | Next.js 16 | web3.test | 14 |
-| [[API Laravel\|api-laravel]] | Laravel 13 | api.test | 29 |
+| Proyecto | Framework | Dominio | Ultima actividad |
+|----------|-----------|---------|-----------------|
+| [[Web1 Astro\|web1-astro]] | Astro 6 | www.tracklife.test | Sprint P2 landing redesign (2026-06-21) |
+| [[Web2 Nuxt\|web2-nuxt]] | Nuxt 4 | web2.test | sin cambios recientes |
+| [[Web3 Next\|web3-next]] | Next.js 16 | app.tracklife.test | Sprint P2 Zod + Dashboard (2026-06-21) |
+| [[API Laravel\|api-laravel]] | Laravel 13 | api.tracklife.test | Sprint P2 Form Requests + Resources (2026-06-21) |
 
 ---
 

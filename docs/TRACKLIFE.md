@@ -198,6 +198,13 @@ Sanctum token-based authentication.
   - `gym/ejercicios/page.tsx`: migración a `useApiData` con `api.exercises()`, filtros client-side via `useMemo` (1 sola llamada API), key bug corregido (`key={e._id ?? e.name}`), fix doble convención de músculo (dataset mezcla `lower_back` y `lower back` — filtro prueba ambas variantes), `SkeletonGrid` en carga, `ErrorState` con "Reintentar" en error
   - `gym/ejercicios/[id]/page.tsx`: migrado a `useApiData`, carga muestra `SkeletonCard`
   - TypeScript: 0 errores
+- **Sprint P2 (2026-06-21)**:
+  - **Form Requests**: 20 Form Requests en `app/Http/Requests/`; 12 controladores refactorizados, 0 llamadas `$request->validate()` inline
+  - **Zod Frontend**: `zod@4.4.3` instalado; `lib/schemas.ts` con schemas para todos los modelos; formularios validados: login, registro, registrar comida, plan nutricional; ajuste clave Zod v4: `error:` no `errorMap:`
+  - **Landing Redesign**: `src/layouts/Layout.astro` + `src/styles/global.css` creados; `astro.config.mjs` con Tailwind 4 Vite, sitemap y site URL; hero impactante, stats, features grid, steps, CTA final; meta tags OG/Twitter, canonical URL, sitemap; build: 3 páginas en 4.33s
+  - **API Resources**: 8 Resources (`UserResource`, `MealResource`, `WorkoutResource`, `BiometricResource`, `ActivityResource`, `ExerciseResource`, `RecipeResource`, `WorkoutPlanResource`); todos los controladores devuelven Resources; contrato: `_id → id`, `user_id` no expuesto, fechas ISO 8601
+  - **Dashboard Mejorado**: `MacroService::weeklyCalories()` (últimos 7 días); `DashboardController` con `weekly_calories` y `recent_workouts`; `components/WeeklyChart.tsx` (BarChart Recharts); `app/app/page.tsx` con streak destacado + gráfico semanal + workouts recientes; `DashboardTest.php` (5 tests TDD)
+  - **Tests finales: 44/44 verdes, 170 assertions**. Build Next.js limpio.
 
 **Pendiente:**
 - Migración SQLite → MongoDB cablear en API (package instalado, `DB_CONNECTION=mongodb` ya configurado)

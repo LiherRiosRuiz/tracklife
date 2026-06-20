@@ -1,6 +1,6 @@
 # Pendientes
 
-Tareas abiertas del workspace. Actualizado: 2026-06-19.
+Tareas abiertas del workspace. Actualizado: 2026-06-21.
 
 ---
 
@@ -16,7 +16,7 @@ Tareas abiertas del workspace. Actualizado: 2026-06-19.
 ## TRACKLIFE — API
 
 - [ ] **Migrar de SQLite a MongoDB** — el package `mongodb/laravel-mongodb` está instalado y `DB_CONNECTION=mongodb` configurado en docker-compose. Solo falta ajustar `config/database.php` y verificar que las migraciones funcionan con MongoDB driver
-- [ ] **Tests reales** — actualmente solo hay stubs ExampleTest. Implementar Feature Tests para Auth, Meals, Workouts, Biometrics
+- [x] **Tests reales** — 44 Feature Tests verdes (170 assertions): Auth, Meals, Workouts, Biometrics, Dashboard, Exercises, WorkoutPlans (2026-06-21)
 - [ ] **Providers de wearables** — Zepp y Whoop OAuth2. La infraestructura de `WearableConnection` está lista, falta el flujo OAuth y el sync real
 - [ ] **Versionado de API** — cuando haya >10 endpoints estables, considerar `/api/v1/`
 
@@ -28,6 +28,7 @@ Tareas abiertas del workspace. Actualizado: 2026-06-19.
 - [x] **Fix página ejercicios** — completado 2026-06-19: migración a `useApiData`, key bug corregido, filtros client-side, fix doble convención músculo, skeletons, ErrorState
 - [x] **Repo GitHub creado** — LiherRiosRuiz/tracklife (privado, 208 archivos, 17 commits, 2026-06-19)
 - [x] **Stop hook — auto git push** — `.claude/settings.json` con hook `Stop`; commit + push automático al finalizar cada sesión (2026-06-19)
+- [x] **Sprint P2** — completado 2026-06-21: Form Requests (20), Zod Frontend, Landing Redesign, API Resources (8), Dashboard mejorado con WeeklyChart. 44/44 tests verdes.
 - [ ] **Páginas placeholder** — pendientes: `/app/entrenamiento/calendario` (con datos reales), `/app/entrenamiento/progreso` (gráficos recharts), `/app/nutricion/plan`, `/app/nutricion/favoritos`, `/app/comunidad/buscar`
 - [ ] **PWA** — manifest + service worker para instalación en móvil
 - [ ] **Tests frontend** — instalar Vitest + @testing-library/react para web3-next
@@ -36,7 +37,7 @@ Tareas abiertas del workspace. Actualizado: 2026-06-19.
 
 ## TRACKLIFE — Landing
 
-- [ ] **Páginas `/como-funciona` y `/precios`** — actualmente son placeholders de Astro
+- [x] **Páginas `/como-funciona` y `/precios`** — implementadas en Sprint P2 (2026-06-21): redesign completo con Tailwind 4, hero, stats, features, CTA
 
 ---
 
