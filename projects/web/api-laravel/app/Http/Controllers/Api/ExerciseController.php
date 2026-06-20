@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreExerciseRequest;
 use App\Http\Requests\UpdateExerciseRequest;
+use App\Http\Resources\ExerciseResource;
 use App\Models\Exercise;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -38,7 +39,7 @@ class ExerciseController extends Controller
 
         $exercises = $query->orderBy('name')->get();
 
-        return response()->json(['exercises' => $exercises]);
+        return response()->json(['exercises' => ExerciseResource::collection($exercises)]);
     }
 
     public function show(Request $request, string $id): JsonResponse
