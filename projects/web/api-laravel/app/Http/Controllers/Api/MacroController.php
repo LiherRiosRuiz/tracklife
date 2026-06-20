@@ -3,14 +3,18 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\MealEntry;
 use App\Models\User;
+use App\Services\MacroService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class MacroController extends Controller
 {
+    public function __construct(
+        private MacroService $macroService,
+    ) {}
+
     public function targets(Request $request): JsonResponse
     {
         $user = $request->user();
@@ -41,24 +45,8 @@ class MacroController extends Controller
         $date = $request->query('date', Carbon::today()->toDateString());
         $user = $request->user();
 
-        $meals = MealEntry::where('user_id', (string) $user->_id)
-            ->whereDate('date', $date)
-            ->get();
-
-        $consumed = ['calories' => 0, 'protein' => 0, 'carbs' => 0, 'fat' => 0];
-        foreach ($meals as $meal) {
-            foreach ($consumed as $key => $val) {
-                $consumed[$key] += (float) ($meal->totals[$key] ?? 0);
-            }
-        }
-
-        $targets = $user->macro_targets ?? User::defaultMacroTargets();
-
-        return response()->json([
-            'date' => $date,
-            'consumed' => array_map(fn ($v) => round($v, 1), $consumed),
-            'targets' => $targets,
-            'streak_days' => $user->streak_days ?? 0,
-        ]);
+        return response()->json(
+            $this->macroService->dailyProgress($user, $date)
+        );
     }
 }
