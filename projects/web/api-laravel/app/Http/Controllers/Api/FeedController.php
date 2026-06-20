@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreFeedCommentRequest;
+use App\Http\Requests\StoreFeedPostRequest;
 use App\Models\SocialPost;
 use App\Services\FeedService;
 use Illuminate\Http\JsonResponse;
@@ -21,12 +23,9 @@ class FeedController extends Controller
         ]);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreFeedPostRequest $request): JsonResponse
     {
-        $data = $request->validate([
-            'type' => 'required|string',
-            'payload' => 'required|array',
-        ]);
+        $data = $request->validated();
 
         $post = $this->feedService->createPost($request->user(), $data['type'], $data['payload']);
 
@@ -49,9 +48,9 @@ class FeedController extends Controller
         return response()->json(['post' => $this->feedService->formatPost($post->fresh())]);
     }
 
-    public function comment(Request $request, string $id): JsonResponse
+    public function comment(StoreFeedCommentRequest $request, string $id): JsonResponse
     {
-        $data = $request->validate(['text' => 'required|string|max:500']);
+        $data = $request->validated();
         $post = SocialPost::findOrFail($id);
 
         $comments = $post->comments ?? [];
