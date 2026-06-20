@@ -29,7 +29,7 @@ export const mealItemSchema = z.object({
 export const storeMealSchema = z.object({
   date: z.string().optional(),
   meal_type: z.enum(["breakfast", "lunch", "snack", "dinner", "other"], {
-    errorMap: () => ({ message: "Tipo de comida no válido" }),
+    error: "Tipo de comida no válido",
   }),
   items: z.array(mealItemSchema).min(1, "Añade al menos un alimento"),
   photo_url: z.string().optional(),
@@ -65,7 +65,7 @@ export const storeWorkoutSchema = z.object({
 
 export const storeBiometricSchema = z.object({
   type: z.enum(["sleep_score", "hrv", "resting_hr", "recovery_score", "strain", "steps", "weight", "body_fat", "muscle_mass", "spO2"]),
-  value: z.number({ required_error: "El valor es obligatorio" }),
+  value: z.number({ error: "El valor es obligatorio" }),
   unit: z.string().optional(),
   timestamp: z.string().optional(),
   source: z.string().optional(),
