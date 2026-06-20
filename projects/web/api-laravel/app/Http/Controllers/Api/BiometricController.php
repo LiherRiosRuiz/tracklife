@@ -33,7 +33,7 @@ class BiometricController extends Controller
     public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'type' => 'required|in:sleep_score,hrv,resting_hr,recovery_score,strain,steps,weight,body_fat,spO2',
+            'type' => 'required|in:sleep_score,hrv,resting_hr,recovery_score,strain,steps,weight,body_fat,muscle_mass,spO2',
             'value' => 'required|numeric',
             'unit' => 'nullable|string',
             'timestamp' => 'nullable|date',
