@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreExerciseRequest;
+use App\Http\Requests\UpdateExerciseRequest;
 use App\Models\Exercise;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -51,18 +53,9 @@ class ExerciseController extends Controller
         return response()->json(['exercise' => $exercise]);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreExerciseRequest $request): JsonResponse
     {
-        $data = $request->validate([
-            'name' => 'required|string|max:120',
-            'muscle_group' => 'nullable|string',
-            'equipment' => 'nullable|string',
-            'category' => 'nullable|string',
-            'instructions' => 'nullable|array',
-            'instructions.*' => 'string',
-            'tips' => 'nullable|array',
-            'tips.*' => 'string',
-        ]);
+        $data = $request->validated();
 
         $exercise = Exercise::create(array_merge($data, [
             'user_id' => (string) $request->user()->_id,

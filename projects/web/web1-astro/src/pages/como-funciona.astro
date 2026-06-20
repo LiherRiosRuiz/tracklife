@@ -1,31 +1,75 @@
 ---
+import Layout from "../layouts/Layout.astro";
 const appUrl = "http://app.tracklife.test";
+
+const modules = [
+  {
+    icon: "🥗",
+    title: "Nutrición inteligente",
+    desc: "Registra cada comida con el escáner de códigos de barras o buscando en nuestra base de datos. Visualiza tus macros (proteína, carbohidratos, grasa) en tiempo real y ajusta tus objetivos según tu progreso.",
+    features: ["Diario alimentario diario", "Macros en tiempo real", "Escáner de código de barras", "Recetas personalizadas", "Plan nutricional editable"],
+  },
+  {
+    icon: "🏋️",
+    title: "Entrenamiento completo",
+    desc: "Planifica tus sesiones de gym con ejercicios personalizados, registra el cardio y lleva un calendario semanal. Visualiza tu volumen de entrenamiento y sigue tus marcas personales.",
+    features: ["Sesiones de gym con series", "Planes de entrenamiento", "Cardio y actividad libre", "Calendario semanal", "Seguimiento de PRs y progreso"],
+  },
+  {
+    icon: "📊",
+    title: "Biométricos y recuperación",
+    desc: "Más allá del peso. Registra tu composición corporal, frecuencia cardíaca, HRV, sueño y recuperación para entender cómo responde tu cuerpo al entrenamiento.",
+    features: ["Peso y composición corporal", "Frecuencia cardíaca y HRV", "Calidad del sueño", "Score de recuperación", "Historial con tendencias"],
+  },
+  {
+    icon: "🤖",
+    title: "Coach IA personalizado",
+    desc: "Un coach que analiza todos tus datos y te da recomendaciones concretas cada día. No genéricas — basadas en tus métricas reales de nutrición, entrenamiento y recuperación.",
+    features: ["Insights diarios personalizados", "Plan semanal adaptativo", "Alertas de sobreentrenamiento", "Recomendaciones de macros", "Basado en tus datos reales"],
+  },
+];
 ---
 
-<html lang="es">
-	<head>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width" />
-		<title>Cómo funciona — TRACKLIFE</title>
-		<style>
-			body { font-family: system-ui, sans-serif; background: #0b1210; color: #f0fdf4; max-width: 720px; margin: 0 auto; padding: 2rem 1.5rem; line-height: 1.7; }
-			h1 { color: #22c55e; }
-			h2 { margin-top: 2rem; color: #22c55e; font-size: 1.1rem; }
-			p { color: #94a3b8; }
-			a { color: #22c55e; }
-		</style>
-	</head>
-	<body>
-		<h1>Cómo funciona TRACKLIFE</h1>
-		<p>TRACKLIFE unifica cuatro pilares para tu transformación física:</p>
-		<h2>1. Comer con datos</h2>
-		<p>Registra comidas, escanea productos y controla tus macros diarios.</p>
-		<h2>2. Entrenar con progresión</h2>
-		<p>Log de fuerza y cardio con historial, volumen y actividades.</p>
-		<h2>3. Recuperar con inteligencia</h2>
-		<p>Conecta wearables y monitoriza sueño, HRV y readiness.</p>
-		<h2>4. Comunidad que motiva</h2>
-		<p>Comparte progreso, únete a retos y clubs con gente como tú.</p>
-		<p style="margin-top:2rem"><a href={`${appUrl}/registro`}>Crear cuenta →</a></p>
-	</body>
-</html>
+<Layout
+  title="Cómo funciona TRACKLIFE — Plataforma fitness integral"
+  description="Descubre cómo TRACKLIFE integra nutrición, entrenamiento, biométricos y coach IA en una sola plataforma para tu transformación física."
+>
+  <section class="max-w-4xl mx-auto px-6 pt-20 pb-8 text-center">
+    <h1 class="text-4xl md:text-6xl font-black mb-4">Cómo funciona</h1>
+    <p class="text-muted text-lg max-w-2xl mx-auto">
+      TRACKLIFE conecta cuatro módulos en un ecosistema coherente. Los datos de cada módulo alimentan a los demás.
+    </p>
+  </section>
+
+  <section class="max-w-4xl mx-auto px-6 py-16 space-y-20">
+    {modules.map((mod, i) => (
+      <div class={`flex flex-col ${i % 2 === 1 ? 'md:flex-row-reverse' : 'md:flex-row'} gap-10 items-center`}>
+        <div class="flex-1">
+          <div class="text-5xl mb-4">{mod.icon}</div>
+          <h2 class="text-2xl md:text-3xl font-black mb-3">{mod.title}</h2>
+          <p class="text-muted leading-relaxed mb-6">{mod.desc}</p>
+          <ul class="space-y-2">
+            {mod.features.map((f) => (
+              <li class="flex items-center gap-2 text-sm">
+                <span class="text-accent font-bold">✓</span>
+                <span>{f}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div class="flex-1 rounded-2xl border border-border bg-card p-10 text-center min-h-48 flex items-center justify-center">
+          <span class="text-8xl">{mod.icon}</span>
+        </div>
+      </div>
+    ))}
+  </section>
+
+  <section class="border-t border-border bg-card/30 py-20 text-center">
+    <h2 class="text-3xl font-black mb-4">¿Listo para empezar?</h2>
+    <p class="text-muted mb-8">Es gratis. Sin tarjeta de crédito.</p>
+    <a href={`${appUrl}/registro`}
+       class="inline-block rounded-2xl bg-accent px-10 py-4 text-lg font-bold text-black hover:bg-green-400 transition-colors">
+      Crear cuenta gratis
+    </a>
+  </section>
+</Layout>

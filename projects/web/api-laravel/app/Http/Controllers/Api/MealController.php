@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreMealRequest;
+use App\Http\Requests\UpdateMealRequest;
 use App\Models\MealEntry;
 use App\Services\FeedService;
 use App\Services\StreakService;
@@ -29,23 +31,9 @@ class MealController extends Controller
         return response()->json(['meals' => $meals]);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreMealRequest $request): JsonResponse
     {
-        $data = $request->validate([
-            'date' => 'nullable|date',
-            'meal_type' => 'required|in:breakfast,lunch,snack,dinner,other',
-            'items' => 'required|array|min:1',
-            'items.*.name' => 'required|string',
-            'items.*.quantity' => 'nullable|numeric',
-            'items.*.unit' => 'nullable|string',
-            'items.*.calories' => 'nullable|numeric',
-            'items.*.protein' => 'nullable|numeric',
-            'items.*.carbs' => 'nullable|numeric',
-            'items.*.fat' => 'nullable|numeric',
-            'photo_url' => 'nullable|string',
-            'notes' => 'nullable|string',
-            'shared_to_feed' => 'nullable|boolean',
-        ]);
+        $data = $request->validated();
 
         $totals = $this->calculateTotals($data['items']);
 
@@ -81,19 +69,13 @@ class MealController extends Controller
         return response()->json(['meal' => $meal], 201);
     }
 
-    public function update(Request $request, string $id): JsonResponse
+    public function update(UpdateMealRequest $request, string $id): JsonResponse
     {
         $meal = MealEntry::where('_id', $id)
             ->where('user_id', (string) $request->user()->_id)
             ->firstOrFail();
 
-        $data = $request->validate([
-            'meal_type' => 'sometimes|in:breakfast,lunch,snack,dinner,other',
-            'items' => 'sometimes|array|min:1',
-            'photo_url' => 'nullable|string',
-            'notes' => 'nullable|string',
-            'shared_to_feed' => 'nullable|boolean',
-        ]);
+        $data = $request->validated();
 
         if (isset($data['items'])) {
             $data['totals'] = $this->calculateTotals($data['items']);

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreWorkoutRequest;
 use App\Models\Workout;
 use App\Models\WorkoutPlan;
 use App\Services\FeedService;
@@ -23,16 +24,9 @@ class WorkoutController extends Controller
         return response()->json(['workouts' => $workouts]);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreWorkoutRequest $request): JsonResponse
     {
-        $data = $request->validate([
-            'name' => 'required|string|max:120',
-            'date' => 'nullable|date',
-            'sets' => 'required|array',
-            'duration_minutes' => 'nullable|integer',
-            'notes' => 'nullable|string',
-            'shared_to_feed' => 'nullable|boolean',
-        ]);
+        $data = $request->validated();
 
         $volume = collect($data['sets'])->sum(fn ($s) => (float) ($s['weight'] ?? 0) * (int) ($s['reps'] ?? 0));
 

@@ -1,0 +1,59 @@
+---
+import "../styles/global.css";
+
+interface Props {
+  title: string;
+  description: string;
+  ogImage?: string;
+}
+
+const { title, description, ogImage = "/favicon.svg" } = Astro.props;
+const siteBase = Astro.site?.toString() ?? 'http://www.tracklife.test';
+const canonicalURL = new URL(Astro.url.pathname, siteBase);
+const appUrl = "http://app.tracklife.test";
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="canonical" href={canonicalURL} />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalURL} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+  </head>
+  <body class="bg-background text-foreground antialiased min-h-screen">
+    <nav class="flex items-center justify-between px-6 py-4 max-w-6xl mx-auto border-b border-border">
+      <a href="/" class="text-xl font-black tracking-widest text-accent">TRACKLIFE</a>
+      <div class="flex items-center gap-6 text-sm">
+        <a href="/como-funciona" class="text-muted hover:text-foreground transition-colors hidden sm:inline">Cómo funciona</a>
+        <a href="/precios" class="text-muted hover:text-foreground transition-colors hidden sm:inline">Precios</a>
+        <a href={`${appUrl}/login`} class="text-muted hover:text-foreground transition-colors">Entrar</a>
+        <a href={`${appUrl}/registro`}
+           class="rounded-xl bg-accent px-4 py-2 font-semibold text-black hover:bg-green-400 transition-colors text-sm">
+          Empezar gratis
+        </a>
+      </div>
+    </nav>
+    <main>
+      <slot />
+    </main>
+    <footer class="border-t border-border mt-24 py-12 text-center text-sm text-muted">
+      <p class="mb-2 font-bold text-foreground tracking-widest">TRACKLIFE</p>
+      <p>© 2026 — Transformación física basada en datos</p>
+      <div class="mt-4 flex justify-center gap-6 text-xs">
+        <a href="/como-funciona" class="hover:text-accent transition-colors">Cómo funciona</a>
+        <a href="/precios" class="hover:text-accent transition-colors">Precios</a>
+        <a href={`${appUrl}/registro`} class="hover:text-accent transition-colors">Registro</a>
+      </div>
+    </footer>
+  </body>
+</html>
