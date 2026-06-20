@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { Button, Card, PageHeader } from "@/components/ui";
+import { storeMealSchema } from "@/lib/schemas";
 
 export default function RegistrarComidaPage() {
   const { token } = useAuth();
@@ -19,6 +20,7 @@ export default function RegistrarComidaPage() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Array<{ name: string; nutriments?: Record<string, number> }>>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const search = async () => {
     if (!token || query.length < 2) return;
@@ -38,19 +40,32 @@ export default function RegistrarComidaPage() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!token) return;
+    setError("");
+
+    const payload = {
+      meal_type: mealType as "breakfast" | "lunch" | "snack" | "dinner" | "other",
+      shared_to_feed: share,
+      items: [{
+        name,
+        calories: Number(calories),
+        protein: Number(protein),
+        carbs: Number(carbs),
+        fat: Number(fat),
+      }],
+    };
+
+    const result = storeMealSchema.safeParse(payload);
+    if (!result.success) {
+      const errs = result.error.flatten();
+      const itemErr = errs.fieldErrors.items?.[0];
+      const nestedErr = errs.fieldErrors.meal_type?.[0];
+      setError(itemErr ?? nestedErr ?? result.error.issues[0]?.message ?? "Datos no válidos");
+      return;
+    }
+
     setLoading(true);
     try {
-      await api.createMeal(token, {
-        meal_type: mealType,
-        shared_to_feed: share,
-        items: [{
-          name,
-          calories: Number(calories),
-          protein: Number(protein),
-          carbs: Number(carbs),
-          fat: Number(fat),
-        }],
-      });
+      await api.createMeal(token, payload);
       router.push("/app/nutricion/diario");
     } finally {
       setLoading(false);
@@ -106,6 +121,7 @@ export default function RegistrarComidaPage() {
             <input type="checkbox" checked={share} onChange={(e) => setShare(e.target.checked)} />
             Compartir en el feed
           </label>
+          {error && <p className="text-sm text-red-400">{error}</p>}
           <Button type="submit" disabled={loading} className="w-full">
             {loading ? "Guardando..." : "Guardar comida"}
           </Button>
