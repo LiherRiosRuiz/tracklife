@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreWorkoutRequest;
+use App\Http\Resources\WorkoutResource;
 use App\Models\Workout;
 use App\Models\WorkoutPlan;
 use App\Services\FeedService;
@@ -21,7 +22,7 @@ class WorkoutController extends Controller
             ->limit(30)
             ->get();
 
-        return response()->json(['workouts' => $workouts]);
+        return response()->json(['workouts' => WorkoutResource::collection($workouts)]);
     }
 
     public function store(StoreWorkoutRequest $request): JsonResponse
@@ -50,7 +51,7 @@ class WorkoutController extends Controller
             ]);
         }
 
-        return response()->json(['workout' => $workout], 201);
+        return response()->json(['workout' => new WorkoutResource($workout)], 201);
     }
 
     public function show(Request $request, string $id): JsonResponse
@@ -59,7 +60,7 @@ class WorkoutController extends Controller
             ->where('user_id', (string) $request->user()->_id)
             ->firstOrFail();
 
-        return response()->json(['workout' => $workout]);
+        return response()->json(['workout' => new WorkoutResource($workout)]);
     }
 
     public function fromPlan(Request $request, string $planId): JsonResponse
