@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\UpdateProfileRequest;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -25,15 +26,9 @@ class UserProfileController extends Controller
         ]);
     }
 
-    public function update(Request $request): JsonResponse
+    public function update(UpdateProfileRequest $request): JsonResponse
     {
-        $data = $request->validate([
-            'name' => 'sometimes|string|max:120',
-            'bio' => 'nullable|string|max:500',
-            'avatar_url' => 'nullable|string',
-            'transformation_goal' => 'nullable|array',
-            'privacy_settings' => 'nullable|array',
-        ]);
+        $data = $request->validated();
 
         $user = $request->user();
         $user->update($data);
