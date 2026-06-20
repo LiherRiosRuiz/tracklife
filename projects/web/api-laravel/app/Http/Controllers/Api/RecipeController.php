@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreRecipeRequest;
 use App\Models\Recipe;
 use App\Services\FeedService;
 use Illuminate\Http\JsonResponse;
@@ -22,19 +23,9 @@ class RecipeController extends Controller
         return response()->json(['recipes' => $recipes]);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreRecipeRequest $request): JsonResponse
     {
-        $data = $request->validate([
-            'title' => 'required|string|max:200',
-            'description' => 'nullable|string',
-            'ingredients' => 'required|array',
-            'steps' => 'nullable|array',
-            'servings' => 'nullable|integer|min:1',
-            'totals_per_serving' => 'nullable|array',
-            'is_public' => 'nullable|boolean',
-            'is_premium' => 'nullable|boolean',
-            'price' => 'nullable|numeric|min:0',
-        ]);
+        $data = $request->validated();
 
         $recipe = Recipe::create(array_merge($data, [
             'user_id' => (string) $request->user()->_id,
