@@ -2,6 +2,8 @@
 
 Tareas abiertas del workspace. Actualizado: 2026-06-21.
 
+Para el roadmap detallado de sprints futuros ver [[Roadmap TrackLife]].
+
 ---
 
 ## Infraestructura
@@ -28,8 +30,10 @@ Tareas abiertas del workspace. Actualizado: 2026-06-21.
 - [x] **Fix página ejercicios** — completado 2026-06-19: migración a `useApiData`, key bug corregido, filtros client-side, fix doble convención músculo, skeletons, ErrorState
 - [x] **Repo GitHub creado** — LiherRiosRuiz/tracklife (privado, 208 archivos, 17 commits, 2026-06-19)
 - [x] **Stop hook — auto git push** — `.claude/settings.json` con hook `Stop`; commit + push automático al finalizar cada sesión (2026-06-19)
+- [x] **Sprint P1** — completado 2026-06-21: 9 páginas placeholder (nutricion/plan, nutricion/favoritos, comunidad/buscar, coach/plan, coach/insights, biometricos/cuerpo, entrenamiento/progreso + ajuste BiometricController)
 - [x] **Sprint P2** — completado 2026-06-21: Form Requests (20), Zod Frontend, Landing Redesign, API Resources (8), Dashboard mejorado con WeeklyChart. 44/44 tests verdes.
-- [ ] **Páginas placeholder** — pendientes: `/app/entrenamiento/calendario` (con datos reales), `/app/entrenamiento/progreso` (gráficos recharts), `/app/nutricion/plan`, `/app/nutricion/favoritos`, `/app/comunidad/buscar`
+- [ ] **Sprint P3** — próximo: WorkoutTest, BiometricTest, ActivityTest, AuthTest (TDD) + Server Components Dashboard + búsqueda real usuarios. Ver [[Roadmap TrackLife]]
+- [ ] **Páginas con datos reales** — calendario, progreso (recharts), plan nutricional, favoritos, comunidad (P4 en [[Roadmap TrackLife]])
 - [ ] **PWA** — manifest + service worker para instalación en móvil
 - [ ] **Tests frontend** — instalar Vitest + @testing-library/react para web3-next
 
@@ -71,4 +75,4 @@ Tareas abiertas del workspace. Actualizado: 2026-06-21.
 
 ---
 
-Ver también: [[Home]], [[TRACKLIFE]], [[Platon SDD]], [[Skills Pendientes]]
+Ver también: [[Home]], [[TRACKLIFE]], [[Roadmap TrackLife]], [[Platon SDD]], [[Skills Pendientes]]
