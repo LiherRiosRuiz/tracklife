@@ -24,3 +24,6 @@ Thumbs.db
 .idea/
 *.swp
 *.swo
+
+# Activity log (generado en runtime)
+.sdd/activity.log

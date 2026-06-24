@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // =============================================================================
-// LIHER — Gobernador del Workspace v1.0
+// LIHER — Gobernador del Workspace v2.0
 // Multi-agent orchestrator using Claude Agent SDK.
 // Coordina: Platon (pensador) + Quevedo (cronista) + Vinci (ejecutor)
 // =============================================================================
@@ -9,6 +9,7 @@ import { query } from "@anthropic-ai/claude-agent-sdk";
 import { createInterface } from "readline";
 import {
   readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync, statSync,
+  appendFileSync,
 } from "fs";
 import { resolve, dirname, basename } from "path";
 import { fileURLToPath } from "url";
@@ -31,6 +32,69 @@ const c = {
   cyan: "\x1b[36m", magenta: "\x1b[35m", red: "\x1b[31m", blue: "\x1b[34m",
   white: "\x1b[37m", nc: "\x1b[0m",
 };
+
+// ── Activity log ─────────────────────────────────────────────────────────────
+const ACTIVITY_LOG = resolve(SDD, "activity.log");
+
+function logActivity(line) {
+  try {
+    appendFileSync(ACTIVITY_LOG, line + "\n");
+  } catch { /* no bloquear si falla el log */ }
+}
+
+// ── Funciones puras (exportables para testing) ───────────────────────────────
+
+function subagentMeta(type) {
+  const map = {
+    platon:  { name: "ΠΛΑΤΏΝ",  color: c.magenta, icon: "Π" },
+    quevedo: { name: "QUEVEDO", color: c.blue,    icon: "Q" },
+    vinci:   { name: "VINCI",   color: c.green,   icon: "V" },
+  };
+  return map[type?.toLowerCase()] || { name: (type || "AGENT").toUpperCase(), color: c.dim, icon: "?" };
+}
+
+function formatToolCall(name, input) {
+  input = input || {};
+  switch (name) {
+    case "Read":
+    case "Write":
+    case "Edit": {
+      const p = input.file_path || input.path || "";
+      return `${name} ${p.split("/").pop() || p}`;
+    }
+    case "Bash": {
+      const cmd = (input.command || "").replace(/\n/g, " ").trim();
+      return `Bash: ${cmd.length > 60 ? cmd.slice(0, 60) + "…" : cmd}`;
+    }
+    case "Grep": return `Grep: ${input.pattern || ""}`;
+    case "Glob": return `Glob: ${input.pattern || ""}`;
+    case "WebFetch": return `WebFetch: ${(input.url || "").slice(0, 50)}`;
+    case "WebSearch": return `WebSearch: ${input.query || ""}`;
+    default: return name;
+  }
+}
+
+function formatActivityLine(evt) {
+  const ts = new Date().toISOString().slice(11, 19);
+  const meta = subagentMeta(evt.subagent_type);
+  const dur = evt.usage?.duration_ms ? `${Math.round(evt.usage.duration_ms / 1000)}s` : "";
+  const tokens = evt.usage?.total_tokens ? `${evt.usage.total_tokens}t` : "";
+
+  switch (evt.subtype) {
+    case "task_started":
+      return `${ts} :: ${meta.name} iniciado`;
+    case "task_progress":
+      if (evt.summary) return `${ts} :: ${meta.name}: "${evt.summary.slice(0, 50)}"`;
+      if (evt.last_tool_name) return `${ts} :: ${meta.name} > ${formatToolCall(evt.last_tool_name, {})}`;
+      return `${ts} :: ${meta.name} trabajando... ${dur}`;
+    case "task_notification": {
+      const icon = evt.status === "completed" ? "✓" : evt.status === "failed" ? "✗" : "○";
+      return `${ts} ${icon} ${meta.name} ${evt.status} (${dur}${tokens ? ", " + tokens : ""})`;
+    }
+    default:
+      return `${ts} ${evt.subtype || "evento"}`;
+  }
+}
 
 // ── Context Loaders (from platon.mjs) ───────────────────────────────────────
 
@@ -137,7 +201,7 @@ function buildPlatonSubPrompt() {
   const promptPath = resolve(SDD, "platon-prompt.md");
   const base = existsSync(promptPath)
     ? readFileSync(promptPath, "utf-8")
-    : "Eres ΠΛΑΤΩΝ — framework SDD. Sigue: Preflight → Calibracion → Strict TDD.";
+    : "Eres ΠΛΑΤΏΝ — framework SDD. Sigue: Preflight → Calibracion → Strict TDD.";
 
   const memory = loadMemory();
   const skills = loadSkills();
@@ -241,7 +305,7 @@ function showSplash() {
   console.log();
   console.log(banner);
   console.log();
-  console.log(`${c.dim}Gobernador · Multi-Agent Orchestration v1.0${c.nc}`);
+  console.log(`${c.dim}Gobernador · Multi-Agent Orchestration v2.0${c.nc}`);
   console.log();
 
   console.log(`${c.bold}Agentes:${c.nc}`);
@@ -379,6 +443,28 @@ async function main() {
     rl.question(`  ${c.white}${c.bold}❯${c.nc} `, (a) => res(a));
   });
 
+  // ── Spinner ─────────────────────────────────────────────────────────────────
+  let spinnerInterval = null;
+  let spinnerFrame = 0;
+  const SPINNER_CHARS = ["⠋","⠙","⠹","⠸","⠼","⠴","⠦","⠧","⠇","⠏"];
+
+  function startSpinner() {
+    if (spinnerInterval) return;
+    spinnerFrame = 0;
+    spinnerInterval = setInterval(() => {
+      const frame = SPINNER_CHARS[spinnerFrame % SPINNER_CHARS.length];
+      process.stdout.write(`\r  ${c.dim}${frame} pensando...${c.nc}    `);
+      spinnerFrame++;
+    }, 100);
+  }
+
+  function stopSpinner() {
+    if (!spinnerInterval) return;
+    clearInterval(spinnerInterval);
+    spinnerInterval = null;
+    process.stdout.write("\r" + " ".repeat(30) + "\r");
+  }
+
   // ── Session lifecycle ───────────────────────────────────────────────────
   function startSession() {
     userResolve = null;
@@ -446,19 +532,73 @@ async function main() {
       try {
         let currentResponseText = "";
         for await (const message of session) {
+          // ── task_started: sub-agente iniciado ───────────────────────────────
+          if (message.type === "system" && message.subtype === "task_started") {
+            stopSpinner();
+            const meta = subagentMeta(message.subagent_type);
+            console.log(`\n  ${meta.color}⟳ ${meta.name}${c.nc} ${c.dim}iniciando...${c.nc}`);
+            logActivity(formatActivityLine({ ...message, subagent_type: message.subagent_type }));
+            continue;
+          }
+
+          // ── task_progress: actualización de progreso ────────────────────────
+          if (message.type === "system" && message.subtype === "task_progress") {
+            stopSpinner();
+            const meta = subagentMeta(message.subagent_type);
+            if (message.summary) {
+              process.stdout.write(`\r  ${meta.color}◎ ${meta.name}${c.nc}${c.dim}: "${message.summary.slice(0, 60)}"${c.nc}    \n`);
+            } else if (message.last_tool_name) {
+              process.stdout.write(`\r  ${c.dim}  └─ ${meta.name} › ${formatToolCall(message.last_tool_name, {})}${c.nc}    \n`);
+            }
+            logActivity(formatActivityLine(message));
+            continue;
+          }
+
+          // ── task_notification: sub-agente completado ────────────────────────
+          if (message.type === "system" && message.subtype === "task_notification") {
+            stopSpinner();
+            const meta = subagentMeta(message.subagent_type);
+            const dur = message.usage?.duration_ms ? ` ${Math.round(message.usage.duration_ms / 1000)}s` : "";
+            const tok = message.usage?.total_tokens ? ` · ${message.usage.total_tokens} tokens` : "";
+            const icon = message.status === "completed" ? `${c.green}✓${c.nc}` :
+                         message.status === "failed"    ? `${c.red}✗${c.nc}` : `${c.dim}○${c.nc}`;
+            console.log(`  ${icon} ${meta.color}${meta.name}${c.nc} ${c.dim}${message.status}${dur}${tok}${c.nc}`);
+            logActivity(formatActivityLine(message));
+            continue;
+          }
+
+          // ── assistant: texto (de LIHER o de sub-agente) ────────────────────
           if (message.type === "assistant" && message.message?.content) {
             for (const block of message.message.content) {
               if ("text" in block && block.text) {
-                currentResponseText += block.text;
-                for (const line of block.text.split("\n")) {
-                  process.stdout.write(`  ${line}\n`);
+                stopSpinner();
+                if (message.parent_tool_use_id) {
+                  // Texto de sub-agente: gutter lateral, color dim
+                  for (const line of block.text.split("\n")) {
+                    process.stdout.write(`  ${c.dim}│ ${line}${c.nc}\n`);
+                  }
+                } else {
+                  // Texto de LIHER: normal
+                  currentResponseText += block.text;
+                  for (const line of block.text.split("\n")) {
+                    process.stdout.write(`  ${line}\n`);
+                  }
                 }
               } else if ("name" in block) {
-                console.log(`\n  ${c.dim}⚙ ${block.name}${c.nc}`);
+                // Tool use block
+                const toolStr = formatToolCall(block.name, block.input || {});
+                if (message.parent_tool_use_id) {
+                  console.log(`  ${c.dim}  └─ ${toolStr}${c.nc}`);
+                } else {
+                  console.log(`\n  ${c.dim}⚙ ${toolStr}${c.nc}`);
+                }
               }
             }
           }
+
+          // ── result: turno completado ────────────────────────────────────────
           if (message.type === "result") {
+            stopSpinner();
             if (currentResponseText) {
               lastAgentResponse = currentResponseText.trim();
               sessionLog.push({
@@ -471,7 +611,9 @@ async function main() {
             if (message.subtype === "error" || message.is_error) {
               console.log(`\n  ${c.red}Error: ${message.result || message.errors?.join(", ") || "unknown"}${c.nc}`);
             }
-            console.log();
+            const sep = `  ${c.dim}${"─".repeat(56)}${c.nc}`;
+            console.log(`\n${sep}\n`);
+            logActivity(`${new Date().toISOString().slice(11,19)} -- turno completado`);
             promptNextInput();
           }
         }
@@ -527,7 +669,7 @@ async function main() {
 
       case "/agents":
         console.log(`\n  ${c.bold}Agentes del workspace${c.nc}\n`);
-        console.log(`  ${c.magenta}ΠΛΑΤΩΝ${c.nc}   ${c.dim}opus-4-6  · max${c.nc}    Pensador — analiza, razona, produce planes`);
+        console.log(`  ${c.magenta}ΠΛΑΤΏΝ${c.nc}   ${c.dim}opus-4-6  · max${c.nc}    Pensador — analiza, razona, produce planes`);
         console.log(`  ${c.blue}QUEVEDO${c.nc}  ${c.dim}sonnet    · high${c.nc}   Cronista — narra, documenta, mantiene vault`);
         console.log(`  ${c.green}VINCI${c.nc}    ${c.dim}sonnet    · high${c.nc}   Ejecutor — implementa planes, escribe codigo`);
         console.log(`\n  ${c.dim}LIHER (tu) coordina a los tres automaticamente.${c.nc}\n`);
@@ -622,6 +764,7 @@ async function main() {
       }
       console.log();
       userResolve(input);
+      startSpinner();
     }).catch(() => { done = true; if (userResolve) userResolve(null); });
   }
 
@@ -636,7 +779,13 @@ async function main() {
   process.exit(0);
 }
 
-main().catch((err) => {
-  console.error(`\n${c.red}Fatal: ${err.message}${c.nc}\n`);
-  process.exit(1);
-});
+// ── Exports para testing ────────────────────────────────────────────────────
+export { subagentMeta, formatToolCall, formatActivityLine };
+
+// ── Entry point ─────────────────────────────────────────────────────────────
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  main().catch((err) => {
+    console.error(`\n${c.red}Fatal: ${err.message}${c.nc}\n`);
+    process.exit(1);
+  });
+}
