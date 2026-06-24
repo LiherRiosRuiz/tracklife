@@ -18,7 +18,7 @@ agents:
       Verificacion precede a la construccion.
     launcher: platon.sh
     cli: .sdd/cli/platon.mjs
-    model: claude-opus-4-6
+    model: claude-opus-4-8
     effort: max
     role: planner
     tools: [Read, Glob, Grep, WebFetch, WebSearch]

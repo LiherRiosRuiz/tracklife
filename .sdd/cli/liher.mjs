@@ -309,7 +309,7 @@ function showSplash() {
   console.log();
 
   console.log(`${c.bold}Agentes:${c.nc}`);
-  console.log(`  ${c.magenta}platon${c.nc}    opus-4-6    ${c.dim}·${c.nc}  ${c.yellow}pensador${c.nc}     ${c.dim}Read, Glob, Grep, WebFetch, WebSearch${c.nc}`);
+  console.log(`  ${c.magenta}platon${c.nc}    opus-4-8    ${c.dim}·${c.nc}  ${c.yellow}pensador${c.nc}     ${c.dim}Read, Glob, Grep, WebFetch, WebSearch${c.nc}`);
   console.log(`  ${c.blue}quevedo${c.nc}   haiku-4-5   ${c.dim}·${c.nc}  ${c.cyan}cronista${c.nc}     ${c.dim}Read, Write, Edit, Glob, Grep, Bash${c.nc}`);
   console.log(`  ${c.green}vinci${c.nc}     sonnet-4-6  ${c.dim}·${c.nc}  ${c.green}ejecutor${c.nc}     ${c.dim}Read, Write, Edit, Glob, Grep, Bash${c.nc}`);
   console.log();
@@ -500,7 +500,7 @@ async function main() {
           platon: {
             description: "Llama a Platon cuando la tarea requiera analisis profundo, razonamiento arquitectonico o crear un plan de implementacion estructurado. Platon piensa pero no ejecuta. Devuelve un plan detallado.",
             prompt: platonSubPrompt,
-            model: "claude-opus-4-6",
+            model: "claude-opus-4-8",
             effort: "max",
             permissionMode: "bypassPermissions",
             tools: ["Read", "Glob", "Grep", "WebFetch", "WebSearch"],
