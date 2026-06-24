@@ -63,12 +63,12 @@ shared:
 
 # ── Skills de usuario (Claude Code) ─────────────────────────────────────────
 
-user: [/init, /commit, /review, /security-review, /simplify, /loop, /schedule, /update-config, /claude-api]
+user: [/init, /commit, /review, /security-review, /simplify, /loop, /schedule, /update-config, /claude-api, /verify, /run, /code-review, /fewer-permission-prompts, /keybindings-help]
 
 # ── MCP disponibles ──────────────────────────────────────────────────────────
 # Solo nombres. Capacidades detalladas en docs de cada MCP server.
 
-mcp: [filesystem, github, playwright, memory, context7, google_calendar, gmail, google_drive]
+mcp: [filesystem, github, playwright, memory, context7, google_calendar, gmail, google_drive, sequential-thinking]
 
 # ── Deteccion de manifests ───────────────────────────────────────────────────
 # Archivos que el preflight busca para auto-detectar tipo de proyecto.

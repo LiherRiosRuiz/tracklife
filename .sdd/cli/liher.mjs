@@ -310,7 +310,7 @@ function showSplash() {
 
   console.log(`${c.bold}Agentes:${c.nc}`);
   console.log(`  ${c.magenta}platon${c.nc}    opus-4-6    ${c.dim}·${c.nc}  ${c.yellow}pensador${c.nc}     ${c.dim}Read, Glob, Grep, WebFetch, WebSearch${c.nc}`);
-  console.log(`  ${c.blue}quevedo${c.nc}   sonnet-4-6  ${c.dim}·${c.nc}  ${c.cyan}cronista${c.nc}     ${c.dim}Read, Write, Edit, Glob, Grep, Bash${c.nc}`);
+  console.log(`  ${c.blue}quevedo${c.nc}   haiku-4-5   ${c.dim}·${c.nc}  ${c.cyan}cronista${c.nc}     ${c.dim}Read, Write, Edit, Glob, Grep, Bash${c.nc}`);
   console.log(`  ${c.green}vinci${c.nc}     sonnet-4-6  ${c.dim}·${c.nc}  ${c.green}ejecutor${c.nc}     ${c.dim}Read, Write, Edit, Glob, Grep, Bash${c.nc}`);
   console.log();
 
@@ -417,7 +417,7 @@ function appendDailyLog(date, entry) {
 }
 
 // ── Config ──────────────────────────────────────────────────────────────────
-const MODEL  = "claude-sonnet-4-6";
+const MODEL  = "claude-opus-4-8";
 const EFFORT = "high";
 
 // ── Interactive session ─────────────────────────────────────────────────────
@@ -509,7 +509,7 @@ async function main() {
           quevedo: {
             description: "Llama a Quevedo para narrar y documentar: escribir cronica de la peticion, actualizar notas del vault en docs/, crear documentacion. Llama al inicio para narrar la peticion y al final para narrar el resultado.",
             prompt: quevedoSubPrompt,
-            model: "claude-sonnet-4-6",
+            model: "claude-haiku-4-5",
             effort: "high",
             permissionMode: "bypassPermissions",
             tools: ["Read", "Write", "Edit", "Glob", "Grep", "Bash"],

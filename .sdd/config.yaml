@@ -31,7 +31,7 @@ agents:
       Cronista fiel del workspace.
     launcher: quevedo.sh
     cli: .sdd/cli/quevedo.mjs
-    model: claude-sonnet-4-6
+    model: claude-haiku-4-5
     effort: high
     role: chronicler
     tools: [Read, Write, Edit, Glob, Grep, Bash]
@@ -45,7 +45,7 @@ agents:
       Analiza, coordina agentes, presenta resultados.
     launcher: liher.sh
     cli: .sdd/cli/liher.mjs
-    model: claude-sonnet-4-6
+    model: claude-opus-4-8
     effort: high
     role: governor
     tools: [Read, Glob, Grep]
