@@ -1,17 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { api, type FeedPost } from "@/lib/api";
+import { useEffect, useState } from "react";
+import { api, type SearchUser } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
 import { Button, Card, PageHeader } from "@/components/ui";
 import { useApiData } from "@/hooks/use-api-data";
 import { SkeletonList } from "@/components/Skeleton";
 import { ErrorState } from "@/components/ErrorState";
-
-// TODO backend: implementar GET /api/users/search?q= para búsqueda real.
-// Por ahora la búsqueda es client-side sobre los usuarios del feed.
-// Solo encuentra usuarios que han posteado recientemente.
-
-type FeedUser = NonNullable<FeedPost["user"]>;
 
 function getInitials(name: string): string {
   return name
@@ -22,7 +17,7 @@ function getInitials(name: string): string {
     .toUpperCase();
 }
 
-function UserCard({ user }: { user: FeedUser }) {
+function UserCard({ user }: { user: SearchUser }) {
   const initials = getInitials(user.name);
 
   return (
@@ -68,49 +63,22 @@ function EmptyState({ query }: { query: string }) {
 }
 
 export default function BuscarPage() {
-  const { data, loading, error, refetch } = useApiData(
-    () => api.feed(),
-    [],
-  );
-
+  const { token } = useAuth();
   const [inputValue, setInputValue] = useState("");
   const [query, setQuery] = useState("");
 
-  // Debounce 300ms: actualiza `query` 300ms después del último keystroke
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setQuery(inputValue.trim());
-    }, 300);
+    const timer = setTimeout(() => setQuery(inputValue.trim()), 300);
     return () => clearTimeout(timer);
   }, [inputValue]);
 
-  // Usuarios únicos del feed (deduplicados por id)
-  const allUsers = useMemo<FeedUser[]>(() => {
-    const posts: FeedPost[] = data?.feed ?? [];
-    const seen = new Set<string>();
-    const users: FeedUser[] = [];
-    for (const post of posts) {
-      if (post.user && !seen.has(post.user.id)) {
-        seen.add(post.user.id);
-        users.push(post.user);
-      }
-    }
-    return users;
-  }, [data]);
+  const { data, loading, error, refetch } = useApiData(
+    () => api.searchUsers(token!, query),
+    [query, token],
+    { enabled: query.length >= 2 && !!token },
+  );
 
-  // Filtrado por nombre o username (solo si hay ≥2 caracteres)
-  const results = useMemo<FeedUser[]>(() => {
-    if (query.length < 2) return [];
-    const q = query.toLowerCase();
-    return allUsers.filter(
-      (u) =>
-        u.name.toLowerCase().includes(q) ||
-        u.username.toLowerCase().includes(q),
-    );
-  }, [query, allUsers]);
-
-  const showInitial = query.length < 2;
-  const showResults = query.length >= 2;
+  const results: SearchUser[] = data?.users ?? [];
 
   return (
     <div>
@@ -130,33 +98,16 @@ export default function BuscarPage() {
         />
       </div>
 
-      {/* Estados de carga / error del feed */}
-      {loading && <SkeletonList />}
-      {error && <ErrorState message={error} onRetry={refetch} />}
+      {/* Menos de 2 caracteres: estado inicial */}
+      {query.length < 2 && <EmptyState query={query} />}
 
-      {/* Contenido principal */}
-      {!loading && !error && (
+      {/* Búsqueda activa */}
+      {query.length >= 2 && (
         <>
-          {showInitial && (
-            <>
-              {allUsers.length > 0 ? (
-                <>
-                  <p className="mb-3 text-sm text-muted">Activos recientemente</p>
-                  <div className="flex flex-col gap-3">
-                    {allUsers.map((user) => (
-                      <UserCard key={user.id} user={user} />
-                    ))}
-                  </div>
-                </>
-              ) : (
-                <div className="py-12 text-center text-muted">
-                  <p className="text-sm">No hay usuarios en el feed todavía.</p>
-                </div>
-              )}
-            </>
-          )}
+          {loading && <SkeletonList />}
+          {error && <ErrorState message={error} onRetry={refetch} />}
 
-          {showResults && (
+          {!loading && !error && (
             <>
               {results.length > 0 ? (
                 <>

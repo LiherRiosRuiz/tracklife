@@ -37,6 +37,15 @@ export type FeedPost = {
   user?: { id: string; name: string; username: string; avatar_url?: string };
 };
 
+export type SearchUser = {
+  id: string;
+  name: string;
+  username: string;
+  bio?: string;
+  avatar_url?: string;
+  streak_days: number;
+};
+
 async function request<T>(
   path: string,
   options: RequestInit = {},
@@ -146,6 +155,13 @@ export const api = {
 
   searchFoods: (token: string, q: string) =>
     request<{ foods: FoodItem[] }>(`/api/foods/search?q=${encodeURIComponent(q)}`, {}, token),
+
+  searchUsers: (token: string, q: string) =>
+    request<{ users: SearchUser[] }>(
+      `/api/users/search?q=${encodeURIComponent(q)}`,
+      {},
+      token,
+    ),
 
   productByBarcode: (barcode: string) =>
     request<{ product: Product }>(`/api/products/barcode/${barcode}`),
