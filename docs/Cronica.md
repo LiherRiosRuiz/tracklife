@@ -6,6 +6,20 @@ Las cronicas tecnicas detalladas se guardan en `.sdd/chronicle/daily/`. Esta not
 
 ---
 
+## 2026-06-25 — Apertura de P3.1 (Tests de API con TDD)
+
+**Sesion**: Orientacion e inicio de P3.1 — cobertura de tests en WorkoutController, BiometricController, ActivityController usando strict TDD.
+
+**Incidencia detectada**: contenedor `web1-astro` (Landing) en crash-loop (scope diferido).
+
+**Baseline**: 44/44 tests verdes · Vault accesible · Roadmap confirmado.
+
+**Proximos pasos**: Fases Platon (calibracion) → Vinci (TDD) → 5+5+5 tests mínimo por controlador.
+
+Ver detalle completo en `.sdd/chronicle/daily/2026-06-25.md`.
+
+---
+
 ## 2026-06-13 — Tres bugs encadenados en TRACKLIFE
 
 ### Bug 1 — Loading infinito en `/app` (web3-next)
