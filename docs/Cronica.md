@@ -6,17 +6,20 @@ Las cronicas tecnicas detalladas se guardan en `.sdd/chronicle/daily/`. Esta not
 
 ---
 
-## 2026-06-25 — Apertura de P3.1 (Tests de API con TDD)
+## 2026-06-25 — Sprint P3.1 Completado (Tests de API con TDD)
 
-**Sesion**: Orientacion e inicio de P3.1 — cobertura de tests en WorkoutController, BiometricController, ActivityController usando strict TDD.
+**Sesion**: P3.1 — cobertura de tests en WorkoutController, BiometricController, ActivityController usando strict TDD. Sprint completado.
 
-**Incidencia detectada**: contenedor `web1-astro` (Landing) en crash-loop (scope diferido).
+**Resultado**: **74 tests / 274 assertions** (vs. baseline 44/170).
+- Creados: `WorkoutTest.php` (8), `BiometricTest.php` (9), `ActivityTest.php` (8)
+- Ampliado: `AuthTest.php` (+5 → 14 total)
+- Sprint TEST-ONLY: cero cambios de produccion — no habia bugs latentes
 
-**Baseline**: 44/44 tests verdes · Vault accesible · Roadmap confirmado.
+**Incidencia anotada**: contenedor `web1-astro` (Landing) en crash-loop (scope diferido a sesion dedicada).
 
-**Proximos pasos**: Fases Platon (calibracion) → Vinci (TDD) → 5+5+5 tests mínimo por controlador.
+**Proximos**: P3.2 (Server Components Dashboard) → P3.3 (búsqueda real usuarios).
 
-Ver detalle completo en `.sdd/chronicle/daily/2026-06-25.md`.
+Ver detalle en `.sdd/chronicle/daily/2026-06-25.md`.
 
 ---
 

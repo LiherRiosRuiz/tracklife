@@ -18,13 +18,13 @@ class MealTest extends TestCase
     private function makeUser(string $suffix = 'a'): User
     {
         return User::create([
-            'name'             => "Test User {$suffix}",
-            'email'            => "meal{$suffix}@test.com",
-            'username'         => "mealuser{$suffix}",
-            'password'         => 'password123',
-            'macro_targets'    => User::defaultMacroTargets(),
+            'name' => "Test User {$suffix}",
+            'email' => "meal{$suffix}@test.com",
+            'username' => "mealuser{$suffix}",
+            'password' => 'password123',
+            'macro_targets' => User::defaultMacroTargets(),
             'privacy_settings' => User::defaultPrivacySettings(),
-            'streak_days'      => 0,
+            'streak_days' => 0,
         ]);
     }
 
@@ -32,24 +32,24 @@ class MealTest extends TestCase
     {
         return array_merge([
             'meal_type' => 'lunch',
-            'items'     => [
+            'items' => [
                 [
-                    'name'     => 'Arroz',
+                    'name' => 'Arroz',
                     'quantity' => 200,
-                    'unit'     => 'g',
+                    'unit' => 'g',
                     'calories' => 260,
-                    'protein'  => 5,
-                    'carbs'    => 54,
-                    'fat'      => 1,
+                    'protein' => 5,
+                    'carbs' => 54,
+                    'fat' => 1,
                 ],
                 [
-                    'name'     => 'Pollo',
+                    'name' => 'Pollo',
                     'quantity' => 150,
-                    'unit'     => 'g',
+                    'unit' => 'g',
                     'calories' => 165,
-                    'protein'  => 31,
-                    'carbs'    => 0,
-                    'fat'      => 3.6,
+                    'protein' => 31,
+                    'carbs' => 0,
+                    'fat' => 3.6,
                 ],
             ],
         ], $overrides);
@@ -72,9 +72,9 @@ class MealTest extends TestCase
         // Totals calculados correctamente (suma de ítems)
         $totals = $response->json('meal.totals');
         $this->assertSame(425.0, (float) $totals['calories']); // 260 + 165
-        $this->assertSame(36.0,  (float) $totals['protein']);  // 5 + 31
-        $this->assertSame(54.0,  (float) $totals['carbs']);    // 54 + 0
-        $this->assertSame(4.6,   (float) $totals['fat']);      // 1 + 3.6
+        $this->assertSame(36.0, (float) $totals['protein']);  // 5 + 31
+        $this->assertSame(54.0, (float) $totals['carbs']);    // 54 + 0
+        $this->assertSame(4.6, (float) $totals['fat']);      // 1 + 3.6
     }
 
     public function test_meal_store_fails_without_required_fields(): void
@@ -158,7 +158,7 @@ class MealTest extends TestCase
         $response = $this->actingAs($user, 'sanctum')
             ->putJson("/api/meals/{$mealId}", [
                 'meal_type' => 'dinner',
-                'notes'     => 'Cena actualizada',
+                'notes' => 'Cena actualizada',
             ]);
 
         $response->assertStatus(200)

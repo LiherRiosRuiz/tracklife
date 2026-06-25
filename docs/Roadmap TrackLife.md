@@ -12,24 +12,32 @@ Sprint P1 y P2 cerrados. Siguiente: P3.
 |--------|--------|-------|
 | P1 — Páginas placeholder (9) | [x] Completado 2026-06-21 | — |
 | P2 — Calidad y estructura | [x] Completado 2026-06-21 | 44/44 |
-| P3 — Tests completos + Server Components | [ ] Pendiente | — |
+| P3.1 — Tests de API (TDD) | [x] Completado 2026-06-25 | 74/74 |
+| P3.2 — Server Components | [ ] Pendiente | — |
+| P3.3 — Búsqueda usuarios real | [ ] Pendiente | — |
 | P4 — Funcionalidades reales | [ ] Pendiente | — |
 | P5 — Producción y pulido | [ ] Pendiente | — |
 
 ---
 
-## Sprint P3 — Tests de API pendientes + Server Components
+## Sprint P3 — Tests de API completos + Optimización Frontend
 
 **Objetivo**: cobertura de tests completa en backend + optimización frontend
 
-### P3.1 Tests de API (TDD — backend)
+### P3.1 Tests de API (TDD — backend) [x] COMPLETADO 2026-06-25
 
-- `WorkoutTest.php` — controlador WorkoutController (CRUD completo, aislamiento por usuario)
-- `BiometricTest.php` — controlador BiometricController (guardar medidas, historial 90 días, deltas)
-- `ActivityTest.php` — controlador ActivityController (registro actividad, calorías quemadas)
-- `AuthTest.php` — registro, login, logout, validaciones (actualmente sin tests)
-- Mínimo 5 tests por controlador. TDD: RED → GREEN → REFACTOR.
-- Usar `MongoTestCleanup` (NO RefreshDatabase — incompatible con MongoDB)
+**Resultado:**
+- `WorkoutTest.php` — 8 tests (CRUD, aislamiento por usuario, paginación)
+- `BiometricTest.php` — 9 tests (guardar medidas, historial, validaciones)
+- `ActivityTest.php` — 8 tests (registro actividad, filtros de fecha)
+- `AuthTest.php` — 14 tests (+5 nuevos: password corto, email inválido, login vacío, username auto, duplicado)
+- **Suite total: 74 tests / 274 assertions / 0 fallos**
+- Metodología: TDD strict (RED → GREEN → REFACTOR) · cero cambios de producción
+- Stack: Laravel 13 · MongoDB · `MongoTestCleanup` trait
+
+**Gap documentado (decisión futura):**
+- `BiometricController::today()` NO calcula "deltas" de biométricos
+- Si se requieren, abrir sub-sprint feature aparte (no es test-only)
 
 ### P3.2 Server Components en Dashboard
 
@@ -122,14 +130,11 @@ Sprint P1 y P2 cerrados. Siguiente: P3.
 | Item | Archivo | Notas |
 |------|---------|-------|
 | Plan semanal estático | `coach/plan/page.tsx` L20-28 | TODO: endpoint /api/coach/plan |
-| Búsqueda client-side | `comunidad/buscar/page.tsx` L11 | TODO: GET /api/users/search |
-| Favoritos en localStorage | `nutricion/favoritos/page.tsx` | TODO: persistir en API |
-| Feed mock | `api-laravel/FeedController.php` | TODO: lógica real de following |
-| Coach insights mock | `api-laravel/CoachController.php` | TODO: basado en datos reales |
-| Sin tests: WorkoutController | — | P3.1 |
-| Sin tests: BiometricController | — | P3.1 |
-| Sin tests: ActivityController | — | P3.1 |
-| Sin tests: AuthController | — | P3.1 |
+| Búsqueda client-side | `comunidad/buscar/page.tsx` L11 | TODO: GET /api/users/search (P3.3) |
+| Favoritos en localStorage | `nutricion/favoritos/page.tsx` | TODO: persistir en API (P4.2) |
+| Feed mock | `api-laravel/FeedController.php` | TODO: lógica real de following (P4.3) |
+| Coach insights mock | `api-laravel/CoachController.php` | TODO: basado en datos reales (P4.4) |
+| Deltas biométricos | `BiometricController::today()` | Gap documentado — decidir P3 vs P4 |
 
 ---
 

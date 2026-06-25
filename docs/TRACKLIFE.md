@@ -205,13 +205,19 @@ Sanctum token-based authentication.
   - **API Resources**: 8 Resources (`UserResource`, `MealResource`, `WorkoutResource`, `BiometricResource`, `ActivityResource`, `ExerciseResource`, `RecipeResource`, `WorkoutPlanResource`); todos los controladores devuelven Resources; contrato: `_id → id`, `user_id` no expuesto, fechas ISO 8601
   - **Dashboard Mejorado**: `MacroService::weeklyCalories()` (últimos 7 días); `DashboardController` con `weekly_calories` y `recent_workouts`; `components/WeeklyChart.tsx` (BarChart Recharts); `app/app/page.tsx` con streak destacado + gráfico semanal + workouts recientes; `DashboardTest.php` (5 tests TDD)
   - **Tests finales: 44/44 verdes, 170 assertions**. Build Next.js limpio.
+- **Sprint P3.1 (2026-06-25)**:
+  - **Tests de API (TDD)**: `WorkoutTest.php` (8 tests), `BiometricTest.php` (9 tests), `ActivityTest.php` (8 tests), `AuthTest.php` (+5 → 14 total)
+  - **Suite total: 74/74 tests verdes, 274 assertions**. Sprint TEST-ONLY: cero cambios de producción, ningún bug latente
+  - **Gap documentado**: `BiometricController::today()` no calcula deltas. Decisión futura: P3 vs P4
 
 **Pendiente:**
 - Migración SQLite → MongoDB cablear en API (package instalado, `DB_CONNECTION=mongodb` ya configurado)
+- Sprint P3.2: Server Components en Dashboard
+- Sprint P3.3: Búsqueda real de usuarios (GET /api/users/search)
+- Gap: deltas biométricos en `BiometricController::today()` (decisión P3 vs P4)
+- Diagnostico: contenedor web1-astro crash-loop (landing no accesible)
 - PWA / app móvil nativa
 - Providers de wearables reales (Zepp, Whoop OAuth)
-- Páginas calendario (con datos reales) y progreso (con gráficos recharts)
-- Páginas nutrición/plan, nutrición/favoritos, comunidad/buscar (placeholders)
 - Tests frontend (Vitest)
 - SSL para dominios tracklife en producción
 

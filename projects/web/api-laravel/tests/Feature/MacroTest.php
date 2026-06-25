@@ -17,13 +17,13 @@ class MacroTest extends TestCase
     private function makeUser(string $suffix = 'a'): User
     {
         return User::create([
-            'name'             => "Macro User {$suffix}",
-            'email'            => "macro{$suffix}@test.com",
-            'username'         => "macrouser{$suffix}",
-            'password'         => 'password123',
-            'macro_targets'    => User::defaultMacroTargets(),
+            'name' => "Macro User {$suffix}",
+            'email' => "macro{$suffix}@test.com",
+            'username' => "macrouser{$suffix}",
+            'password' => 'password123',
+            'macro_targets' => User::defaultMacroTargets(),
             'privacy_settings' => User::defaultPrivacySettings(),
-            'streak_days'      => 0,
+            'streak_days' => 0,
         ]);
     }
 
@@ -43,12 +43,12 @@ class MacroTest extends TestCase
 
         // Usuario nuevo tiene los targets por defecto
         $defaults = User::defaultMacroTargets();
-        $targets  = $response->json('targets');
+        $targets = $response->json('targets');
 
         $this->assertSame((int) $defaults['calories'], (int) $targets['calories']);
-        $this->assertSame((int) $defaults['protein'],  (int) $targets['protein']);
-        $this->assertSame((int) $defaults['carbs'],    (int) $targets['carbs']);
-        $this->assertSame((int) $defaults['fat'],      (int) $targets['fat']);
+        $this->assertSame((int) $defaults['protein'], (int) $targets['protein']);
+        $this->assertSame((int) $defaults['carbs'], (int) $targets['carbs']);
+        $this->assertSame((int) $defaults['fat'], (int) $targets['fat']);
     }
 
     public function test_user_can_update_macro_targets(): void
@@ -57,9 +57,9 @@ class MacroTest extends TestCase
 
         $newTargets = [
             'calories' => 2500,
-            'protein'  => 180,
-            'carbs'    => 250,
-            'fat'      => 80,
+            'protein' => 180,
+            'carbs' => 250,
+            'fat' => 80,
         ];
 
         $response = $this->actingAs($user, 'sanctum')
@@ -84,9 +84,9 @@ class MacroTest extends TestCase
         $response = $this->actingAs($user, 'sanctum')
             ->putJson('/api/macros/targets', [
                 'calories' => 100,
-                'protein'  => 150,
-                'carbs'    => 200,
-                'fat'      => 70,
+                'protein' => 150,
+                'carbs' => 200,
+                'fat' => 70,
             ]);
 
         $response->assertStatus(422)
@@ -128,16 +128,16 @@ class MacroTest extends TestCase
         $this->actingAs($user, 'sanctum')
             ->postJson('/api/meals', [
                 'meal_type' => 'breakfast',
-                'date'      => $today,
-                'items'     => [
+                'date' => $today,
+                'items' => [
                     [
-                        'name'     => 'Avena',
+                        'name' => 'Avena',
                         'quantity' => 100,
-                        'unit'     => 'g',
+                        'unit' => 'g',
                         'calories' => 350,
-                        'protein'  => 12,
-                        'carbs'    => 60,
-                        'fat'      => 7,
+                        'protein' => 12,
+                        'carbs' => 60,
+                        'fat' => 7,
                     ],
                 ],
             ]);
@@ -149,9 +149,9 @@ class MacroTest extends TestCase
 
         $consumed = $response->json('consumed');
         $this->assertSame(350.0, (float) $consumed['calories']);
-        $this->assertSame(12.0,  (float) $consumed['protein']);
-        $this->assertSame(60.0,  (float) $consumed['carbs']);
-        $this->assertSame(7.0,   (float) $consumed['fat']);
+        $this->assertSame(12.0, (float) $consumed['protein']);
+        $this->assertSame(60.0, (float) $consumed['carbs']);
+        $this->assertSame(7.0, (float) $consumed['fat']);
     }
 
     public function test_daily_progress_requires_authentication(): void

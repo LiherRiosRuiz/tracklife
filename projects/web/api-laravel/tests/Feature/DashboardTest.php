@@ -18,11 +18,12 @@ class DashboardTest extends TestCase
     private function makeUser(): User
     {
         $user = User::create([
-            'name'     => 'Test',
-            'email'    => 'dash@test.com',
+            'name' => 'Test',
+            'email' => 'dash@test.com',
             'password' => bcrypt('password'),
             'username' => 'dashtest',
         ]);
+
         return $user;
     }
 
@@ -65,11 +66,11 @@ class DashboardTest extends TestCase
         $user = $this->makeUser();
 
         MealEntry::create([
-            'user_id'   => (string) $user->_id,
-            'date'      => Carbon::today()->subDays(2)->toDateString(),
+            'user_id' => (string) $user->_id,
+            'date' => Carbon::today()->subDays(2)->toDateString(),
             'meal_type' => 'lunch',
-            'items'     => [['name' => 'Test', 'calories' => 400]],
-            'totals'    => ['calories' => 400, 'protein' => 30, 'carbs' => 50, 'fat' => 10],
+            'items' => [['name' => 'Test', 'calories' => 400]],
+            'totals' => ['calories' => 400, 'protein' => 30, 'carbs' => 50, 'fat' => 10],
         ]);
 
         $response = $this->actingAs($user, 'sanctum')
@@ -87,10 +88,10 @@ class DashboardTest extends TestCase
         $user = $this->makeUser();
 
         Workout::create([
-            'user_id'      => (string) $user->_id,
-            'name'         => 'Push Day',
-            'date'         => Carbon::today()->toDateString(),
-            'sets'         => [],
+            'user_id' => (string) $user->_id,
+            'name' => 'Push Day',
+            'date' => Carbon::today()->toDateString(),
+            'sets' => [],
             'total_volume' => 1500,
         ]);
 

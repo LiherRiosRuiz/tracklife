@@ -1,6 +1,6 @@
 # Estado del Sistema
 
-> Generado automaticamente por `update-status.sh`. Ultima edicion manual: 2026-06-21.
+> Generado automaticamente por `update-status.sh`. Ultima edicion manual: 2026-06-25.
 > Ejecutar `make status` para actualizar los datos en tiempo real.
 
 ---
@@ -10,7 +10,7 @@
 | Campo | Valor |
 |-------|-------|
 | Branch | `master` |
-| Ultimo commit | b31a793 — fix: quevedo buildVaultGraph — strip code spans antes de parsear wikilinks |
+| Ultimo commit | (pendiente commit P3.1 — 74 tests, cierre 2026-06-25) |
 | Remote | `https://github.com/LiherRiosRuiz/tracklife.git` (privado, configurado 2026-06-19) |
 | Auto-push | Stop hook activo en `.claude/settings.json` — commit + push al finalizar cada sesion |
 
@@ -41,10 +41,10 @@
 
 | Proyecto | Framework | Dominio | Ultima actividad |
 |----------|-----------|---------|-----------------|
-| [[Web1 Astro\|web1-astro]] | Astro 6 | www.tracklife.test | Sprint P2 landing redesign (2026-06-21) |
+| [[Web1 Astro\|web1-astro]] | Astro 6 | www.tracklife.test | Sprint P2 landing redesign (2026-06-21) · FAULT: crash-loop desde 2026-06-25 |
 | [[Web2 Nuxt\|web2-nuxt]] | Nuxt 4 | web2.test | sin cambios recientes |
 | [[Web3 Next\|web3-next]] | Next.js 16 | app.tracklife.test | Sprint P2 Zod + Dashboard (2026-06-21) |
-| [[API Laravel\|api-laravel]] | Laravel 13 | api.tracklife.test | Sprint P2 Form Requests + Resources (2026-06-21) |
+| [[API Laravel\|api-laravel]] | Laravel 13 | api.tracklife.test | Sprint P3.1 Tests TDD + 30 tests nuevos (2026-06-25) |
 
 ---
 

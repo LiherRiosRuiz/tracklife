@@ -8,6 +8,7 @@ Para el roadmap detallado de sprints futuros ver [[Roadmap TrackLife]].
 
 ## Infraestructura
 
+- [ ] **web1-astro crash-loop** — Contenedor Landing en estado `Restarting` desde 2026-06-25 apertura P3.1. Causas probables: dependencia faltante, error en build, incompatibilidad Astro 6. Impacto: landing no accesible, app funcional. Scope diferido a sesion dedicada.
 - [ ] **Automatizar portproxy WSL2 con Task Scheduler** — la IP de WSL2 cambia en cada reinicio. Automatizacion ya construida (2026-06-08, recomendacion #5 de [[Skills Pendientes]]): `infra/scripts/portproxy.sh` + `infra/scripts/install-portproxy-task.ps1` + target `make portproxy-install`. Falta la primera ejecucion manual con permisos de Administrador para registrar la tarea programada
 - [ ] **Certificados SSL** — si el stack se abre a internet, usar Let's Encrypt vía Traefik ACME
 - [ ] **Backups automáticos de MongoDB** — automatizacion ya construida (2026-06-08, recomendacion #5 de [[Skills Pendientes]]): `infra/mongodb/backup.sh` (`mongodump --gzip --archive`, rotacion configurable, restore documentado) + target `make mongo-backup`. Falta la primera corrida manual de verificacion antes de confiar en el flujo de forma rutinaria
@@ -18,7 +19,8 @@ Para el roadmap detallado de sprints futuros ver [[Roadmap TrackLife]].
 ## TRACKLIFE — API
 
 - [ ] **Migrar de SQLite a MongoDB** — el package `mongodb/laravel-mongodb` está instalado y `DB_CONNECTION=mongodb` configurado en docker-compose. Solo falta ajustar `config/database.php` y verificar que las migraciones funcionan con MongoDB driver
-- [x] **Tests reales** — 44 Feature Tests verdes (170 assertions): Auth, Meals, Workouts, Biometrics, Dashboard, Exercises, WorkoutPlans (2026-06-21)
+- [x] **Tests reales** — 74 Feature Tests verdes (274 assertions): Auth (+5), Meals, Workouts (8), Biometrics (9), Activities (8), Dashboard, Exercises, WorkoutPlans (2026-06-25, Sprint P3.1)
+- [ ] **Deltas biométricos** — `BiometricController::today()` no calcula deltas. Gap documentado en P3.1; si se requieren, abrir sub-sprint aparte
 - [ ] **Providers de wearables** — Zepp y Whoop OAuth2. La infraestructura de `WearableConnection` está lista, falta el flujo OAuth y el sync real
 - [ ] **Versionado de API** — cuando haya >10 endpoints estables, considerar `/api/v1/`
 
@@ -32,7 +34,9 @@ Para el roadmap detallado de sprints futuros ver [[Roadmap TrackLife]].
 - [x] **Stop hook — auto git push** — `.claude/settings.json` con hook `Stop`; commit + push automático al finalizar cada sesión (2026-06-19)
 - [x] **Sprint P1** — completado 2026-06-21: 9 páginas placeholder (nutricion/plan, nutricion/favoritos, comunidad/buscar, coach/plan, coach/insights, biometricos/cuerpo, entrenamiento/progreso + ajuste BiometricController)
 - [x] **Sprint P2** — completado 2026-06-21: Form Requests (20), Zod Frontend, Landing Redesign, API Resources (8), Dashboard mejorado con WeeklyChart. 44/44 tests verdes.
-- [ ] **Sprint P3** — próximo: WorkoutTest, BiometricTest, ActivityTest, AuthTest (TDD) + Server Components Dashboard + búsqueda real usuarios. Ver [[Roadmap TrackLife]]
+- [x] **Sprint P3.1** — completado 2026-06-25: WorkoutTest (8), BiometricTest (9), ActivityTest (8), AuthTest (+5). 74/74 tests verdes (274 assertions).
+- [ ] **Sprint P3.2** — próximo: Server Components Dashboard. Ver [[Roadmap TrackLife]]
+- [ ] **Sprint P3.3** — búsqueda real usuarios (GET /api/users/search)
 - [ ] **Páginas con datos reales** — calendario, progreso (recharts), plan nutricional, favoritos, comunidad (P4 en [[Roadmap TrackLife]])
 - [ ] **PWA** — manifest + service worker para instalación en móvil
 - [ ] **Tests frontend** — instalar Vitest + @testing-library/react para web3-next
