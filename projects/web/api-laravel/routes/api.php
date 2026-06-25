@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\MealController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\RecipeController;
 use App\Http\Controllers\Api\UserProfileController;
+use App\Http\Controllers\Api\UserSearchController;
 use App\Http\Controllers\Api\WearableController;
 use App\Http\Controllers\Api\WorkoutController;
 use App\Http\Controllers\Api\WorkoutPlanController;
@@ -46,6 +47,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/meals/{id}', [MealController::class, 'destroy']);
 
     Route::get('/foods/search', [FoodController::class, 'search']);
+    Route::get('/users/search', [UserSearchController::class, 'search']);
     Route::post('/products/scan', [ProductController::class, 'scan']);
 
     Route::get('/macros/targets', [MacroController::class, 'targets']);
