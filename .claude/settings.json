@@ -1,4 +1,24 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(git:*)",
+      "Bash(gh:*)",
+      "Bash(docker:*)",
+      "Bash(wsl:*)",
+      "Bash(npm:*)",
+      "Bash(npx:*)",
+      "Bash(make:*)",
+      "Bash(php artisan:*)",
+      "Bash(./vendor/bin/pint:*)",
+      "Bash(./vendor/bin/phpunit:*)",
+      "Bash(composer:*)",
+      "Bash(node:*)",
+      "Read(//mnt/d/Compartida/LIHER/**)",
+      "Read(//d/Compartida/LIHER/**)",
+      "Edit(//mnt/d/Compartida/LIHER/**)",
+      "Write(//mnt/d/Compartida/LIHER/**)"
+    ]
+  },
   "hooks": {
     "Stop": [
       {
