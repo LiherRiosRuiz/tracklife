@@ -13,8 +13,8 @@ Sprint P1 y P2 cerrados. Siguiente: P3.
 | P1 — Páginas placeholder (9) | [x] Completado 2026-06-21 | — |
 | P2 — Calidad y estructura | [x] Completado 2026-06-21 | 44/44 |
 | P3.1 — Tests de API (TDD) | [x] Completado 2026-06-25 | 74/74 |
-| P3.2 — Server Components | [ ] Pendiente | — |
-| P3.3 — Búsqueda usuarios real | [ ] Pendiente | — |
+| P3.2 — Server Components | [ ] Desbloqueado (decisión auth tomada) | — |
+| P3.3 — Búsqueda usuarios real | [x] Completado 2026-06-25 | 79/79 |
 | P4 — Funcionalidades reales | [ ] Pendiente | — |
 | P5 — Producción y pulido | [ ] Pendiente | — |
 
@@ -41,16 +41,45 @@ Sprint P1 y P2 cerrados. Siguiente: P3.
 
 ### P3.2 Server Components en Dashboard
 
-- Convertir `/app/app/page.tsx` a Server Component donde sea posible
-- `WeeklyChart.tsx` sigue siendo client (Recharts requiere browser)
-- Separar data-fetching del render: `fetch()` directo en Server Component
-- Beneficio: menos JS en cliente, mejor TTFB
+**DESBLOQUEADO** — Decisión de arquitectura tomada (LIHER, 2026-06-25). Pendiente de implementación (su propio sprint TDD vía Platón).
 
-### P3.3 Búsqueda real de usuarios
+**Problema:** Token Sanctum en `localStorage` (client-only). Server Components (Next.js) no acceden a localStorage. Las 19+ páginas con `token!` del AuthContext no pueden fetchar datos autenticados server-side sin refactor previo.
 
-- Endpoint: `GET /api/users/search?q=` en Laravel
-- Reemplazar búsqueda client-side en `comunidad/buscar/page.tsx`
-- Mínimo 3 tests: resultados, sin autenticación 401, query vacía
+**Opciones evaluadas:**
+
+| Opcion | Descripcion | Viabilidad |
+|--------|-------------|-----------|
+| A (ELEGIDA) | **httpOnly cookie + capa server en Next.js** | VIABLE |
+| B (descartado) | Cookie no-httpOnly | NO — misma exposición XSS que localStorage |
+| C (descartado p/ahora) | Sanctum cookie-SPA completo en Laravel | VIABLE LP (P5+) |
+
+**Decisión: Opción A — httpOnly cookie servida vía Route Handlers de Next.js 16.**
+
+Razonamiento (largo plazo):
+- Server Components **necesitan** auth legible en el servidor → cookies, no localStorage. Es un requisito estructural, no preferencia.
+- El idioma moderno de Next.js 16 ya resuelve esto sin un "BFF Node.js aparte": **Route Handlers / Server Actions** que leen una cookie `httpOnly` (`cookies()` de `next/headers`). Menos superficie que mantener un proxy separado.
+- **No toca el API Laravel** (sigue emitiendo tokens Sanctum); el token se guarda en cookie httpOnly desde un route handler de login en Next, en vez de en localStorage.
+- **httpOnly = resistente a XSS** (el token deja de ser legible por JS). Mejora de seguridad neta sobre el estado actual.
+- **Migración incremental:** dual-write (cookie + localStorage) durante la transición para no romper las 19+ páginas client mientras se migran gradualmente a Server Components. Se retira localStorage al final.
+- Opción C (Sanctum cookie-SPA) se descarta para esta fase: toca CORS/session/dominios del backend, frágil entre subdominios (`api.tracklife.test` ↔ `app.tracklife.test`) y entre los 3 frontends (Astro/Nuxt/Next). Queda como norte de largo plazo si se unifica auth de todo el stack en P5+.
+
+**Plan de sprint P3.2 (próxima sesión):** Platón produce plan TDD detallado. Pasos macro:
+1. Route handler `POST /app/api/auth/login` en Next → llama a Laravel, recibe token, lo escribe en cookie `httpOnly` `Secure` `SameSite=Lax`.
+2. `lib/server-api.ts` — fetcher server-side que lee el token de `cookies()`.
+3. Dual-write: AuthContext sigue poblando localStorage para compat client durante migración.
+4. Migrar el Dashboard (`/app/app/page.tsx`) a Server Component leyendo datos vía `server-api`. `WeeklyChart` permanece client (Recharts).
+5. Logout limpia cookie + localStorage.
+
+**Riesgo a vigilar:** middleware de Next y refresh de token (interceptor 401) — coordinar con P5.1 (auth hardening).
+
+### P3.3 Búsqueda real de usuarios [x] COMPLETADO 2026-06-25
+
+**Resultado:**
+- `UserSearchController::search()` — GET /api/users/search?q= (auth:sanctum)
+- `UserSearchTest.php` — 5 tests (resultados, 401, query vacia, exclusion propio, match case-insensitive)
+- `comunidad/buscar/page.tsx` — reescrito, busqueda real con debounce 300ms
+- Respuesta segura: id, name, username, bio, avatar_url, streak_days (sin email, privacy)
+- **Suite total:** 79 tests / 309 assertions / 0 fallos
 
 ---
 
@@ -130,11 +159,11 @@ Sprint P1 y P2 cerrados. Siguiente: P3.
 | Item | Archivo | Notas |
 |------|---------|-------|
 | Plan semanal estático | `coach/plan/page.tsx` L20-28 | TODO: endpoint /api/coach/plan |
-| Búsqueda client-side | `comunidad/buscar/page.tsx` L11 | TODO: GET /api/users/search (P3.3) |
 | Favoritos en localStorage | `nutricion/favoritos/page.tsx` | TODO: persistir en API (P4.2) |
 | Feed mock | `api-laravel/FeedController.php` | TODO: lógica real de following (P4.3) |
 | Coach insights mock | `api-laravel/CoachController.php` | TODO: basado en datos reales (P4.4) |
 | Deltas biométricos | `BiometricController::today()` | Gap documentado — decidir P3 vs P4 |
+| Link a perfil 404 | `comunidad/buscar/page.tsx` Button href="/app/comunidad/perfil/{id}" | Ruta NO EXISTE. GET /api/users/{id}/profile existe pero ninguna pagina Next la consume. Candidato sub-sprint: "Pagina perfil usuario" |
 
 ---
 

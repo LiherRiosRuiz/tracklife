@@ -23,6 +23,7 @@ Para el roadmap detallado de sprints futuros ver [[Roadmap TrackLife]].
 - [ ] **Deltas biométricos** — `BiometricController::today()` no calcula deltas. Gap documentado en P3.1; si se requieren, abrir sub-sprint aparte
 - [ ] **Providers de wearables** — Zepp y Whoop OAuth2. La infraestructura de `WearableConnection` está lista, falta el flujo OAuth y el sync real
 - [ ] **Versionado de API** — cuando haya >10 endpoints estables, considerar `/api/v1/`
+- [ ] **CLAUDE.md de projects/web/api-laravel/ desactualizado** — Afirma "no routes/api.php" y "MongoDB no cableado", pero el codigo real tiene API completa (~20 controladores) + Mongo activo. Tarea mantenimiento documentacion.
 
 ---
 
@@ -35,8 +36,8 @@ Para el roadmap detallado de sprints futuros ver [[Roadmap TrackLife]].
 - [x] **Sprint P1** — completado 2026-06-21: 9 páginas placeholder (nutricion/plan, nutricion/favoritos, comunidad/buscar, coach/plan, coach/insights, biometricos/cuerpo, entrenamiento/progreso + ajuste BiometricController)
 - [x] **Sprint P2** — completado 2026-06-21: Form Requests (20), Zod Frontend, Landing Redesign, API Resources (8), Dashboard mejorado con WeeklyChart. 44/44 tests verdes.
 - [x] **Sprint P3.1** — completado 2026-06-25: WorkoutTest (8), BiometricTest (9), ActivityTest (8), AuthTest (+5). 74/74 tests verdes (274 assertions).
-- [ ] **Sprint P3.2** — próximo: Server Components Dashboard. Ver [[Roadmap TrackLife]]
-- [ ] **Sprint P3.3** — búsqueda real usuarios (GET /api/users/search)
+- [ ] **Sprint P3.2** — BLOQUEADO: Server Components Dashboard requiere refactor auth (BFF). Ver [[Roadmap TrackLife]] para opciones A/C
+- [x] **Sprint P3.3** — completado 2026-06-25: busqueda real usuarios (GET /api/users/search). 79/79 tests verdes.
 - [ ] **Páginas con datos reales** — calendario, progreso (recharts), plan nutricional, favoritos, comunidad (P4 en [[Roadmap TrackLife]])
 - [ ] **PWA** — manifest + service worker para instalación en móvil
 - [ ] **Tests frontend** — instalar Vitest + @testing-library/react para web3-next
