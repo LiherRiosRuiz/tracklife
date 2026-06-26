@@ -44,23 +44,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(newUser);
   };
 
+  // login/register pasan por los route handlers same-origin de Next (host app.*),
+  // que setean la cookie httpOnly y devuelven { user, token }. El token se sigue
+  // guardando en localStorage (dual-write) para compatibilidad con las páginas
+  // client que aún leen `token` del contexto. La retirada de localStorage es P5.1.
   const login = async (email: string, password: string) => {
-    const { token: t, user: u } = await api.login({ email, password });
-    persist(t, u);
+    const res = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await res.json().catch(() => ({ message: "Error al iniciar sesión" }));
+    if (!res.ok) throw new Error(data.message ?? "Error al iniciar sesión");
+    persist(data.token, data.user);
   };
 
   const register = async (name: string, email: string, password: string) => {
-    const { token: t, user: u } = await api.register({ name, email, password });
-    persist(t, u);
+    const res = await fetch("/api/auth/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, email, password }),
+    });
+    const data = await res.json().catch(() => ({ message: "Error al registrarse" }));
+    if (!res.ok) throw new Error(data.message ?? "Error al registrarse");
+    persist(data.token, data.user);
   };
 
   const logout = () => {
-    // Llamada silenciosa a la API para revocar el token en servidor.
+    // El route handler de Next revoca el token en Laravel y limpia la cookie httpOnly.
     // Se ignoran errores de red — el usuario cierra sesión de todas formas.
-    const currentToken = token;
-    if (currentToken) {
-      api.logout(currentToken).catch(() => {});
-    }
+    fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
     localStorage.removeItem(TOKEN_KEY);
     setToken(null);
     setUser(null);

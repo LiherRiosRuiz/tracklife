@@ -6,6 +6,10 @@ services:
     environment:
       NEXT_PUBLIC_API_URL: http://api.tracklife.test
       NEXT_PUBLIC_APP_URL: http://app.tracklife.test
+      # URL server-only (sin NEXT_PUBLIC_): el servidor Next llama al API por la red
+      # interna Docker (nombre de contenedor), no por el dominio .test (que no resuelve
+      # dentro del contenedor). Evita además CORS al ser server-to-server.
+      API_INTERNAL_URL: http://api-laravel:8000
     volumes:
       - .:/app
       - tracklife_node_modules:/app/node_modules

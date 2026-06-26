@@ -1,34 +1,26 @@
-"use client";
-
+import { redirect } from "next/navigation";
 import { Flame } from "lucide-react";
-import { api } from "@/lib/api";
-import { useAuth } from "@/lib/auth";
-import { useApiData } from "@/hooks/use-api-data";
 import { Button, Card, MacroBar, PageHeader } from "@/components/ui";
 import { FeedList } from "@/components/FeedList";
-import { SkeletonDashboard } from "@/components/Skeleton";
-import { ErrorState } from "@/components/ErrorState";
 import { WeeklyChart } from "@/components/WeeklyChart";
+import { serverApi, UnauthenticatedError } from "@/lib/server-api";
 
-export default function DashboardPage() {
-  const { token, user } = useAuth();
+export default async function DashboardPage() {
+  let data;
+  try {
+    data = await serverApi.dashboard();
+  } catch (e) {
+    // Self-guard server-side: sin cookie (o token rechazado) → al login.
+    if (e instanceof UnauthenticatedError) redirect("/login");
+    throw e; // otros errores → app/app/error.tsx
+  }
 
-  const { data, loading, error, refetch } = useApiData(
-    () => api.dashboard(token!),
-    [token],
-    { enabled: !!token },
-  );
-
-  if (loading) return <SkeletonDashboard />;
-  if (error) return <ErrorState message={error} onRetry={refetch} />;
-  if (!data) return null;
-
-  const { macros, insights, feed_preview, weekly_calories, recent_workouts } = data;
+  const { user, macros, insights, feed_preview, weekly_calories, recent_workouts } = data;
 
   return (
     <div>
       <PageHeader
-        title={`Hola, ${user?.name}`}
+        title={`Hola, ${user.name}`}
         subtitle="Resumen de tu día"
       />
       <div className="mb-4 flex items-center gap-2 text-sm text-accent">
