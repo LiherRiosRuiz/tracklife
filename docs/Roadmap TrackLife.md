@@ -13,7 +13,7 @@ Sprint P1 y P2 cerrados. Siguiente: P3.
 | P1 — Páginas placeholder (9) | [x] Completado 2026-06-21 | — |
 | P2 — Calidad y estructura | [x] Completado 2026-06-21 | 44/44 |
 | P3.1 — Tests de API (TDD) | [x] Completado 2026-06-25 | 74/74 |
-| P3.2 — Server Components | [ ] Desbloqueado (decisión auth tomada) | — |
+| P3.2 — Server Components | [x] Completado 2026-06-25 | 79/79 |
 | P3.3 — Búsqueda usuarios real | [x] Completado 2026-06-25 | 79/79 |
 | P4 — Funcionalidades reales | [ ] Pendiente | — |
 | P5 — Producción y pulido | [ ] Pendiente | — |
@@ -39,38 +39,27 @@ Sprint P1 y P2 cerrados. Siguiente: P3.
 - `BiometricController::today()` NO calcula "deltas" de biométricos
 - Si se requieren, abrir sub-sprint feature aparte (no es test-only)
 
-### P3.2 Server Components en Dashboard
+### P3.2 Server Components en Dashboard [x] COMPLETADO 2026-06-25
 
-**DESBLOQUEADO** — Decisión de arquitectura tomada (LIHER, 2026-06-25). Pendiente de implementación (su propio sprint TDD vía Platón).
+**Opcion A ejecutada:** httpOnly cookie servida via Route Handlers de Next.js 16 + dual-write cookie+localStorage (migracion incremental).
 
-**Problema:** Token Sanctum en `localStorage` (client-only). Server Components (Next.js) no acceden a localStorage. Las 19+ páginas con `token!` del AuthContext no pueden fetchar datos autenticados server-side sin refactor previo.
+**Resultado:**
+- `app/api/auth/{login,register,logout}/route.ts` — Route Handlers con httpOnly cookie (SameSite=Lax, Path=/, Max-Age 604800, Secure solo prod). Proxean a Laravel via `API_INTERNAL_URL=http://api-laravel:8000` (server-to-server, sin CORS).
+- `lib/server-api.ts` — capa server-only que lee token de cookie via `cookies()` de next/headers. Lanza `UnauthenticatedError` sin sesion.
+- `lib/auth-constants.ts` — constante `SESSION_COOKIE`.
+- `lib/auth.tsx` — login/register/logout pasan por Route Handlers de Next; dual-write cookie+localStorage para compat con 18 paginas client.
+- `app/app/page.tsx` — Dashboard reescrito como Server Component (fetcha server-side). `WeeklyChart` permanece client island.
+- `app/app/loading.tsx` y `error.tsx` — boundaries anadidos.
+- **Verificacion runtime:** Set-Cookie correcto con httpOnly, smoke test register/login/GET /app sin/con sesion validados. httpOnly confirmed (no accesible por JS).
+- **Suite stable:** 79 tests verdes (sin cambios).
 
-**Opciones evaluadas:**
+**Metodologia:** LIHER ejecuto directamente (subagentes truncados) siguiendo plan de Platon. API Laravel sin cambios (no-regresion).
 
-| Opcion | Descripcion | Viabilidad |
-|--------|-------------|-----------|
-| A (ELEGIDA) | **httpOnly cookie + capa server en Next.js** | VIABLE |
-| B (descartado) | Cookie no-httpOnly | NO — misma exposición XSS que localStorage |
-| C (descartado p/ahora) | Sanctum cookie-SPA completo en Laravel | VIABLE LP (P5+) |
-
-**Decisión: Opción A — httpOnly cookie servida vía Route Handlers de Next.js 16.**
-
-Razonamiento (largo plazo):
-- Server Components **necesitan** auth legible en el servidor → cookies, no localStorage. Es un requisito estructural, no preferencia.
-- El idioma moderno de Next.js 16 ya resuelve esto sin un "BFF Node.js aparte": **Route Handlers / Server Actions** que leen una cookie `httpOnly` (`cookies()` de `next/headers`). Menos superficie que mantener un proxy separado.
-- **No toca el API Laravel** (sigue emitiendo tokens Sanctum); el token se guarda en cookie httpOnly desde un route handler de login en Next, en vez de en localStorage.
-- **httpOnly = resistente a XSS** (el token deja de ser legible por JS). Mejora de seguridad neta sobre el estado actual.
-- **Migración incremental:** dual-write (cookie + localStorage) durante la transición para no romper las 19+ páginas client mientras se migran gradualmente a Server Components. Se retira localStorage al final.
-- Opción C (Sanctum cookie-SPA) se descarta para esta fase: toca CORS/session/dominios del backend, frágil entre subdominios (`api.tracklife.test` ↔ `app.tracklife.test`) y entre los 3 frontends (Astro/Nuxt/Next). Queda como norte de largo plazo si se unifica auth de todo el stack en P5+.
-
-**Plan de sprint P3.2 (próxima sesión):** Platón produce plan TDD detallado. Pasos macro:
-1. Route handler `POST /app/api/auth/login` en Next → llama a Laravel, recibe token, lo escribe en cookie `httpOnly` `Secure` `SameSite=Lax`.
-2. `lib/server-api.ts` — fetcher server-side que lee el token de `cookies()`.
-3. Dual-write: AuthContext sigue poblando localStorage para compat client durante migración.
-4. Migrar el Dashboard (`/app/app/page.tsx`) a Server Component leyendo datos vía `server-api`. `WeeklyChart` permanece client (Recharts).
-5. Logout limpia cookie + localStorage.
-
-**Riesgo a vigilar:** middleware de Next y refresh de token (interceptor 401) — coordinar con P5.1 (auth hardening).
+**Deuda para futuro (P5.1+):**
+- Retirar localStorage y dual-write
+- Migrar 18 paginas client restantes a Server Components
+- Refresh tokens, middleware.ts, re-sincronizacion sesiones viejas
+- HTTPS en dev para flag Secure
 
 ### P3.3 Búsqueda real de usuarios [x] COMPLETADO 2026-06-25
 
