@@ -24,6 +24,9 @@ Para el roadmap detallado de sprints futuros ver [[Roadmap TrackLife]].
 - [ ] **Providers de wearables** — Zepp y Whoop OAuth2. La infraestructura de `WearableConnection` está lista, falta el flujo OAuth y el sync real
 - [ ] **Versionado de API** — cuando haya >10 endpoints estables, considerar `/api/v1/`
 - [ ] **CLAUDE.md de projects/web/api-laravel/ desactualizado** — Afirma "no routes/api.php" y "MongoDB no cableado", pero el codigo real tiene API completa (~20 controladores) + Mongo activo. Tarea mantenimiento documentacion.
+- [x] **Fix crítico aislamiento de tests** — 2026-06-29: los tests corrían contra la BD producción `tracklife` y borraban la colección `users` en cada `php artisan test` (las env reales de Docker ensombrecían `phpunit.xml`, ni `force="true"` se aplicaba). Sintoma: usuarios desaparecían y el login daba "Credenciales incorrectas". Resuelto: `TestCase::setUp()` fuerza BD `_testing` + `DB::purge` + guardia allowlist en `MongoTestCleanup` + test de regresión. Verificado: sentinela en producción sobrevive a la suite completa. commit `eca9b52`.
+- [x] **Fix higiene APP_KEY** — 2026-06-29: `docker-entrypoint.sh` regeneraba la APP_KEY en cada arranque (rotándola). Ahora solo se genera si no existe (idempotente). No era la causa del bug de persistencia pero es un footgun real.
+- [ ] **Mensaje de login ambiguo** — `AuthController::login` devuelve "Credenciales incorrectas" tanto si el email no existe como si la contraseña es errónea. Decisión pendiente: el mensaje genérico es buena práctica anti-enumeración de usuarios, así que probablemente dejarlo; documentar la decisión. Baja prioridad.
 
 ---
 
