@@ -139,7 +139,7 @@ function AjustesForm({ user, token, onLogout }: { user: User; token: string; onL
               <span className="text-sm text-accent">Cambios guardados</span>
             )}
             {profileStatus === "error" && (
-              <span className="text-sm text-red-400">{profileError}</span>
+              <span className="text-sm text-danger">{profileError}</span>
             )}
           </div>
         </Card>
@@ -182,7 +182,7 @@ function AjustesForm({ user, token, onLogout }: { user: User; token: string; onL
               <span className="text-sm text-accent">Cambios guardados</span>
             )}
             {privacyStatus === "error" && (
-              <span className="text-sm text-red-400">{privacyError}</span>
+              <span className="text-sm text-danger">{privacyError}</span>
             )}
           </div>
         </Card>
@@ -200,7 +200,7 @@ function AjustesForm({ user, token, onLogout }: { user: User; token: string; onL
         <Button
           variant="secondary"
           onClick={onLogout}
-          className="border-red-900 text-red-400 hover:border-red-500 hover:text-red-300"
+          className="border-danger/40 text-danger hover:border-danger hover:text-danger"
         >
           Cerrar sesión
         </Button>

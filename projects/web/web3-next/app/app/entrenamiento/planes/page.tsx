@@ -51,7 +51,7 @@ export default function PlanesPage() {
                   {plan.exercises.reduce((sum, ex) => sum + ex.sets.length, 0)} series
                 </p>
               </Link>
-              <button onClick={() => deletePlan(plan._id!)} className="ml-4 text-sm text-muted hover:text-red-400">
+              <button onClick={() => deletePlan(plan._id!)} className="ml-4 text-sm text-muted hover:text-danger">
                 Eliminar
               </button>
             </Card>

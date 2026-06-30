@@ -121,7 +121,7 @@ export default function RegistrarComidaPage() {
             <input type="checkbox" checked={share} onChange={(e) => setShare(e.target.checked)} />
             Compartir en el feed
           </label>
-          {error && <p className="text-sm text-red-400">{error}</p>}
+          {error && <p className="text-sm text-danger">{error}</p>}
           <Button type="submit" disabled={loading} className="w-full">
             {loading ? "Guardando..." : "Guardar comida"}
           </Button>

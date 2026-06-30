@@ -29,7 +29,7 @@ const WEEKLY_PLAN: DayPlan[] = [
 
 const DAY_COLORS: Record<DayPlan["type"], string> = {
   strength: "bg-accent text-black",
-  cardio:   "bg-blue-500 text-white",
+  cardio:   "bg-protein text-white",
   rest:     "bg-border text-muted",
 };
 
@@ -40,9 +40,9 @@ const DAY_BADGE: Record<DayPlan["type"], string> = {
 };
 
 const INSIGHT_COLORS: Record<string, string> = {
-  warning: "border-yellow-500/40 bg-yellow-950/30 text-yellow-300",
-  success: "border-green-500/40 bg-green-950/30 text-accent",
-  info:    "border-blue-500/40 bg-blue-950/30 text-blue-300",
+  warning: "border-warning/30 bg-warning/10 text-warning",
+  success: "border-success/30 bg-success/10 text-accent",
+  info:    "border-cyan/30 bg-cyan/10 text-cyan",
 };
 
 const INSIGHT_ICONS: Record<string, string> = {
@@ -127,7 +127,7 @@ export default function CoachPlanPage() {
                     <p className="mt-1 text-xs text-muted">Peso objetivo</p>
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-blue-400">
+                    <p className="text-2xl font-bold text-cyan">
                       {goal.target_body_fat ? `${goal.target_body_fat}%` : "—"}
                     </p>
                     <p className="mt-1 text-xs text-muted">Grasa objetivo</p>
@@ -197,19 +197,19 @@ export default function CoachPlanPage() {
                         label="Proteína (g)"
                         value={consumed.protein}
                         target={targets.protein}
-                        color="bg-blue-500"
+                        color="bg-protein"
                       />
                       <MacroBar
                         label="Carbohidratos (g)"
                         value={consumed.carbs}
                         target={targets.carbs}
-                        color="bg-yellow-500"
+                        color="bg-carbs"
                       />
                       <MacroBar
                         label="Grasa (g)"
                         value={consumed.fat}
                         target={targets.fat}
-                        color="bg-orange-500"
+                        color="bg-fat"
                       />
                     </div>
                   ) : (

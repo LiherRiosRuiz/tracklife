@@ -303,10 +303,10 @@ export default function FavoritosPage() {
               <option value="other">Snack</option>
             </select>
             {addState === "done" && (
-              <p className="mb-3 text-sm text-green-400">Anadido al diario</p>
+              <p className="mb-3 text-sm text-success">Anadido al diario</p>
             )}
             {addState === "error" && (
-              <p className="mb-3 text-sm text-red-400">Error al anadir — intenta de nuevo</p>
+              <p className="mb-3 text-sm text-danger">Error al anadir — intenta de nuevo</p>
             )}
             <div className="flex gap-2">
               <Button
