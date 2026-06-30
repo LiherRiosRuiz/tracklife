@@ -46,31 +46,31 @@ const plans = [
 >
   <section class="max-w-4xl mx-auto px-6 pt-20 pb-8 text-center">
     <h1 class="text-4xl md:text-6xl font-black mb-4">Precios simples</h1>
-    <p class="text-muted text-lg">Empieza gratis. Siempre.</p>
+    <p class="text-fg-muted text-lg">Empieza gratis. Siempre.</p>
   </section>
 
   <section class="max-w-3xl mx-auto px-6 py-16 grid md:grid-cols-2 gap-8">
     {plans.map((plan) => (
-      <div class={`rounded-2xl border p-8 flex flex-col ${plan.highlighted ? 'border-accent bg-card shadow-xl shadow-accent/10' : 'border-border bg-card'}`}>
+      <div class={`rounded-2xl border p-8 flex flex-col ${plan.highlighted ? 'border-accent bg-surface shadow-xl shadow-accent/10' : 'border-border bg-surface'}`}>
         {plan.highlighted && (
-          <div class="mb-4 inline-block rounded-full bg-accent px-3 py-1 text-xs font-bold text-black">Próximamente</div>
+          <div class="mb-4 inline-block rounded-full bg-accent px-3 py-1 text-xs font-bold text-on-accent">Próximamente</div>
         )}
         <h2 class="text-2xl font-black mb-1">{plan.name}</h2>
         <div class="mb-1">
-          <span class={`text-4xl font-black ${plan.highlighted ? 'text-muted' : 'text-accent'}`}>{plan.price}</span>
-          {plan.period && <span class="text-sm text-muted ml-1">{plan.period}</span>}
+          <span class={`text-4xl font-black ${plan.highlighted ? 'text-fg-muted' : 'text-accent'}`}>{plan.price}</span>
+          {plan.period && <span class="text-sm text-fg-muted ml-1">{plan.period}</span>}
         </div>
-        <p class="text-muted text-sm mb-6">{plan.desc}</p>
+        <p class="text-fg-muted text-sm mb-6">{plan.desc}</p>
         <ul class="space-y-3 mb-8 flex-1">
           {plan.features.map((f) => (
             <li class="flex items-center gap-2 text-sm">
-              <span class={plan.highlighted ? 'text-muted' : 'text-accent'}>✓</span>
+              <span class={plan.highlighted ? 'text-fg-muted' : 'text-accent'}>✓</span>
               <span>{f}</span>
             </li>
           ))}
         </ul>
         <a href={plan.href}
-           class={`block rounded-xl py-3 text-center font-bold transition-colors ${plan.highlighted ? 'border border-border text-muted cursor-not-allowed' : 'bg-accent text-black hover:bg-green-400'}`}>
+           class={`block rounded-xl py-3 text-center font-bold transition-colors ${plan.highlighted ? 'border border-border text-fg-muted cursor-not-allowed' : 'bg-accent text-on-accent hover:bg-accent-strong'}`}>
           {plan.cta}
         </a>
       </div>
@@ -78,7 +78,7 @@ const plans = [
   </section>
 
   <section class="max-w-2xl mx-auto px-6 pb-20 text-center">
-    <p class="text-muted text-sm">
+    <p class="text-fg-muted text-sm">
       ¿Preguntas? El proyecto es open source —
       <a href="https://github.com/LiherRiosRuiz/tracklife" class="text-accent hover:underline">revisa el código</a>.
     </p>
