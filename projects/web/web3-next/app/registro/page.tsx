@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth";
-import { Button, Card } from "@/components/ui";
+import { Brand, Button, Card, Input } from "@/components/ui";
 import { registerSchema } from "@/lib/schemas";
 
 export default function RegisterPage() {
@@ -45,49 +45,54 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4">
-      <Card className="w-full max-w-md">
-        <h1 className="text-2xl font-black text-accent">TRACKLIFE</h1>
-        <p className="mt-1 text-sm text-muted">Crea tu cuenta y empieza tu transformación</p>
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-4">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-1/3 left-1/2 h-[60vh] w-[60vh] -translate-x-1/2 rounded-full opacity-25 blur-3xl"
+        style={{ background: "radial-gradient(circle, var(--color-accent), transparent 70%)" }}
+      />
+      <Card elevated className="relative w-full max-w-md">
+        <Brand className="text-2xl" />
+        <p className="mt-2 text-sm text-fg-muted">Crea tu cuenta y empieza tu transformación</p>
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <div>
-            <input
+            <Input
               type="text"
               placeholder="Nombre"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:border-accent"
+              error={!!fieldErrors.name}
             />
-            {fieldErrors.name && <p className="mt-1 text-xs text-red-400">{fieldErrors.name}</p>}
+            {fieldErrors.name && <p className="mt-1 text-xs text-danger">{fieldErrors.name}</p>}
           </div>
           <div>
-            <input
+            <Input
               type="email"
               placeholder="Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:border-accent"
+              error={!!fieldErrors.email}
             />
-            {fieldErrors.email && <p className="mt-1 text-xs text-red-400">{fieldErrors.email}</p>}
+            {fieldErrors.email && <p className="mt-1 text-xs text-danger">{fieldErrors.email}</p>}
           </div>
           <div>
-            <input
+            <Input
               type="password"
               placeholder="Contraseña (mín. 8)"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:border-accent"
+              error={!!fieldErrors.password}
             />
-            {fieldErrors.password && <p className="mt-1 text-xs text-red-400">{fieldErrors.password}</p>}
+            {fieldErrors.password && <p className="mt-1 text-xs text-danger">{fieldErrors.password}</p>}
           </div>
-          {error && <p className="text-sm text-red-400">{error}</p>}
+          {error && <p className="text-sm text-danger">{error}</p>}
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? "Creando cuenta..." : "Crear cuenta"}
           </Button>
         </form>
-        <p className="mt-4 text-center text-sm text-muted">
+        <p className="mt-4 text-center text-sm text-fg-muted">
           ¿Ya tienes cuenta?{" "}
-          <Link href="/login" className="text-accent hover:underline">
+          <Link href="/login" className="font-semibold text-accent hover:underline">
             Inicia sesión
           </Link>
         </p>

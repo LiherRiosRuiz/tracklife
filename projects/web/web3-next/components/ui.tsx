@@ -1,5 +1,32 @@
 import Link from "next/link";
-import type { ComponentType, ReactNode } from "react";
+import type { ComponentType, InputHTMLAttributes, ReactNode } from "react";
+
+/* Wordmark de marca con gradiente accent→cyan */
+export function Brand({ className = "" }: { className?: string }) {
+  return (
+    <span
+      className={`bg-gradient-to-r from-accent to-cyan bg-clip-text font-extrabold tracking-wider text-transparent ${className}`}
+    >
+      TRACKLIFE
+    </span>
+  );
+}
+
+/* Input de formulario consistente con el design system */
+export function Input({
+  error = false,
+  className = "",
+  ...props
+}: InputHTMLAttributes<HTMLInputElement> & { error?: boolean }) {
+  return (
+    <input
+      {...props}
+      className={`w-full rounded-md border bg-bg px-4 py-3 text-sm outline-none transition-colors placeholder:text-fg-subtle focus:border-accent ${
+        error ? "border-danger" : "border-border"
+      } ${className}`}
+    />
+  );
+}
 
 export function Card({
   children,

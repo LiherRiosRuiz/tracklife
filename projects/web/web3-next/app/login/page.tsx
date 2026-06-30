@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth";
-import { Button, Card } from "@/components/ui";
+import { Brand, Button, Card, Input } from "@/components/ui";
 import { loginSchema } from "@/lib/schemas";
 
 export default function LoginPage() {
@@ -38,35 +38,38 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4">
-      <Card className="w-full max-w-md">
-        <h1 className="text-2xl font-black text-accent">TRACKLIFE</h1>
-        <p className="mt-1 text-sm text-muted">Inicia sesión en tu cuenta</p>
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-4">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-1/3 left-1/2 h-[60vh] w-[60vh] -translate-x-1/2 rounded-full opacity-25 blur-3xl"
+        style={{ background: "radial-gradient(circle, var(--color-accent), transparent 70%)" }}
+      />
+      <Card elevated className="relative w-full max-w-md">
+        <Brand className="text-2xl" />
+        <p className="mt-2 text-sm text-fg-muted">Inicia sesión en tu cuenta</p>
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-          <input
+          <Input
             type="email"
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:border-accent"
             required
           />
-          <input
+          <Input
             type="password"
             placeholder="Contraseña"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:border-accent"
             required
           />
-          {error && <p className="text-sm text-red-400">{error}</p>}
+          {error && <p className="text-sm text-danger">{error}</p>}
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? "Entrando..." : "Entrar"}
           </Button>
         </form>
-        <p className="mt-4 text-center text-sm text-muted">
+        <p className="mt-4 text-center text-sm text-fg-muted">
           ¿No tienes cuenta?{" "}
-          <Link href="/registro" className="text-accent hover:underline">
+          <Link href="/registro" className="font-semibold text-accent hover:underline">
             Regístrate
           </Link>
         </p>
