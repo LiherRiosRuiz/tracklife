@@ -1,29 +1,89 @@
 @import "tailwindcss";
 
-:root {
-  --background: #0b1210;
-  --foreground: #f0fdf4;
-  --card: #111916;
-  --accent: #22c55e;
-  --accent-dim: #166534;
-  --muted: #94a3b8;
-  --border: #1e293b;
-}
+/* =============================================================================
+   TrackLife — Design System "Bioluminiscencia"
+   Dark profundo verde-petroleo + lima electrico. Datos protagonistas.
+   Fuente de verdad visual: .sdd/skills/design-system.md
+   ============================================================================= */
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-accent: var(--accent);
-  --color-accent-dim: var(--accent-dim);
-  --color-muted: var(--muted);
-  --color-border: var(--border);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+@theme {
+  /* — Superficies (dark, tinte verde-petroleo) — */
+  --color-bg:            oklch(16% 0.018 165);
+  --color-surface:       oklch(20% 0.020 165);
+  --color-surface-2:     oklch(24% 0.022 165);
+  --color-border:        oklch(28% 0.020 165);
+  --color-border-strong: oklch(36% 0.022 165);
+
+  /* — Texto — */
+  --color-fg:            oklch(97% 0.012 150);
+  --color-fg-muted:      oklch(72% 0.018 160);
+  --color-fg-subtle:     oklch(58% 0.016 160);
+
+  /* — Marca / accent — */
+  --color-accent:        oklch(82% 0.21 142);
+  --color-accent-strong: oklch(74% 0.20 142);
+  --color-accent-dim:    oklch(38% 0.09 142);
+  --color-on-accent:     oklch(18% 0.03 150);
+
+  /* — Acentos secundarios (data-viz, firma "bio") — */
+  --color-cyan:          oklch(80% 0.13 210);
+  --color-violet:        oklch(72% 0.15 295);
+  --color-amber:         oklch(80% 0.15 75);
+  --color-coral:         oklch(72% 0.17 25);
+
+  /* — Semanticos de estado — */
+  --color-success:       oklch(80% 0.18 150);
+  --color-warning:       oklch(82% 0.16 85);
+  --color-danger:        oklch(67% 0.20 25);
+
+  /* — Semanticos de dominio (macros) — */
+  --color-protein:       var(--color-cyan);
+  --color-carbs:         var(--color-amber);
+  --color-fat:           var(--color-coral);
+
+  /* — Alias legacy: mantienen las utilidades existentes (~40 paginas) — */
+  --color-background:    var(--color-bg);
+  --color-foreground:    var(--color-fg);
+  --color-card:          var(--color-surface);
+  --color-muted:         var(--color-fg-muted);
+
+  /* — Radii (sistema coherente) — */
+  --radius-sm:  0.5rem;
+  --radius-md:  0.75rem;
+  --radius-lg:  1rem;
+  --radius-xl:  1.25rem;
+  --radius-2xl: 1.5rem;
+
+  /* — Escala tipografica modular (ratio ~1.25, base 16px) — */
+  --text-xs:   0.75rem;
+  --text-sm:   0.875rem;
+  --text-base: 1rem;
+  --text-lg:   1.125rem;
+  --text-xl:   1.25rem;
+  --text-2xl:  1.5rem;
+  --text-3xl:  1.875rem;
+  --text-4xl:  2.5rem;
+  --text-5xl:  3.5rem;
+
+  /* — Elevacion (sombras suaves + glow de accent: la firma) — */
+  --shadow-sm:   0 1px 2px oklch(0% 0 0 / 0.4);
+  --shadow-md:   0 4px 16px oklch(0% 0 0 / 0.45);
+  --shadow-lg:   0 12px 32px oklch(0% 0 0 / 0.5);
+  --shadow-glow: 0 0 24px oklch(82% 0.21 142 / 0.25);
+
+  /* — Fuentes (set por next/font en layout.tsx) — */
+  --font-sans: var(--font-sora), system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-fg);
+  font-family: var(--font-sans);
+}
+
+/* Numeros tabulares por defecto en metricas (los digitos no "bailan") */
+.tabular {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
 }
