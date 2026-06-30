@@ -8,7 +8,7 @@ export function Skeleton({ className = "" }: { className?: string }) {
 
 export function SkeletonCard() {
   return (
-    <div className="rounded-2xl border border-border bg-card p-5">
+    <div className="rounded-2xl border border-border bg-surface p-5">
       <Skeleton className="mb-3 h-4 w-1/3" />
       <Skeleton className="mb-2 h-3 w-2/3" />
       <Skeleton className="h-3 w-1/2" />
@@ -21,7 +21,7 @@ export function SkeletonDashboard() {
     <div>
       <Skeleton className="mb-2 h-8 w-48" />
       <Skeleton className="mb-6 h-4 w-32" />
-      <div className="mb-6 rounded-2xl border border-border bg-card p-5">
+      <div className="mb-6 rounded-2xl border border-border bg-surface p-5">
         <Skeleton className="mb-4 h-5 w-16" />
         <Skeleton className="mb-3 h-2 w-full" />
         <div className="mt-4 grid gap-3 sm:grid-cols-3">

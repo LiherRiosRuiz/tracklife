@@ -36,11 +36,11 @@ export function ExercisePickerModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 sm:items-center">
-      <div className="max-h-[85vh] w-full max-w-lg overflow-hidden rounded-t-2xl bg-card sm:rounded-2xl">
+      <div className="max-h-[85vh] w-full max-w-lg overflow-hidden rounded-t-2xl bg-surface sm:rounded-2xl">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border p-4">
           <h2 className="font-semibold">Elegir ejercicio</h2>
-          <button onClick={onClose} className="text-muted hover:text-foreground">
+          <button onClick={onClose} className="text-fg-muted hover:text-fg">
             Cerrar
           </button>
         </div>
@@ -52,7 +52,7 @@ export function ExercisePickerModal({
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar..."
             autoFocus
-            className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
+            className="w-full rounded-xl border border-border bg-bg px-3 py-2 text-sm"
           />
         </div>
 

@@ -17,7 +17,7 @@ export function FeedList({ posts: initial, showKudos = true }: { posts: FeedPost
   };
 
   if (posts.length === 0) {
-    return <Card><p className="text-sm text-muted">No hay actividad todavía. ¡Sé el primero!</p></Card>;
+    return <Card><p className="text-sm text-fg-muted">No hay actividad todavía. ¡Sé el primero!</p></Card>;
   }
 
   return (
@@ -27,14 +27,14 @@ export function FeedList({ posts: initial, showKudos = true }: { posts: FeedPost
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-sm font-semibold">{post.user?.name ?? "Usuario"}</p>
-              <p className="mt-1 text-sm text-muted">
+              <p className="mt-1 text-sm text-fg-muted">
                 {(post.payload.message as string) ?? post.type}
               </p>
             </div>
             {showKudos && token && (
               <button
                 onClick={() => handleKudos(post.id)}
-                className="flex items-center gap-1 rounded-lg px-2 py-1 text-sm text-muted hover:bg-background"
+                className="flex items-center gap-1 rounded-lg px-2 py-1 text-sm text-fg-muted hover:bg-bg"
               >
                 <Heart size={16} />
                 {post.kudos_count}
