@@ -42,9 +42,12 @@ Para el roadmap detallado de sprints futuros ver [[Roadmap TrackLife]].
 - [x] **Sprint P3.2** — completado 2026-06-25: httpOnly cookie via Route Handlers + Dashboard Server Component + dual-write. 79/79 tests verdes.
 - [x] **Sprint P3.3** — completado 2026-06-25: busqueda real usuarios (GET /api/users/search). 79/79 tests verdes.
 - [x] **Sub-sprint perfil usuario** — completado 2026-06-29: página perfil [id], endpoint protegido (fix seguridad), UserProfileTest 5 tests. 84/84 verdes.
+- [~] **Overhaul estético "Bioluminiscencia"** — en curso (rama `feature/ui-overhaul`, 2026-06-30). Hecho: 4 skills de diseño en SDD; F1 design system (tokens OKLCH, Sora+JetBrains, primitivos Stat/Ring/Badge/EmptyState/Input/Brand); rediseño dashboard; propagación a login/registro/AppNav; base a11y (focus-visible, reduced-motion). Pendiente: F3 (resto de ~40 pantallas), F4 (motion/framer-motion), F5 (PWA). Plan completo: Platón (ver crónica 2026-06-30).
+- [x] **"Recuérdame" verificado + cookie 30 días** — 2026-06-30: el "no recuerda usuarios" era residuo del wipe de tests (cuenta borrada). Verificado end-to-end que registro/login/sesión persisten. Cookie de sesión extendida 7→30 días (`SESSION_MAX_AGE`). Cuenta demo: `demo@tracklife.test` / `password123`.
+- [ ] **Auth cookie-only (sin localStorage)** — DIRECCIÓN A LARGO PLAZO. Hoy hay dos fuentes de verdad (cookie httpOnly para SSR + localStorage para client). Migrar TODAS las llamadas API a route handlers same-origin (BFF) que adjunten el token desde la cookie server-side → eliminar token de JS (cierra superficie XSS) + sliding refresh (middleware) para que usuarios activos nunca caduquen. Es el P5.1 "retirar localStorage" + "migrar 18 páginas client". Sprint dedicado.
 - [ ] **Páginas con datos reales** — calendario, progreso (recharts), plan nutricional, favoritos, comunidad (P4 en [[Roadmap TrackLife]])
-- [ ] **PWA** — manifest + service worker para instalación en móvil
-- [ ] **Tests frontend** — instalar Vitest + @testing-library/react para web3-next
+- [ ] **PWA** — manifest + service worker + iconos maskable (F5; prerequisito de Play Store vía TWA/Bubblewrap — ver [[mobile-pwa]])
+- [ ] **Tests frontend** — instalar Vitest + @testing-library/react + Playwright para web3-next (F0 del overhaul)
 
 ---
 
