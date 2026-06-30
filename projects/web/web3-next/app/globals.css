@@ -88,6 +88,25 @@ body {
   font-feature-settings: "tnum";
 }
 
+/* ── Motion (CSS puro; respeta prefers-reduced-motion en @layer base) ──────── */
+@keyframes ring-fill {
+  from {
+    stroke-dashoffset: var(--ring-circ);
+  }
+}
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+.animate-ring {
+  animation: ring-fill 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.animate-in {
+  animation: fade-in-up 0.4s ease-out both;
+}
+
 @layer base {
   /* Foco visible accesible (a11y) */
   :focus-visible {

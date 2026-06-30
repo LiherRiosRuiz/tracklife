@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { ComponentType, InputHTMLAttributes, ReactNode } from "react";
+import type { ComponentType, CSSProperties, InputHTMLAttributes, ReactNode } from "react";
 
 /* Wordmark de marca con gradiente accent→cyan */
 export function Brand({ className = "" }: { className?: string }) {
@@ -64,7 +64,7 @@ export function Button({
   disabled?: boolean;
 }) {
   const base =
-    "inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors disabled:opacity-50";
+    "inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all active:scale-[0.98] disabled:opacity-50";
   const styles = {
     primary: "bg-accent text-on-accent hover:bg-accent-strong",
     secondary: "border border-border bg-surface text-fg hover:border-accent hover:text-accent",
@@ -159,7 +159,13 @@ export function Ring({
           strokeLinecap="round"
           strokeDasharray={circ}
           strokeDashoffset={offset}
-          style={glow ? { filter: `drop-shadow(0 0 6px ${color})` } : undefined}
+          className="animate-ring"
+          style={
+            {
+              "--ring-circ": circ,
+              ...(glow ? { filter: `drop-shadow(0 0 6px ${color})` } : {}),
+            } as CSSProperties
+          }
         />
       </svg>
       {children && <div className="absolute inset-0 grid place-items-center text-center">{children}</div>}
