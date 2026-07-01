@@ -48,8 +48,9 @@ Para el roadmap detallado de sprints futuros ver [[Roadmap TrackLife]].
 - [ ] **Páginas con datos reales** — calendario, progreso (recharts), plan nutricional, favoritos, comunidad (P4 en [[Roadmap TrackLife]])
 - [x] **PWA instalable** — 2026-06-30/07-01: manifest standalone, service worker, iconos SVG + **PNG 192/512/maskable** (`scripts/gen-icons.mjs`), theme color. Ver [[Deploy TrackLife]].
 - [x] **Onboarding de activación** — 2026-07-01: `/app/onboarding` (bienvenida → objetivo → macros → listo) + celebración de logro (confetti/haptic). Registro redirige aquí.
-- [ ] **Deploy público (bloqueante = usuario)** — plan completo en [[Deploy TrackLife]]. Requiere altas gratis: Vercel (front) + Railway/Render (API) + MongoDB Atlas. LIHER hace todo lo técnico en cuanto haya URLs públicas. Dominio propio opcional (`tracklife.fit`).
-- [ ] **Merge `feature/ui-overhaul` → master** — rama con todo el overhaul (F1–F5 + landing + onboarding), lista para revisión y merge.
+- [x] **Merge overhaul → master + push** — 2026-07-01: todo el overhaul (F1–F5 + landing + onboarding + PWA + prep deploy) mergeado a `master` y empujado a GitHub (`e572de5`). Rama de producción lista para desplegar.
+- [x] **Prep de deploy completa** — 2026-07-01: CORS por env, `.env.production.example` (front y API), `assetlinks.template.json`, y CHECKLIST EXACTO en [[Deploy TrackLife]]. Solo falta pegar valores.
+- [ ] **Deploy público (bloqueante = usuario, gratis)** — 3 altas: MongoDB Atlas + Railway/Render (API) + Vercel (front), conectar repo, pegar env. En cuanto haya URLs públicas, LIHER valida el flujo y hace el empaquetado TWA (Bubblewrap → AAB) para Play Store. Pasos exactos en [[Deploy TrackLife]].
 - [ ] **Tests frontend** — instalar Vitest + @testing-library/react + Playwright para web3-next (F0 del overhaul)
 
 ---
