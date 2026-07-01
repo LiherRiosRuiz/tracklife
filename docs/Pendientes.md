@@ -46,7 +46,10 @@ Para el roadmap detallado de sprints futuros ver [[Roadmap TrackLife]].
 - [x] **"Recuérdame" verificado + cookie 30 días** — 2026-06-30: el "no recuerda usuarios" era residuo del wipe de tests (cuenta borrada). Verificado end-to-end que registro/login/sesión persisten. Cookie de sesión extendida 7→30 días (`SESSION_MAX_AGE`). Cuenta demo: `demo@tracklife.test` / `password123`.
 - [ ] **Auth cookie-only (sin localStorage)** — DIRECCIÓN A LARGO PLAZO. Hoy hay dos fuentes de verdad (cookie httpOnly para SSR + localStorage para client). Migrar TODAS las llamadas API a route handlers same-origin (BFF) que adjunten el token desde la cookie server-side → eliminar token de JS (cierra superficie XSS) + sliding refresh (middleware) para que usuarios activos nunca caduquen. Es el P5.1 "retirar localStorage" + "migrar 18 páginas client". Sprint dedicado.
 - [ ] **Páginas con datos reales** — calendario, progreso (recharts), plan nutricional, favoritos, comunidad (P4 en [[Roadmap TrackLife]])
-- [ ] **PWA** — manifest + service worker + iconos maskable (F5; prerequisito de Play Store vía TWA/Bubblewrap — ver [[mobile-pwa]])
+- [x] **PWA instalable** — 2026-06-30/07-01: manifest standalone, service worker, iconos SVG + **PNG 192/512/maskable** (`scripts/gen-icons.mjs`), theme color. Ver [[Deploy TrackLife]].
+- [x] **Onboarding de activación** — 2026-07-01: `/app/onboarding` (bienvenida → objetivo → macros → listo) + celebración de logro (confetti/haptic). Registro redirige aquí.
+- [ ] **Deploy público (bloqueante = usuario)** — plan completo en [[Deploy TrackLife]]. Requiere altas gratis: Vercel (front) + Railway/Render (API) + MongoDB Atlas. LIHER hace todo lo técnico en cuanto haya URLs públicas. Dominio propio opcional (`tracklife.fit`).
+- [ ] **Merge `feature/ui-overhaul` → master** — rama con todo el overhaul (F1–F5 + landing + onboarding), lista para revisión y merge.
 - [ ] **Tests frontend** — instalar Vitest + @testing-library/react + Playwright para web3-next (F0 del overhaul)
 
 ---
