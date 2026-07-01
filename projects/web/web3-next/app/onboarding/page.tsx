@@ -6,6 +6,7 @@ import { ArrowRight, Check, Target, Flame, Sparkles } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { api } from "@/lib/api";
 import { Brand, Button, Card, Input, Ring, Stat } from "@/components/ui";
+import { Celebration } from "@/components/Celebration";
 
 type Step = 0 | 1 | 2 | 3;
 
@@ -190,6 +191,7 @@ export default function OnboardingPage() {
 
         {step === 3 && (
           <Card elevated className="text-center">
+            <Celebration />
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-accent-dim">
               <Check size={28} strokeWidth={2} className="text-accent" />
             </div>
