@@ -36,7 +36,7 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       await register(name, email, password);
-      router.push("/app");
+      router.push("/onboarding");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al registrarse");
     } finally {
