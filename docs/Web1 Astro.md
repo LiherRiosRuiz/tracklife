@@ -30,23 +30,22 @@ src/pages/
 └── precios.astro         /precios
 ```
 
-### `/` — Landing principal
+### `/` — Landing principal (rediseño overhaul 2026-06-30)
 
-Hero + grid de features + CTA de registro.
+**Diseño (en lockstep con app Web3 Next)**:
+- **Hero**: "TRACKLIFE — Transformación física con datos"
+  - Subtítulo: nutrición + entrenamiento + recuperación + comunidad
+  - Gradiente de fondo (accent → cyan): radial, glow suave
+  - CTA: "Empieza gratis" → `http://app.tracklife.test/registro` (botón accent)
+- **Grid de 4 feature cards**: Nutrición, Entrenamiento, Biométricos, Comunidad
+  - Descripciones concisas e inspiraciones (Yuka, Hevy, Strava, Whoop)
+  - Iconos SVG (no emojis), colores por dominio (protein/carbs/fat)
+- **Stats bar**: "Comunidad en tiempo real" — métricas numéricas
+- **CTA final**: "Comienza tu transformación" con flecha
+- **Nav**: Cómo funciona | Precios | Entrar a la app
+- **Footer**: "TRACKLIFE © 2026 — Transformación física basada en datos"
 
-**Contenido:**
-- Hero: "TRACKLIFE — Transformación física con datos"
-- Subtítulo: nutrición + entrenamiento + recuperación + comunidad
-- CTA: "Empieza gratis" → `http://app.tracklife.test/registro`
-- Grid de 4 cards:
-  - **Nutrición**: "Diario de comidas, escáner de productos estilo Yuka y macros personalizados"
-  - **Entrenamiento**: "Log de gym estilo Hevi y cardio estilo Strava con historial completo"
-  - **Biométricos**: "Sueño, HRV, strain y recuperación. Compatible con Zepp, Whoop y más"
-  - **Comunidad**: "Feed social, retos, clubs y rankings para mantener la motivación"
-- Nav: Cómo funciona | Precios | Entrar a la app
-- Footer: "TRACKLIFE © 2026 — Transformación física basada en datos"
-
-**Estilo**: dark tema inline (mismas variables que la app: `#0b1210`, `#22c55e`). Sin dependencias CSS externas.
+**Estilo**: tokens OKLCH idénticos a web3-next (superficies verde-petróleo, accent lima). Tipografía Sora + JetBrains Mono. Sin emojis, sin dependencias CSS externas. Respeta prefers-reduced-motion. Focus-visible estándar (a11y).
 
 ---
 
@@ -82,6 +81,24 @@ Note: `allowedHosts` es necesario porque Vite 6 bloquea hosts no permitidos por 
 
 ---
 
+## Design System (lockstep con web3-next)
+
+Hereda los tokens OKLCH, fuentes y componentes de [[Web3 Next]]:
+- **Superficies**: verde-petróleo oscuro (`--color-bg`, `--color-surface`)
+- **Texto**: blanco verdoso (`--color-fg`)
+- **Marca**: lima accent (`--color-accent`)
+- **Tipografía**: Sora (display) + JetBrains Mono (datos)
+- **Motion**: keyframes CSS (ring-fill, fade-in), respeta prefers-reduced-motion
+- **A11y**: focus-visible, ::selection coloreada, alto contraste
+
+**Componentes Astro** (islands React/Vue si aplica):
+- Hero con gradiente y glow
+- Feature cards con ícono SVG + texto
+- CTA buttons (primario/secundario)
+- Stats con números grandes (tabular)
+
+---
+
 ## Historial de problemas resueltos
 
 **2026-06-04** — `create-astro` creaba subdirectorios aleatorios cuando el directorio no estaba vacío.
@@ -90,6 +107,11 @@ Note: `allowedHosts` es necesario porque Vite 6 bloquea hosts no permitidos por 
 **2026-06-04** — Vite 6 bloqueaba `web1.test` como host no permitido.
 - Solución: añadir `allowedHosts` en `astro.config.mjs`
 
+**2026-06-30** — Redesign overhaul (Bioluminiscencia).
+- Tokens OKLCH inyectados en globals.css, heredados por layout Astro
+- Fuentes Sora+JetBrains importadas en layout
+- Hero + features rediseñados sin emojis
+
 ---
 
-Ver también: [[TRACKLIFE]], [[Arquitectura Docker]], [[Traefik]]
+Ver también: [[TRACKLIFE]], [[Arquitectura Docker]], [[Traefik]], [[Web3 Next]]

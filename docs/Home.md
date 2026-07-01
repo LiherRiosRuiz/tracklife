@@ -65,16 +65,24 @@ bash platon.sh       # Iniciar sesión SDD
 
 ---
 
-## Estado del workspace (2026-06-06)
+## Producción / Deploy
+
+La rama `master` está lista para producción. Guía de pasos:
+- [[Deploy TrackLife]] — arquitectura pública (Vercel + Railway + MongoDB Atlas), ruta gratis
+- [[Publicar TrackLife - Guia paso a paso]] — checklist exacto de cuentas, variables y redirecciones
+
+---
+
+## Estado del workspace (2026-07-01)
 
 | Componente | Estado |
 |------------|--------|
 | Traefik | ✓ Activo |
 | MongoDB | ✓ Activo |
 | Portainer | ✓ Activo |
-| TRACKLIFE App | ✓ Activo (app.tracklife.test) |
-| TRACKLIFE Landing | ✓ Activo (www.tracklife.test) |
-| TRACKLIFE API | ✓ Activo (api.tracklife.test) |
+| TRACKLIFE App | ✓ Activo (app.tracklife.test) — design system Bioluminiscencia + PWA |
+| TRACKLIFE Landing | ✓ Activo (www.tracklife.test) — rediseño en lockstep |
+| TRACKLIFE API | ✓ Activo (api.tracklife.test) — 84 tests, 318 assertions |
 | web2-nuxt | ✓ Activo (web2.test) — proyecto sandbox |
 | Platón SDD | v2.0 — memoria + skills + Guardian Angel |
 | Quevedo | v1.0 — cronista del workspace |

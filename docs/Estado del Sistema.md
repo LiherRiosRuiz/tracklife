@@ -1,6 +1,6 @@
 # Estado del Sistema
 
-> Generado automaticamente por `update-status.sh`. Ultima edicion manual: 2026-06-25.
+> Generado automaticamente por `update-status.sh`. Ultima edicion manual: 2026-07-01.
 > Ejecutar `make status` para actualizar los datos en tiempo real.
 
 ---
@@ -9,10 +9,11 @@
 
 | Campo | Valor |
 |-------|-------|
-| Branch | `master` |
-| Ultimo commit | (pendiente commit P3.1 — 74 tests, cierre 2026-06-25) |
+| Branch | `master` — rama de producción |
+| Ultimo commit | `e572de5` — Merge overhaul estético → master (2026-07-01) |
 | Remote | `https://github.com/LiherRiosRuiz/tracklife.git` (privado, configurado 2026-06-19) |
 | Auto-push | Stop hook activo en `.claude/settings.json` — commit + push al finalizar cada sesion |
+| Estado | Overhaul (F1–F5) mergeado, PWA lista, prep deploy completa. Listo para Vercel/Railway/MongoDB Atlas. |
 
 ---
 
@@ -41,10 +42,10 @@
 
 | Proyecto | Framework | Dominio | Ultima actividad |
 |----------|-----------|---------|-----------------|
-| [[Web1 Astro\|web1-astro]] | Astro 6 | www.tracklife.test | Sprint P2 landing redesign (2026-06-21) · FAULT: crash-loop desde 2026-06-25 |
+| [[Web1 Astro\|web1-astro]] | Astro 6 | www.tracklife.test | Landing rediseñada "Bioluminiscencia" lockstep (2026-07-01) · corriendo OK |
 | [[Web2 Nuxt\|web2-nuxt]] | Nuxt 4 | web2.test | sin cambios recientes |
-| [[Web3 Next\|web3-next]] | Next.js 16 | app.tracklife.test | Sprint P2 Zod + Dashboard (2026-06-21) |
-| [[API Laravel\|api-laravel]] | Laravel 13 | api.tracklife.test | Sprint P3.1 Tests TDD + 30 tests nuevos (2026-06-25) |
+| [[Web3 Next\|web3-next]] | Next.js 16 | app.tracklife.test | Overhaul completo: design system OKLCH, dashboard, onboarding, PWA (2026-07-01) |
+| [[API Laravel\|api-laravel]] | Laravel 13 | api.tracklife.test | Fix aislamiento tests + endpoint perfil + CORS por env (2026-06-29/07-01) |
 
 ---
 

@@ -1,8 +1,6 @@
 # Roadmap TrackLife
 
-Sprints futuros de TRACKLIFE. Actualizado: 2026-06-29.
-
-Sprint P1 y P2 cerrados. Siguiente: P3.
+Sprints futuros de TRACKLIFE. Actualizado: 2026-07-01.
 
 ---
 
@@ -16,8 +14,28 @@ Sprint P1 y P2 cerrados. Siguiente: P3.
 | P3.2 — Server Components | [x] Completado 2026-06-25 | 79/79 |
 | P3.3 — Búsqueda usuarios real | [x] Completado 2026-06-25 | 79/79 |
 | P3.4 — Página perfil usuario | [x] Completado 2026-06-29 | 84/84 |
+| **UX — Overhaul "Bioluminiscencia"** | [x] Completado 2026-06-30/07-01 | 85/85 |
 | P4 — Funcionalidades reales | [ ] Pendiente | — |
-| P5 — Producción y pulido | [ ] Pendiente | — |
+| P5 — Producción y Play Store | [~] En curso (prep completa) | — |
+
+---
+
+## Sprint UX — Overhaul estético "Bioluminiscencia" [x] COMPLETADO 2026-06-30/07-01
+
+Rama `feature/ui-overhaul` → mergeada a `master`. Todo con build OK + lint 0.
+
+- **SDD**: 4 skills de diseño ([[design-system]], ui-aesthetics, motion-ux, mobile-pwa).
+- **F1 design system**: tokens OKLCH, Sora + JetBrains Mono, primitivos (Stat, Ring, Badge, EmptyState, Input, Brand).
+- **F2**: dashboard (anillo + hero number), login/registro (glow de marca), AppNav (safe-area), **landing web1-astro** en lockstep.
+- **F3**: consistencia total — 14 páginas + componentes a tokens (deuda de color 0).
+- **F4**: motion CSS (ring-fill, fade-in) + celebración de logro (confetti + haptic).
+- **F5**: PWA instalable (manifest, iconos PNG/maskable, service worker).
+- **Onboarding** de activación (bienvenida → objetivo → macros → primera comida).
+- **Auth**: cookie de sesión 30 días ("recuérdame" verificado).
+
+## Fase Producción / Play Store [~] EN CURSO
+
+Prep técnica **completa** (CORS por env, `.env.production.example`, `assetlinks.template.json`, iconos). Bloqueante = 3 altas gratis del usuario (Vercel + Railway + MongoDB Atlas). Guía: [[Publicar TrackLife - Guia paso a paso]] · detalle: [[Deploy TrackLife]]. Luego: empaquetado TWA (Bubblewrap → AAB) → Play Console.
 
 ---
 

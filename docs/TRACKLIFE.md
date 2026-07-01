@@ -115,32 +115,40 @@ Se activa al registrar cualquier comida. Se muestra en dashboard y header.
 
 ---
 
-## Design System
+## Design System "Bioluminiscencia" (F1–F5, overhaul 2026-06-30/07-01)
 
-**Paleta de colores** (tema oscuro):
+**Paleta OKLCH** (no hex):
+- Superficies: verde-petróleo oscuro (`--color-bg`, `--color-surface`)
+- Texto: blanco verdoso (`--color-fg`)
+- Marca: lima accent (`--color-accent`)
+- Acentos: cyan, violet, amber, coral (data-viz)
+- Semánticos: success, warning, danger
 
-| Variable | Valor | Uso |
-|----------|-------|-----|
-| `--background` | `#0b1210` | Fondo de página |
-| `--foreground` | `#f0fdf4` | Texto principal |
-| `--card` | `#111916` | Cards y sidebar |
-| `--accent` | `#22c55e` | Acciones, activo, TRACKLIFE brand |
-| `--accent-dim` | `#166534` | Fondo de elemento activo en nav |
-| `--muted` | `#94a3b8` | Texto secundario |
-| `--border` | `#1e293b` | Bordes |
-
-**Tipografía**: Geist Sans + Geist Mono (Google Fonts)
+**Tipografía**:
+- Display: **Sora** (Google Fonts, pesos 400/500/700)
+- Datos: **JetBrains Mono** (monoespaciado, tabular-nums)
 
 **Componentes en `components/ui.tsx`**:
-- `<Card>` — contenedor con bordes redondeados (rounded-2xl)
-- `<Button>` — tres variantes: primary (verde), secondary (borde), ghost
-- `<PageHeader>` — título + subtítulo de sección
-- `<MacroBar>` — barra de progreso con valor/objetivo
-- `<ScoreBadge>` — badge de puntuación coloreado (verde/amarillo/rojo)
+- `<Brand>` — wordmark TRACKLIFE con gradiente
+- `<Input>` — campo de formulario con validación
+- `<Card>` — contenedor (puede elevar con `elevated`)
+- `<Button>` — primary (accent), secondary (borde), ghost
+- `<PageHeader>` — título + subtítulo
+- `<Stat>` — métrica con label + número tabulado
+- `<Ring>` — anillo circular de progreso (firma visual)
+- `<Badge>` — insignia de estado (sin emojis)
+- `<MacroBar>` — barra de macros (protein/carbs/fat por color)
+- `<ScoreBadge>` — score coloreado
+- `<EmptyState>` — estado vacío con ícono y CTA
 
-**Iconos**: lucide-react
+**Motion CSS**:
+- `@keyframes ring-fill` — anillo de progreso
+- `@keyframes fade-in-up` — fade in suave
+- Respeta `prefers-reduced-motion` (a11y)
 
-**Gráficos**: recharts (para biométricos)
+**Iconos**: lucide-react (no emojis)
+
+**Gráficos**: recharts (para biométricos y dashboard)
 
 ---
 
@@ -210,17 +218,56 @@ Sanctum token-based authentication.
   - **Suite total: 74/74 tests verdes, 274 assertions**. Sprint TEST-ONLY: cero cambios de producción, ningún bug latente
   - **Gap documentado**: `BiometricController::today()` no calcula deltas. Decisión futura: P3 vs P4
 
+- **Sprint P3.2 (2026-06-25/07-01)**: Server Components + auth httpOnly cookie
+  - `app/api/auth/{login,register,logout}/route.ts` — Route Handlers con cookie
+  - `lib/server-api.ts` — capa server-only para RSC
+  - Dashboard como Server Component (fetcha desde cookie)
+  - Dual-write cookie+localStorage (P5.1 retirará localStorage)
+  - Tests stable: 79/79 verdes
+- **Sprint P3.3 (2026-06-25)**: Búsqueda real de usuarios (GET /api/users/search)
+  - `UserSearchController::search()` — endpoint protegido
+  - `comunidad/buscar/page.tsx` — reescrito con debounce 300ms
+  - Tests: 79 verdes (309 assertions)
+- **Sub-sprint perfil usuario (2026-06-29)**:
+  - `app/app/comunidad/perfil/[id]/page.tsx` — página de perfil
+  - `UserProfileController@show` — endpoint movido al grupo auth:sanctum
+  - Tests: 84/84 verdes (318 assertions)
+- **Overhaul estético "Bioluminiscencia" (2026-06-30/07-01)**:
+  - Tokens OKLCH en design system (no hex)
+  - Fuentes Sora+JetBrains (no Geist)
+  - Componentes: Stat, Ring, Badge, EmptyState, Brand, Input
+  - Dashboard: anillo de calorías + hero number
+  - Login/registro con glow de marca
+  - AppNav con safe-area PWA
+  - Landing web1-astro rediseñada en lockstep
+  - 4 skills de diseño en SDD (design-system, ui-aesthetics, motion-ux, mobile-pwa)
+  - 14 páginas + 6 componentes migrados (deuda de color a 0)
+  - Motion CSS puro (no framer-motion)
+  - Base a11y (focus-visible, reduced-motion, ::selection)
+  - Commits limpios: todos con build OK + lint 0
+- **PWA instalable (2026-07-01)**:
+  - `app/manifest.ts` — standalone mode, theme color
+  - Iconos SVG + PNG 192/512 + maskable (`scripts/gen-icons.mjs`)
+  - Service Worker (`public/sw.js`)
+  - Instalable en home screen (Android/iOS)
+  - Para Play Store: vía Bubblewrap (TWA)
+- **Prep deploy (2026-07-01)**:
+  - CORS configurable por env (`config/cors.php`)
+  - `.env.production.example` (front y API)
+  - `assetlinks.template.json` (para TWA)
+  - Checklist exacto en [[Deploy TrackLife]]
+  - Rama `master` lista para Vercel/Railway
+
 **Pendiente:**
-- Migración SQLite → MongoDB cablear en API (package instalado, `DB_CONNECTION=mongodb` ya configurado)
-- Sprint P3.2: Server Components en Dashboard
-- Sprint P3.3: Búsqueda real de usuarios (GET /api/users/search)
-- Gap: deltas biométricos en `BiometricController::today()` (decisión P3 vs P4)
-- Diagnostico: contenedor web1-astro crash-loop (landing no accesible)
-- PWA / app móvil nativa
+- Onboarding post-registro (`/onboarding`) — enlazado pero no implementado aún
+- Migración SQLite → MongoDB (package instalado, config lista)
 - Providers de wearables reales (Zepp, Whoop OAuth)
 - Tests frontend (Vitest)
-- SSL para dominios tracklife en producción
+- Auth cookie-only sin localStorage (P5.1)
+- Páginas con datos reales (calendario, progreso, plan nutricional, favoritos)
+- Deploy público (Vercel + Railway + MongoDB Atlas) — requiere interacción usuario
+- Empaquetado TWA para Play Store — tras deploy público
 
 ---
 
-Ver también: [[API Laravel]], [[Web3 Next]], [[Web1 Astro]], [[Arquitectura Docker]]
+Ver también: [[API Laravel]], [[Web3 Next]], [[Web1 Astro]], [[Arquitectura Docker]], [[Deploy TrackLife]], [[Publicar TrackLife - Guia paso a paso]]
