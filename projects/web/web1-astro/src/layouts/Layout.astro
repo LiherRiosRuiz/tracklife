@@ -18,7 +18,11 @@ const appUrl = "http://app.tracklife.test";
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0c1311" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="canonical" href={canonicalURL} />
     <title>{title}</title>
     <meta name="description" content={description} />
@@ -30,15 +34,15 @@ const appUrl = "http://app.tracklife.test";
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
   </head>
-  <body class="bg-background text-foreground antialiased min-h-screen">
+  <body class="bg-bg text-fg antialiased min-h-screen">
     <nav class="flex items-center justify-between px-6 py-4 max-w-6xl mx-auto border-b border-border">
-      <a href="/" class="text-xl font-black tracking-widest text-accent">TRACKLIFE</a>
+      <a href="/" class="text-xl font-extrabold tracking-widest brand-gradient">TRACKLIFE</a>
       <div class="flex items-center gap-6 text-sm">
-        <a href="/como-funciona" class="text-muted hover:text-foreground transition-colors hidden sm:inline">Cómo funciona</a>
-        <a href="/precios" class="text-muted hover:text-foreground transition-colors hidden sm:inline">Precios</a>
-        <a href={`${appUrl}/login`} class="text-muted hover:text-foreground transition-colors">Entrar</a>
+        <a href="/como-funciona" class="text-fg-muted hover:text-fg transition-colors hidden sm:inline">Cómo funciona</a>
+        <a href="/precios" class="text-fg-muted hover:text-fg transition-colors hidden sm:inline">Precios</a>
+        <a href={`${appUrl}/login`} class="text-fg-muted hover:text-fg transition-colors">Entrar</a>
         <a href={`${appUrl}/registro`}
-           class="rounded-xl bg-accent px-4 py-2 font-semibold text-black hover:bg-green-400 transition-colors text-sm">
+           class="rounded-lg bg-accent px-4 py-2 font-semibold text-on-accent hover:bg-accent-strong transition-colors text-sm">
           Empezar gratis
         </a>
       </div>
@@ -46,8 +50,8 @@ const appUrl = "http://app.tracklife.test";
     <main>
       <slot />
     </main>
-    <footer class="border-t border-border mt-24 py-12 text-center text-sm text-muted">
-      <p class="mb-2 font-bold text-foreground tracking-widest">TRACKLIFE</p>
+    <footer class="border-t border-border mt-24 py-12 text-center text-sm text-fg-muted">
+      <p class="mb-2 font-extrabold tracking-widest brand-gradient">TRACKLIFE</p>
       <p>© 2026 — Transformación física basada en datos</p>
       <div class="mt-4 flex justify-center gap-6 text-xs">
         <a href="/como-funciona" class="hover:text-accent transition-colors">Cómo funciona</a>

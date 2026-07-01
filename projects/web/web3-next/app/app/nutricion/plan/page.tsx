@@ -27,9 +27,9 @@ const FIELD_MINS: Record<keyof MacroTargets, number> = {
 };
 
 const MACRO_COLORS: Partial<Record<keyof MacroTargets, string>> = {
-  protein: "bg-blue-500",
-  carbs: "bg-yellow-500",
-  fat: "bg-orange-500",
+  protein: "bg-protein",
+  carbs: "bg-carbs",
+  fat: "bg-fat",
 };
 
 // ── Guía de referencia (estático) ──────────────────────────────────────────
@@ -80,17 +80,17 @@ function MacroDistribution({ targets }: { targets: MacroTargets }) {
       {/* Barra combinada */}
       <div className="mb-4 flex h-3 overflow-hidden rounded-full">
         <div
-          className="bg-blue-500 transition-all"
+          className="bg-protein transition-all"
           style={{ width: `${proteinPct}%` }}
           title={`Proteína ${proteinPct}%`}
         />
         <div
-          className="bg-yellow-500 transition-all"
+          className="bg-carbs transition-all"
           style={{ width: `${carbsPct}%` }}
           title={`Carbohidratos ${carbsPct}%`}
         />
         <div
-          className="bg-orange-500 transition-all"
+          className="bg-fat transition-all"
           style={{ width: `${fatPct}%` }}
           title={`Grasa ${fatPct}%`}
         />
@@ -99,19 +99,19 @@ function MacroDistribution({ targets }: { targets: MacroTargets }) {
       {/* Leyenda */}
       <div className="mb-5 flex flex-wrap gap-4 text-sm">
         <span className="flex items-center gap-1.5">
-          <span className="inline-block h-2.5 w-2.5 rounded-full bg-blue-500" />
+          <span className="inline-block h-2.5 w-2.5 rounded-full bg-protein" />
           <span className="text-muted">Proteína</span>
           <span className="font-semibold">{proteinPct}%</span>
           <span className="text-muted">({proteinKcal} kcal)</span>
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="inline-block h-2.5 w-2.5 rounded-full bg-yellow-500" />
+          <span className="inline-block h-2.5 w-2.5 rounded-full bg-carbs" />
           <span className="text-muted">Carbs</span>
           <span className="font-semibold">{carbsPct}%</span>
           <span className="text-muted">({carbsKcal} kcal)</span>
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="inline-block h-2.5 w-2.5 rounded-full bg-orange-500" />
+          <span className="inline-block h-2.5 w-2.5 rounded-full bg-fat" />
           <span className="text-muted">Grasa</span>
           <span className="font-semibold">{fatPct}%</span>
           <span className="text-muted">({fatKcal} kcal)</span>
@@ -142,7 +142,7 @@ function MacroDistribution({ targets }: { targets: MacroTargets }) {
 
       {/* Aviso si la suma difiere mucho de las calorías objetivo */}
       {Math.abs(totalMacroKcal - targets.calories) > 100 && (
-        <p className="mt-4 text-xs text-yellow-400">
+        <p className="mt-4 text-xs text-warning">
           La suma calórica de tus macros ({totalMacroKcal} kcal) difiere de tu
           objetivo de calorías ({targets.calories} kcal). Ajusta los valores para
           que coincidan.
@@ -228,7 +228,7 @@ function PlanForm({ initialTargets, token }: { initialTargets: MacroTargets; tok
               <span className="text-sm text-accent">Objetivos guardados</span>
             )}
             {status === "error" && (
-              <span className="text-sm text-red-400">{errorMsg}</span>
+              <span className="text-sm text-danger">{errorMsg}</span>
             )}
           </div>
         </Card>
@@ -253,17 +253,17 @@ function PlanForm({ initialTargets, token }: { initialTargets: MacroTargets; tok
               <p className="mb-3 text-sm font-semibold">{goal.label}</p>
               <div className="space-y-2 text-xs">
                 <div className="flex items-center gap-2">
-                  <span className="inline-block h-2 w-2 rounded-full bg-blue-500 shrink-0" />
+                  <span className="inline-block h-2 w-2 rounded-full bg-protein shrink-0" />
                   <span className="text-muted">Proteína:</span>
                   <span>{goal.protein}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="inline-block h-2 w-2 rounded-full bg-yellow-500 shrink-0" />
+                  <span className="inline-block h-2 w-2 rounded-full bg-carbs shrink-0" />
                   <span className="text-muted">Carbs:</span>
                   <span>{goal.carbs}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="inline-block h-2 w-2 rounded-full bg-orange-500 shrink-0" />
+                  <span className="inline-block h-2 w-2 rounded-full bg-fat shrink-0" />
                   <span className="text-muted">Grasa:</span>
                   <span>{goal.fat}</span>
                 </div>
@@ -302,7 +302,7 @@ export default function PlanPage() {
       />
 
       {error && (
-        <p className="mb-4 text-sm text-red-400">
+        <p className="mb-4 text-sm text-danger">
           No se pudieron cargar los objetivos actuales: {error}
         </p>
       )}

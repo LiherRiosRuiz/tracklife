@@ -197,7 +197,7 @@ export default function ProgresoPage() {
                   {pct !== null && (
                     <p
                       className={`mt-0.5 text-right text-xs font-medium ${
-                        pct >= 0 ? "text-green-400" : "text-red-400"
+                        pct >= 0 ? "text-success" : "text-danger"
                       }`}
                     >
                       {pct >= 0 ? "+" : ""}

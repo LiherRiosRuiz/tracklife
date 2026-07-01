@@ -1,6 +1,6 @@
 # Pendientes
 
-Tareas abiertas del workspace. Actualizado: 2026-06-21.
+Tareas abiertas del workspace. Actualizado: 2026-06-29.
 
 Para el roadmap detallado de sprints futuros ver [[Roadmap TrackLife]].
 
@@ -24,6 +24,9 @@ Para el roadmap detallado de sprints futuros ver [[Roadmap TrackLife]].
 - [ ] **Providers de wearables** — Zepp y Whoop OAuth2. La infraestructura de `WearableConnection` está lista, falta el flujo OAuth y el sync real
 - [ ] **Versionado de API** — cuando haya >10 endpoints estables, considerar `/api/v1/`
 - [ ] **CLAUDE.md de projects/web/api-laravel/ desactualizado** — Afirma "no routes/api.php" y "MongoDB no cableado", pero el codigo real tiene API completa (~20 controladores) + Mongo activo. Tarea mantenimiento documentacion.
+- [x] **Fix crítico aislamiento de tests** — 2026-06-29: los tests corrían contra la BD producción `tracklife` y borraban la colección `users` en cada `php artisan test` (las env reales de Docker ensombrecían `phpunit.xml`, ni `force="true"` se aplicaba). Sintoma: usuarios desaparecían y el login daba "Credenciales incorrectas". Resuelto: `TestCase::setUp()` fuerza BD `_testing` + `DB::purge` + guardia allowlist en `MongoTestCleanup` + test de regresión. Verificado: sentinela en producción sobrevive a la suite completa. commit `eca9b52`.
+- [x] **Fix higiene APP_KEY** — 2026-06-29: `docker-entrypoint.sh` regeneraba la APP_KEY en cada arranque (rotándola). Ahora solo se genera si no existe (idempotente). No era la causa del bug de persistencia pero es un footgun real.
+- [ ] **Mensaje de login ambiguo** — `AuthController::login` devuelve "Credenciales incorrectas" tanto si el email no existe como si la contraseña es errónea. Decisión pendiente: el mensaje genérico es buena práctica anti-enumeración de usuarios, así que probablemente dejarlo; documentar la decisión. Baja prioridad.
 
 ---
 
@@ -36,11 +39,18 @@ Para el roadmap detallado de sprints futuros ver [[Roadmap TrackLife]].
 - [x] **Sprint P1** — completado 2026-06-21: 9 páginas placeholder (nutricion/plan, nutricion/favoritos, comunidad/buscar, coach/plan, coach/insights, biometricos/cuerpo, entrenamiento/progreso + ajuste BiometricController)
 - [x] **Sprint P2** — completado 2026-06-21: Form Requests (20), Zod Frontend, Landing Redesign, API Resources (8), Dashboard mejorado con WeeklyChart. 44/44 tests verdes.
 - [x] **Sprint P3.1** — completado 2026-06-25: WorkoutTest (8), BiometricTest (9), ActivityTest (8), AuthTest (+5). 74/74 tests verdes (274 assertions).
-- [ ] **Sprint P3.2** — BLOQUEADO: Server Components Dashboard requiere refactor auth (BFF). Ver [[Roadmap TrackLife]] para opciones A/C
+- [x] **Sprint P3.2** — completado 2026-06-25: httpOnly cookie via Route Handlers + Dashboard Server Component + dual-write. 79/79 tests verdes.
 - [x] **Sprint P3.3** — completado 2026-06-25: busqueda real usuarios (GET /api/users/search). 79/79 tests verdes.
+- [x] **Sub-sprint perfil usuario** — completado 2026-06-29: página perfil [id], endpoint protegido (fix seguridad), UserProfileTest 5 tests. 84/84 verdes.
+- [~] **Overhaul estético "Bioluminiscencia"** — grueso COMPLETADO (rama `feature/ui-overhaul`, 2026-06-30, sin merge). Hecho: 4 skills de diseño en SDD; F1 design system (tokens OKLCH, Sora+JetBrains, primitivos Stat/Ring/Badge/EmptyState/Input/Brand); dashboard; login/registro/AppNav; **F3 consistencia total (deuda de color a 0 en 14 páginas + 6 componentes)**; **F4 motion CSS (ring-fill, fade-in, active:scale; sin framer-motion)**; **F5 PWA (manifest, iconos SVG+maskable, SW, theme)**; **landing web1-astro en lockstep**. Base a11y (focus-visible, reduced-motion). Cada commit build OK + lint 0. Pendiente: onboarding dedicado, F4 avanzado (framer-motion + celebraciones), PNG icons 192/512 + empaquetado TWA. Plan: Platón (crónica 2026-06-30).
+- [x] **"Recuérdame" verificado + cookie 30 días** — 2026-06-30: el "no recuerda usuarios" era residuo del wipe de tests (cuenta borrada). Verificado end-to-end que registro/login/sesión persisten. Cookie de sesión extendida 7→30 días (`SESSION_MAX_AGE`). Cuenta demo: `demo@tracklife.test` / `password123`.
+- [ ] **Auth cookie-only (sin localStorage)** — DIRECCIÓN A LARGO PLAZO. Hoy hay dos fuentes de verdad (cookie httpOnly para SSR + localStorage para client). Migrar TODAS las llamadas API a route handlers same-origin (BFF) que adjunten el token desde la cookie server-side → eliminar token de JS (cierra superficie XSS) + sliding refresh (middleware) para que usuarios activos nunca caduquen. Es el P5.1 "retirar localStorage" + "migrar 18 páginas client". Sprint dedicado.
 - [ ] **Páginas con datos reales** — calendario, progreso (recharts), plan nutricional, favoritos, comunidad (P4 en [[Roadmap TrackLife]])
-- [ ] **PWA** — manifest + service worker para instalación en móvil
-- [ ] **Tests frontend** — instalar Vitest + @testing-library/react para web3-next
+- [x] **PWA instalable** — 2026-06-30/07-01: manifest standalone, service worker, iconos SVG + **PNG 192/512/maskable** (`scripts/gen-icons.mjs`), theme color. Ver [[Deploy TrackLife]].
+- [x] **Onboarding de activación** — 2026-07-01: `/app/onboarding` (bienvenida → objetivo → macros → listo) + celebración de logro (confetti/haptic). Registro redirige aquí.
+- [ ] **Deploy público (bloqueante = usuario)** — plan completo en [[Deploy TrackLife]]. Requiere altas gratis: Vercel (front) + Railway/Render (API) + MongoDB Atlas. LIHER hace todo lo técnico en cuanto haya URLs públicas. Dominio propio opcional (`tracklife.fit`).
+- [ ] **Merge `feature/ui-overhaul` → master** — rama con todo el overhaul (F1–F5 + landing + onboarding), lista para revisión y merge.
+- [ ] **Tests frontend** — instalar Vitest + @testing-library/react + Playwright para web3-next (F0 del overhaul)
 
 ---
 

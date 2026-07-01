@@ -61,7 +61,7 @@ export default function EscanerPage() {
             <ScoreBadge score={product.health_score} />
           </div>
           {product.alerts && product.alerts.length > 0 && (
-            <ul className="mt-3 space-y-1 text-sm text-yellow-400">
+            <ul className="mt-3 space-y-1 text-sm text-warning">
               {product.alerts.map((a, i) => <li key={i}>⚠ {a}</li>)}
             </ul>
           )}

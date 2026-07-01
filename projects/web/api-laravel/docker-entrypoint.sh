@@ -20,8 +20,15 @@ if [ ! -d "vendor" ] || [ -z "$(ls -A vendor 2>/dev/null)" ]; then
     composer install --no-interaction
 fi
 
-echo "==> Generando APP_KEY si no existe..."
-php artisan key:generate --no-interaction 2>/dev/null || true
+# Solo generar APP_KEY si NO existe ya una. Antes se regeneraba en cada
+# arranque, rotando la clave y rompiendo cualquier estado cifrado (cookies de
+# sesion Laravel, URLs firmadas, datos encriptados). Ahora es idempotente.
+if ! grep -qE '^APP_KEY=base64:.+' .env 2>/dev/null; then
+    echo "==> Generando APP_KEY (no existe)..."
+    php artisan key:generate --no-interaction 2>/dev/null || true
+else
+    echo "==> APP_KEY ya presente, no se regenera."
+fi
 
 echo "==> Sembrando datos TRACKLIFE..."
 php artisan db:seed --no-interaction 2>/dev/null || true

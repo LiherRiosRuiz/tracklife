@@ -13,6 +13,10 @@ skills_ref:
   - .sdd/skills/devops-docker.md
   - .sdd/skills/security.md
   - .sdd/skills/tailwind-4.md
+  - .sdd/skills/design-system.md
+  - .sdd/skills/ui-aesthetics.md
+  - .sdd/skills/motion-ux.md
+  - .sdd/skills/mobile-pwa.md
 
 skills:
   dev:

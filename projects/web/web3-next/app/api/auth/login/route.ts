@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { SESSION_COOKIE } from "@/lib/auth-constants";
+import { SESSION_COOKIE, SESSION_MAX_AGE } from "@/lib/auth-constants";
 
 const API_INTERNAL_URL = process.env.API_INTERNAL_URL ?? "http://api-laravel:8000";
 
@@ -28,7 +28,7 @@ export async function POST(request: Request) {
     secure: process.env.NODE_ENV === "production", // dev es http → false, o el navegador descarta la cookie
     sameSite: "lax",
     path: "/",
-    maxAge: 60 * 60 * 24 * 7, // 7 días
+    maxAge: SESSION_MAX_AGE,
   });
 
   return NextResponse.json(data, { status: 200 });

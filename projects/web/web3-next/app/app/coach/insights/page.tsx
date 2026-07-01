@@ -11,9 +11,9 @@ import { ErrorState } from "@/components/ErrorState";
 // --- Constantes reutilizadas de coach/plan ---
 
 const INSIGHT_COLORS: Record<string, string> = {
-  warning: "border-yellow-500/40 bg-yellow-950/30 text-yellow-300",
-  success: "border-green-500/40 bg-green-950/30 text-accent",
-  info:    "border-blue-500/40 bg-blue-950/30 text-blue-300",
+  warning: "border-warning/30 bg-warning/10 text-warning",
+  success: "border-success/30 bg-success/10 text-accent",
+  info:    "border-cyan/30 bg-cyan/10 text-cyan",
 };
 
 const INSIGHT_ICONS: Record<string, string> = {
@@ -32,9 +32,9 @@ const SEVERITY_LABELS: Record<string, string> = {
 };
 
 const SEVERITY_PILL: Record<string, string> = {
-  warning: "bg-yellow-950/50 text-yellow-300 border border-yellow-500/30",
-  success: "bg-green-950/50 text-accent border border-green-500/30",
-  info:    "bg-blue-950/50 text-blue-300 border border-blue-500/30",
+  warning: "bg-warning/10 text-warning border border-warning/30",
+  success: "bg-success/10 text-accent border border-success/30",
+  info:    "bg-cyan/10 text-cyan border border-cyan/30",
 };
 
 // Categorías de filtro

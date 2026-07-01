@@ -38,19 +38,19 @@ export function RestTimer({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
-      <div className="w-full max-w-sm rounded-2xl bg-card p-8 text-center">
-        <p className="mb-2 text-sm font-medium text-muted">Descanso</p>
+      <div className="w-full max-w-sm rounded-2xl bg-surface p-8 text-center">
+        <p className="mb-2 text-sm font-medium text-fg-muted">Descanso</p>
 
         {/* Circular progress */}
         <div className="relative mx-auto mb-6 h-48 w-48">
           <svg className="h-full w-full -rotate-90" viewBox="0 0 100 100">
-            <circle cx="50" cy="50" r="45" fill="none" stroke="var(--border)" strokeWidth="6" />
+            <circle cx="50" cy="50" r="45" fill="none" stroke="var(--color-border)" strokeWidth="6" />
             <circle
               cx="50"
               cy="50"
               r="45"
               fill="none"
-              stroke="var(--accent)"
+              stroke="var(--color-accent)"
               strokeWidth="6"
               strokeLinecap="round"
               strokeDasharray={`${2 * Math.PI * 45}`}
@@ -89,7 +89,7 @@ export function RestTimer({
 
         <button
           onClick={onSkip}
-          className="w-full rounded-xl bg-accent py-3 font-semibold text-black transition hover:bg-green-400"
+          className="w-full rounded-xl bg-accent py-3 font-semibold text-on-accent transition hover:bg-accent-strong"
         >
           Saltar descanso
         </button>

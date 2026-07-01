@@ -23,6 +23,10 @@ skills:
   security:       { file: security.md,          projects: [api-laravel, web1-astro, web2-nuxt, web3-next] }
   typescript:     { file: typescript-strict.md, projects: [web1-astro, web2-nuxt, web3-next] }
   tailwind-4:     { file: tailwind-4.md,        projects: [web3-next] }
+  design-system:  { file: design-system.md,     projects: [web3-next, web1-astro] }
+  ui-aesthetics:  { file: ui-aesthetics.md,      projects: [web3-next, web1-astro] }
+  motion-ux:      { file: motion-ux.md,          projects: [web3-next, web1-astro] }
+  mobile-pwa:     { file: mobile-pwa.md,         projects: [web3-next] }
 
 # ── Registries por proyecto ──────────────────────────────────────────────────
 # Cada proyecto tiene su propio registry con solo SUS skills.

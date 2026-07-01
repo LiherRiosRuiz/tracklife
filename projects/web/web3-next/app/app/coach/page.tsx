@@ -19,7 +19,7 @@ export default function CoachPage() {
   const insights = data?.insights ?? [];
 
   const severityColor = (s: string) =>
-    s === "warning" ? "text-yellow-400" : s === "success" ? "text-accent" : "text-muted";
+    s === "warning" ? "text-warning" : s === "success" ? "text-accent" : "text-muted";
 
   return (
     <div>

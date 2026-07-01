@@ -31,7 +31,7 @@ function deltaColor(readings: BiometricReading[], idx: number): string {
   if (idx >= readings.length - 1) return "text-muted";
   const diff = readings[idx].value - readings[idx + 1].value;
   if (Math.abs(diff) < 0.01) return "text-muted";
-  return diff > 0 ? "text-green-400" : "text-red-400";
+  return diff > 0 ? "text-success" : "text-danger";
 }
 
 function formatDate(ts: string | undefined): string {
@@ -67,7 +67,7 @@ function StatusBadge({ status }: { status: "idle" | "saving" | "ok" | "error"; m
   }
   if (status === "ok") {
     return (
-      <p className="mt-3 text-sm text-green-400">Registrado correctamente.</p>
+      <p className="mt-3 text-sm text-success">Registrado correctamente.</p>
     );
   }
   return null;
@@ -239,7 +239,7 @@ export default function CuerpoPage() {
 
           <StatusBadge status={saveStatus} />
           {saveStatus === "error" && saveError && (
-            <p className="text-sm text-red-400">{saveError}</p>
+            <p className="text-sm text-danger">{saveError}</p>
           )}
         </Card>
       </section>
@@ -250,7 +250,7 @@ export default function CuerpoPage() {
         {historialLoading ? (
           <p className="text-sm text-muted">Cargando...</p>
         ) : historialError ? (
-          <p className="text-sm text-red-400">{historialError}</p>
+          <p className="text-sm text-danger">{historialError}</p>
         ) : (
           <div className="grid grid-cols-3 gap-3">
             {BODY_TYPES.map((type) => (
@@ -270,7 +270,7 @@ export default function CuerpoPage() {
         {historialLoading ? (
           <p className="text-sm text-muted">Cargando...</p>
         ) : historialError ? (
-          <p className="text-sm text-red-400">{historialError}</p>
+          <p className="text-sm text-danger">{historialError}</p>
         ) : (
           <Card className="space-y-6">
             {BODY_TYPES.map((type) => (

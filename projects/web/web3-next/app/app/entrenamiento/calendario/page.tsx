@@ -167,7 +167,7 @@ export default function CalendarioPage() {
         </Card>
       )}
       {!loading && error && (
-        <Card className="mb-4 text-center text-sm text-red-400">
+        <Card className="mb-4 text-center text-sm text-danger">
           {error}
         </Card>
       )}
@@ -209,13 +209,13 @@ export default function CalendarioPage() {
                 {hasWorkout && (
                   <span
                     title="Workout registrado"
-                    className="inline-block h-2 w-2 rounded-full bg-green-400"
+                    className="inline-block h-2 w-2 rounded-full bg-success"
                   />
                 )}
                 {hasMeals && (
                   <span
                     title="Comidas registradas"
-                    className="inline-block h-2 w-2 rounded-full bg-blue-400"
+                    className="inline-block h-2 w-2 rounded-full bg-cyan"
                   />
                 )}
               </div>
@@ -227,10 +227,10 @@ export default function CalendarioPage() {
       {/* Leyenda */}
       <div className="mt-2 flex items-center gap-4 text-xs text-muted">
         <span className="flex items-center gap-1.5">
-          <span className="inline-block h-2 w-2 rounded-full bg-green-400" /> Workout
+          <span className="inline-block h-2 w-2 rounded-full bg-success" /> Workout
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="inline-block h-2 w-2 rounded-full bg-blue-400" /> Comidas
+          <span className="inline-block h-2 w-2 rounded-full bg-cyan" /> Comidas
         </span>
       </div>
 
@@ -278,7 +278,7 @@ function DayDetail({
 
       {workouts.length > 0 && (
         <div className="mb-4">
-          <h3 className="mb-2 text-sm font-semibold text-green-400">
+          <h3 className="mb-2 text-sm font-semibold text-success">
             Workouts ({workouts.length})
           </h3>
           <ul className="space-y-2">
@@ -305,7 +305,7 @@ function DayDetail({
 
       {meals.length > 0 && (
         <div>
-          <h3 className="mb-2 text-sm font-semibold text-blue-400">
+          <h3 className="mb-2 text-sm font-semibold text-cyan">
             Comidas ({meals.length}){totalCals > 0 ? ` · ${Math.round(totalCals)} kcal` : ""}
           </h3>
           <ul className="space-y-2">

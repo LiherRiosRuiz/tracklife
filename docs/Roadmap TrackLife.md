@@ -1,6 +1,6 @@
 # Roadmap TrackLife
 
-Sprints futuros de TRACKLIFE. Actualizado: 2026-06-21.
+Sprints futuros de TRACKLIFE. Actualizado: 2026-06-29.
 
 Sprint P1 y P2 cerrados. Siguiente: P3.
 
@@ -15,6 +15,7 @@ Sprint P1 y P2 cerrados. Siguiente: P3.
 | P3.1 — Tests de API (TDD) | [x] Completado 2026-06-25 | 74/74 |
 | P3.2 — Server Components | [x] Completado 2026-06-25 | 79/79 |
 | P3.3 — Búsqueda usuarios real | [x] Completado 2026-06-25 | 79/79 |
+| P3.4 — Página perfil usuario | [x] Completado 2026-06-29 | 84/84 |
 | P4 — Funcionalidades reales | [ ] Pendiente | — |
 | P5 — Producción y pulido | [ ] Pendiente | — |
 
@@ -69,6 +70,16 @@ Sprint P1 y P2 cerrados. Siguiente: P3.
 - `comunidad/buscar/page.tsx` — reescrito, busqueda real con debounce 300ms
 - Respuesta segura: id, name, username, bio, avatar_url, streak_days (sin email, privacy)
 - **Suite total:** 79 tests / 309 assertions / 0 fallos
+
+### P3.4 Página perfil usuario [x] COMPLETADO 2026-06-29
+
+**Resultado:**
+- `app/app/comunidad/perfil/[id]/page.tsx` — pagina Next creada como Client Component (useApiData, Skeleton, ErrorState)
+- `lib/api.ts` — metodo `userProfile(id)` → GET /api/users/{id}/profile
+- `UserProfileController@show` — endpoint existente, movido dentro del grupo `auth:sanctum` (fix seguridad: ruta estaba publica por accidente, incoherente con /users/search gateado)
+- `tests/Feature/UserProfileTest.php` — 5 tests TDD nuevos (22 assertions): estructura 200, 401 sin auth, 404 inexistente, no expone email/password, valores correctos
+- Avatar con iniciales fallback, racha y bio mostrados en perfil
+- **Suite total:** 84 tests / 318 assertions / 0 fallos
 
 ---
 
@@ -152,7 +163,6 @@ Sprint P1 y P2 cerrados. Siguiente: P3.
 | Feed mock | `api-laravel/FeedController.php` | TODO: lógica real de following (P4.3) |
 | Coach insights mock | `api-laravel/CoachController.php` | TODO: basado en datos reales (P4.4) |
 | Deltas biométricos | `BiometricController::today()` | Gap documentado — decidir P3 vs P4 |
-| Link a perfil 404 | `comunidad/buscar/page.tsx` Button href="/app/comunidad/perfil/{id}" | Ruta NO EXISTE. GET /api/users/{id}/profile existe pero ninguna pagina Next la consume. Candidato sub-sprint: "Pagina perfil usuario" |
 
 ---
 

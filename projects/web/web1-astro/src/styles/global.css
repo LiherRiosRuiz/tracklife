@@ -1,16 +1,54 @@
 @import "tailwindcss";
 
+/* =============================================================================
+   TrackLife Landing — Design System "Bioluminiscencia" (lockstep con la app)
+   Sincronizado con web3-next/app/globals.css · ver .sdd/skills/design-system.md
+   ============================================================================= */
+
 @theme {
-  --color-background: #0b1210;
-  --color-foreground: #f0fdf4;
-  --color-card: #111916;
-  --color-accent: #22c55e;
-  --color-accent-dim: #166534;
-  --color-muted: #94a3b8;
-  --color-border: #1e293b;
+  /* Superficies */
+  --color-bg:            oklch(16% 0.018 165);
+  --color-surface:       oklch(20% 0.020 165);
+  --color-surface-2:     oklch(24% 0.022 165);
+  --color-border:        oklch(28% 0.020 165);
+  --color-border-strong: oklch(36% 0.022 165);
+
+  /* Texto */
+  --color-fg:            oklch(97% 0.012 150);
+  --color-fg-muted:      oklch(72% 0.018 160);
+  --color-fg-subtle:     oklch(58% 0.016 160);
+
+  /* Marca */
+  --color-accent:        oklch(82% 0.21 142);
+  --color-accent-strong: oklch(74% 0.20 142);
+  --color-accent-dim:    oklch(38% 0.09 142);
+  --color-on-accent:     oklch(18% 0.03 150);
+
+  /* Acentos viz */
+  --color-cyan:          oklch(80% 0.13 210);
+  --color-violet:        oklch(72% 0.15 295);
+  --color-amber:         oklch(80% 0.15 75);
+  --color-coral:         oklch(72% 0.17 25);
+
+  /* Alias legacy (utilidades existentes de la landing) */
+  --color-background:    var(--color-bg);
+  --color-foreground:    var(--color-fg);
+  --color-card:          var(--color-surface);
+  --color-muted:         var(--color-fg-muted);
+
+  --font-sans: "Sora", system-ui, sans-serif;
 }
 
 body {
-  background-color: var(--color-background);
-  color: var(--color-foreground);
+  background-color: var(--color-bg);
+  color: var(--color-fg);
+  font-family: var(--font-sans);
+}
+
+/* Wordmark con gradiente accent→cyan */
+.brand-gradient {
+  background: linear-gradient(135deg, var(--color-accent), var(--color-cyan));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }

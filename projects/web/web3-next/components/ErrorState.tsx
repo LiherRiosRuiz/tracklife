@@ -9,7 +9,7 @@ export function ErrorState({
 }) {
   return (
     <Card className="text-center">
-      <p className="text-sm text-red-400">{message}</p>
+      <p className="text-sm text-danger">{message}</p>
       {onRetry && (
         <Button onClick={onRetry} variant="secondary" className="mt-4">
           Reintentar

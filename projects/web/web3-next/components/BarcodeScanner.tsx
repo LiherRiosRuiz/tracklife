@@ -35,7 +35,7 @@ export function BarcodeScanner({ onScan }: { onScan: (code: string) => void }) {
   return (
     <div>
       <div id="tracklife-scanner" className="overflow-hidden rounded-2xl border border-border" />
-      {error && <p className="mt-2 text-sm text-yellow-400">{error}</p>}
+      {error && <p className="mt-2 text-sm text-warning">{error}</p>}
     </div>
   );
 }

@@ -95,7 +95,7 @@ export default function NuevoPlanPage() {
         <Card key={exIdx} className="mb-3">
           <div className="mb-3 flex items-center justify-between">
             <h3 className="font-semibold">{ex.exercise_name}</h3>
-            <button onClick={() => removeExercise(exIdx)} className="text-xs text-muted hover:text-red-400">
+            <button onClick={() => removeExercise(exIdx)} className="text-xs text-muted hover:text-danger">
               Quitar
             </button>
           </div>
@@ -142,7 +142,7 @@ export default function NuevoPlanPage() {
                   onChange={(e) => updateSet(exIdx, setIdx, "rest_seconds", Number(e.target.value))}
                   className="w-14 rounded-lg border border-border bg-background px-1 py-1 text-sm"
                 />
-                <button onClick={() => removeSet(exIdx, setIdx)} className="text-muted hover:text-red-400">
+                <button onClick={() => removeSet(exIdx, setIdx)} className="text-muted hover:text-danger">
                   x
                 </button>
               </div>

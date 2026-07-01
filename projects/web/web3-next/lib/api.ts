@@ -163,6 +163,9 @@ export const api = {
       token,
     ),
 
+  userProfile: (id: string) =>
+    request<{ user: SearchUser }>(`/api/users/${id}/profile`),
+
   productByBarcode: (barcode: string) =>
     request<{ product: Product }>(`/api/products/barcode/${barcode}`),
 

@@ -3,10 +3,10 @@ import Layout from "../layouts/Layout.astro";
 const appUrl = "http://app.tracklife.test";
 
 const features = [
-  { icon: "🥗", title: "Nutrición", desc: "Diario alimentario, macros en tiempo real, escáner de código de barras y recetas personalizadas." },
-  { icon: "🏋️", title: "Entrenamiento", desc: "Sesiones de gym, planes personalizados, cardio y calendario semanal con seguimiento de PRs." },
-  { icon: "📊", title: "Biométricos", desc: "Peso, composición corporal, frecuencia cardíaca, HRV y calidad del sueño todo en un historial." },
-  { icon: "👥", title: "Comunidad", desc: "Feed social, clubs, retos activos y un sistema de rachas para no perder la motivación." },
+  { svg: '<path d="M11 2a9 9 0 0 0-3 17.5c1 .5 2 .5 4 .5s3 0 4-.5A9 9 0 0 0 13 2"/><path d="M12 7v5l3 2"/>', title: "Nutrición", desc: "Diario alimentario, macros en tiempo real, escáner de código de barras y recetas personalizadas." },
+  { svg: '<path d="m6.5 6.5 11 11"/><path d="m21 21-1-1"/><path d="m3 3 1 1"/><path d="m18 22 4-4"/><path d="m2 6 4-4"/><path d="m3 10 7-7"/><path d="m14 21 7-7"/>', title: "Entrenamiento", desc: "Sesiones de gym, planes personalizados, cardio y calendario semanal con seguimiento de PRs." },
+  { svg: '<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>', title: "Biométricos", desc: "Peso, composición corporal, frecuencia cardíaca, HRV y calidad del sueño en un solo historial." },
+  { svg: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>', title: "Comunidad", desc: "Feed social, clubs, retos activos y un sistema de rachas para no perder la motivación." },
 ];
 
 const steps = [
@@ -28,39 +28,43 @@ const stats = [
   description="Plataforma integral de fitness: nutrición, entrenamiento, biométricos y comunidad. Todo conectado, todo medible, todo tuyo."
 >
   <!-- Hero -->
-  <section class="max-w-5xl mx-auto px-6 pt-24 pb-20 text-center">
-    <div class="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-1.5 text-xs text-muted mb-8">
-      <span class="h-1.5 w-1.5 rounded-full bg-accent animate-pulse"></span>
-      Plataforma fitness open source
-    </div>
-    <h1 class="text-6xl md:text-8xl font-black tracking-tight leading-none mb-6">
-      Tu cuerpo.<br />
-      <span class="text-accent">Tus datos.</span><br />
-      Tu control.
-    </h1>
-    <p class="text-lg md:text-xl text-muted max-w-2xl mx-auto mb-10 leading-relaxed">
-      Nutrición, entrenamiento, recuperación y comunidad en una sola plataforma.
-      Todo conectado. Todo medible. Todo tuyo.
-    </p>
-    <div class="flex flex-wrap justify-center gap-4">
-      <a href={`${appUrl}/registro`}
-         class="rounded-2xl bg-accent px-8 py-4 text-base font-bold text-black hover:bg-green-400 transition-colors shadow-lg">
-        Empezar gratis →
-      </a>
-      <a href="/como-funciona"
-         class="rounded-2xl border border-border px-8 py-4 text-base font-semibold hover:border-accent hover:text-accent transition-colors">
-        Cómo funciona
-      </a>
+  <section class="relative overflow-hidden">
+    <div class="pointer-events-none absolute -top-40 left-1/2 h-[70vh] w-[70vh] -translate-x-1/2 rounded-full opacity-25 blur-3xl"
+         style="background: radial-gradient(circle, var(--color-accent), transparent 70%)"></div>
+    <div class="relative max-w-5xl mx-auto px-6 pt-24 pb-20 text-center">
+      <div class="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-4 py-1.5 text-xs text-fg-muted mb-8">
+        <span class="h-1.5 w-1.5 rounded-full bg-accent animate-pulse"></span>
+        Plataforma fitness open source
+      </div>
+      <h1 class="text-6xl md:text-8xl font-extrabold tracking-tight leading-none mb-6">
+        Tu cuerpo.<br />
+        <span class="brand-gradient">Tus datos.</span><br />
+        Tu control.
+      </h1>
+      <p class="text-lg md:text-xl text-fg-muted max-w-2xl mx-auto mb-10 leading-relaxed">
+        Nutrición, entrenamiento, recuperación y comunidad en una sola plataforma.
+        Todo conectado. Todo medible. Todo tuyo.
+      </p>
+      <div class="flex flex-wrap justify-center gap-4">
+        <a href={`${appUrl}/registro`}
+           class="rounded-xl bg-accent px-8 py-4 text-base font-bold text-on-accent hover:bg-accent-strong transition-colors shadow-lg">
+          Empezar gratis →
+        </a>
+        <a href="/como-funciona"
+           class="rounded-xl border border-border px-8 py-4 text-base font-semibold hover:border-accent hover:text-accent transition-colors">
+          Cómo funciona
+        </a>
+      </div>
     </div>
   </section>
 
   <!-- Stats -->
-  <section class="border-y border-border bg-card/50 py-12">
+  <section class="border-y border-border bg-surface/50 py-12">
     <div class="max-w-4xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
       {stats.map((s) => (
         <div>
-          <div class="text-4xl font-black text-accent">{s.value}</div>
-          <div class="mt-1 text-sm text-muted">{s.label}</div>
+          <div class="text-4xl font-extrabold text-accent" style="font-variant-numeric: tabular-nums">{s.value}</div>
+          <div class="mt-1 text-sm text-fg-muted">{s.label}</div>
         </div>
       ))}
     </div>
@@ -69,34 +73,36 @@ const stats = [
   <!-- Features -->
   <section class="max-w-5xl mx-auto px-6 py-24">
     <div class="text-center mb-16">
-      <h2 class="text-3xl md:text-5xl font-black mb-4">Todo lo que necesitas</h2>
-      <p class="text-muted max-w-xl mx-auto">Cuatro módulos diseñados para trabajar juntos y darte una visión completa de tu salud.</p>
+      <h2 class="text-3xl md:text-5xl font-extrabold mb-4">Todo lo que necesitas</h2>
+      <p class="text-fg-muted max-w-xl mx-auto">Cuatro módulos diseñados para trabajar juntos y darte una visión completa de tu salud.</p>
     </div>
     <div class="grid md:grid-cols-2 gap-6">
       {features.map((f) => (
-        <div class="rounded-2xl border border-border bg-card p-8 hover:border-accent/40 transition-colors group cursor-default">
-          <div class="text-4xl mb-5">{f.icon}</div>
+        <div class="rounded-2xl border border-border bg-surface p-8 hover:border-accent/40 transition-colors group cursor-default">
+          <div class="mb-5 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-accent-dim">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6 text-accent" set:html={f.svg}></svg>
+          </div>
           <h3 class="text-xl font-bold mb-3 group-hover:text-accent transition-colors">{f.title}</h3>
-          <p class="text-muted text-sm leading-relaxed">{f.desc}</p>
+          <p class="text-fg-muted text-sm leading-relaxed">{f.desc}</p>
         </div>
       ))}
     </div>
   </section>
 
   <!-- How it works -->
-  <section class="border-t border-border bg-card/30 py-24">
+  <section class="border-t border-border bg-surface/30 py-24">
     <div class="max-w-3xl mx-auto px-6">
       <div class="text-center mb-16">
-        <h2 class="text-3xl md:text-5xl font-black mb-4">Tres pasos para empezar</h2>
-        <p class="text-muted">Sin complicaciones. En menos de 5 minutos estás midiendo.</p>
+        <h2 class="text-3xl md:text-5xl font-extrabold mb-4">Tres pasos para empezar</h2>
+        <p class="text-fg-muted">Sin complicaciones. En menos de 5 minutos estás midiendo.</p>
       </div>
       <div class="space-y-10">
         {steps.map((step) => (
           <div class="flex gap-8 items-start">
-            <div class="shrink-0 text-5xl font-black text-border">{step.num}</div>
+            <div class="shrink-0 text-5xl font-extrabold text-border-strong" style="font-variant-numeric: tabular-nums">{step.num}</div>
             <div class="pt-2">
               <h3 class="text-xl font-bold mb-2">{step.title}</h3>
-              <p class="text-muted leading-relaxed">{step.desc}</p>
+              <p class="text-fg-muted leading-relaxed">{step.desc}</p>
             </div>
           </div>
         ))}
@@ -106,15 +112,15 @@ const stats = [
 
   <!-- CTA Final -->
   <section class="max-w-3xl mx-auto px-6 py-28 text-center">
-    <h2 class="text-4xl md:text-6xl font-black mb-4 leading-tight">
+    <h2 class="text-4xl md:text-6xl font-extrabold mb-4 leading-tight">
       Deja de adivinar.<br />
-      <span class="text-accent">Empieza a medir.</span>
+      <span class="brand-gradient">Empieza a medir.</span>
     </h2>
-    <p class="text-muted mb-10 max-w-lg mx-auto text-lg">
+    <p class="text-fg-muted mb-10 max-w-lg mx-auto text-lg">
       Toma el control de tu transformación con datos reales. Es gratis.
     </p>
     <a href={`${appUrl}/registro`}
-       class="inline-block rounded-2xl bg-accent px-12 py-5 text-xl font-black text-black hover:bg-green-400 transition-colors shadow-xl">
+       class="inline-block rounded-xl bg-accent px-12 py-5 text-xl font-extrabold text-on-accent hover:bg-accent-strong transition-colors shadow-xl">
       Crear cuenta gratis
     </a>
   </section>
