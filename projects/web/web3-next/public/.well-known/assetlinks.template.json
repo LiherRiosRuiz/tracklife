@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "test.tracklife.twa",
+      "sha256_cert_fingerprints": [
+        "PEGAR_AQUI_EL_SHA256_DE_PLAY_APP_SIGNING"
+      ]
+    }
+  }
+]
