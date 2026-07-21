@@ -14,12 +14,18 @@ class FeedController extends Controller
 {
     public function __construct(private FeedService $feedService) {}
 
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $posts = SocialPost::orderBy('created_at', 'desc')->limit(50)->get();
+        $perPage = 50;
+        $page = max(1, (int) $request->query('page', 1));
+
+        $posts = SocialPost::orderBy('created_at', 'desc')
+            ->skip(($page - 1) * $perPage)
+            ->take($perPage)
+            ->get();
 
         return response()->json([
-            'feed' => $posts->map(fn ($p) => $this->feedService->formatPost($p))->values(),
+            'feed' => $this->feedService->formatPosts($posts),
         ]);
     }
 
