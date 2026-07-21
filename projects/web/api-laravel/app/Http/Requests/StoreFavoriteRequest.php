@@ -15,7 +15,7 @@ class StoreFavoriteRequest extends FormRequest
     {
         return [
             'type' => 'required|in:food,recipe',
-            'ref' => 'required|string',
+            'ref' => 'required|string|max:120',
         ];
     }
 }

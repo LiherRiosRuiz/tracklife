@@ -192,6 +192,26 @@ class FavoriteTest extends TestCase
             ->assertJsonValidationErrors(['type']);
     }
 
+    // ─── Corrective: ref length cap (unbounded string accepted 10k chars in smoke test) ─
+
+    public function test_store_rejects_ref_exceeding_max_length(): void
+    {
+        $response = $this->actingAsTestUser()
+            ->postJson('/api/favorites', ['type' => 'food', 'ref' => str_repeat('a', 121)]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['ref']);
+    }
+
+    public function test_store_accepts_ref_at_max_length(): void
+    {
+        $response = $this->actingAsTestUser()
+            ->postJson('/api/favorites', ['type' => 'food', 'ref' => str_repeat('a', 120)]);
+
+        $response->assertStatus(201)
+            ->assertJsonPath('favorite.ref', str_repeat('a', 120));
+    }
+
     // ─── T11: Cross-user isolation on destroy ────────────────────────────────
 
     public function test_destroy_only_deletes_own_favorite(): void
