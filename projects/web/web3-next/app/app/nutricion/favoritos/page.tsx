@@ -16,10 +16,12 @@ const FAVORITES_KEY = "tracklife_favorites";
 
 type FavoriteEntry = { type: "food"; name: string } | { type: "recipe"; id: string };
 
+// Clave local con prefijo de tipo, usada para el Set de favoritos y para deduplicar en UI.
 function favoriteKey(entry: FavoriteEntry): string {
   return entry.type === "food" ? `food:${entry.name}` : `recipe:${entry.id}`;
 }
 
+// Referencia cruda (sin prefijo de tipo) que se envia a la API como `ref`.
 function entryRef(entry: FavoriteEntry): string {
   return entry.type === "food" ? entry.name : entry.id;
 }
@@ -98,6 +100,7 @@ export default function FavoritosPage() {
     }
 
     (async () => {
+      const failedKeys: string[] = [];
       for (const key of keys) {
         const i = key.indexOf(":");
         if (i === -1) continue;
@@ -105,11 +108,18 @@ export default function FavoritosPage() {
         const ref = key.slice(i + 1);
         try {
           await api.addFavorite(token, type, ref);
-        } catch {
-          // best-effort: un fallo puntual no debe abortar el resto de la migracion
+        } catch (err) {
+          // best-effort: un fallo puntual no debe abortar el resto de la migracion,
+          // pero se conserva la clave para reintentar en la proxima carga (no se pierde el dato)
+          console.error(`Fallo al migrar favorito "${key}" a la API`, err);
+          failedKeys.push(key);
         }
       }
-      localStorage.removeItem(FAVORITES_KEY);
+      if (failedKeys.length > 0) {
+        localStorage.setItem(FAVORITES_KEY, JSON.stringify(failedKeys));
+      } else {
+        localStorage.removeItem(FAVORITES_KEY);
+      }
       refetchFavorites();
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -142,8 +152,9 @@ export default function FavoritosPage() {
       ? api.removeFavorite(token, entry.type, ref)
       : api.addFavorite(token, entry.type, ref);
 
-    request.catch(() => {
+    request.catch((err) => {
       // revierte la mutacion optimista si la API falla
+      console.error(`Fallo al ${wasFav ? "quitar" : "anadir"} favorito "${key}"`, err);
       setFavorites((prev) => {
         const next = new Set(prev);
         if (wasFav) {
