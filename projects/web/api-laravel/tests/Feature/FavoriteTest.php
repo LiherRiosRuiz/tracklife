@@ -140,4 +140,42 @@ class FavoriteTest extends TestCase
         $response->assertStatus(200)
             ->assertJsonPath('message', 'Favorito eliminado');
     }
+
+    // ─── T3/T4: Validation ───────────────────────────────────────────────────
+
+    public function test_store_fails_without_required_fields(): void
+    {
+        $response = $this->actingAsTestUser()
+            ->postJson('/api/favorites', []);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['type', 'ref']);
+    }
+
+    public function test_store_rejects_invalid_type(): void
+    {
+        $response = $this->actingAsTestUser()
+            ->postJson('/api/favorites', ['type' => 'gadget', 'ref' => 'Banana']);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['type']);
+    }
+
+    // ─── T11: Cross-user isolation on destroy ────────────────────────────────
+
+    public function test_destroy_only_deletes_own_favorite(): void
+    {
+        $userA = $this->createTestUser();
+        $userB = $this->createTestUser();
+
+        Favorite::create(['user_id' => (string) $userA->_id, 'type' => 'food', 'ref' => 'Banana']);
+
+        $response = $this->actingAs($userB, 'sanctum')
+            ->deleteJson('/api/favorites', ['type' => 'food', 'ref' => 'Banana']);
+
+        $response->assertStatus(200);
+
+        $this->assertSame(1, Favorite::where('user_id', (string) $userA->_id)
+            ->where('type', 'food')->where('ref', 'Banana')->count());
+    }
 }
