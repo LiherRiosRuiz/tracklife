@@ -94,4 +94,50 @@ class FavoriteTest extends TestCase
         $this->assertCount(2, $favorites);
         $this->assertArrayNotHasKey('user_id', $favorites[0]);
     }
+
+    // ─── T7: Idempotent store ─────────────────────────────────────────────────
+
+    public function test_store_existing_favorite_returns_200(): void
+    {
+        $user = $this->createTestUser();
+
+        $this->actingAs($user, 'sanctum')
+            ->postJson('/api/favorites', ['type' => 'food', 'ref' => 'Banana'])
+            ->assertStatus(201);
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->postJson('/api/favorites', ['type' => 'food', 'ref' => 'Banana']);
+
+        $response->assertStatus(200);
+
+        $this->assertSame(1, Favorite::where('user_id', (string) $user->_id)
+            ->where('type', 'food')->where('ref', 'Banana')->count());
+    }
+
+    // ─── T9/T10: Destroy idempotency ─────────────────────────────────────────
+
+    public function test_destroy_removes_favorite_returns_200_with_message(): void
+    {
+        $user = $this->createTestUser();
+
+        Favorite::create(['user_id' => (string) $user->_id, 'type' => 'food', 'ref' => 'Banana']);
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->deleteJson('/api/favorites', ['type' => 'food', 'ref' => 'Banana']);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('message', 'Favorito eliminado');
+
+        $this->assertSame(0, Favorite::where('user_id', (string) $user->_id)
+            ->where('type', 'food')->where('ref', 'Banana')->count());
+    }
+
+    public function test_destroy_absent_favorite_still_returns_200(): void
+    {
+        $response = $this->actingAsTestUser()
+            ->deleteJson('/api/favorites', ['type' => 'recipe', 'ref' => 'unknown-id']);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('message', 'Favorito eliminado');
+    }
 }

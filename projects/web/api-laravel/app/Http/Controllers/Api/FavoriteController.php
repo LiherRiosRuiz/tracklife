@@ -36,6 +36,13 @@ class FavoriteController extends Controller
 
     public function destroy(StoreFavoriteRequest $request): JsonResponse
     {
+        $data = $request->validated();
+
+        Favorite::where('user_id', (string) $request->user()->_id)
+            ->where('type', $data['type'])
+            ->where('ref', $data['ref'])
+            ->delete();
+
         return response()->json(['message' => 'Favorito eliminado']);
     }
 }
