@@ -1,10 +1,23 @@
 {
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "command": "gentle-ai skill-registry refresh --quiet --no-gitignore --cwd \"${CLAUDE_PROJECT_DIR:-$PWD}\" || true",
+            "type": "command"
+          }
+        ],
+        "matcher": ""
+      }
+    ]
+  },
+  "outputStyle": "Gentleman",
   "permissions": {
     "allow": [
       "Bash(git:*)",
       "Bash(gh:*)",
       "Bash(docker:*)",
-      "Bash(wsl:*)",
       "Bash(npm:*)",
       "Bash(npx:*)",
       "Bash(make:*)",
@@ -12,25 +25,7 @@
       "Bash(./vendor/bin/pint:*)",
       "Bash(./vendor/bin/phpunit:*)",
       "Bash(composer:*)",
-      "Bash(node:*)",
-      "Read(//mnt/d/Compartida/LIHER/**)",
-      "Read(//d/Compartida/LIHER/**)",
-      "Edit(//mnt/d/Compartida/LIHER/**)",
-      "Write(//mnt/d/Compartida/LIHER/**)"
-    ]
-  },
-  "hooks": {
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "cd \"D:/Compartida/LIHER\" && git status --short | grep -q . && git add . && git commit -m \"auto: sync $(date '+%Y-%m-%d %H:%M')\" && git push || true",
-            "timeout": 60,
-            "statusMessage": "Sincronizando repo con GitHub..."
-          }
-        ]
-      }
+      "Bash(node:*)"
     ]
   }
 }
