@@ -83,7 +83,9 @@ async function request<T>(
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({ message: res.statusText }));
-    throw new Error(err.message ?? "Error de API");
+    const error = new Error(err.message ?? "Error de API") as Error & { status?: number };
+    error.status = res.status;
+    throw error;
   }
 
   return res.json() as Promise<T>;

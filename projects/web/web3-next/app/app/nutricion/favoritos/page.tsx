@@ -109,7 +109,15 @@ export default function FavoritosPage() {
         try {
           await api.addFavorite(token, type, ref);
         } catch (err) {
-          // best-effort: un fallo puntual no debe abortar el resto de la migracion,
+          const status = (err as Error & { status?: number }).status;
+          const isPermanentClientError = status !== undefined && status >= 400 && status < 500;
+          if (isPermanentClientError) {
+            // error de validacion (4xx): reintentar no lo arreglara nunca (p.ej. un
+            // favorito legado con un nombre demasiado largo), se descarta en forma permanente
+            console.error(`Favorito "${key}" invalido (status ${status}), se descarta sin reintentar`, err);
+            continue;
+          }
+          // best-effort: un fallo puntual (red, 5xx) no debe abortar el resto de la migracion,
           // pero se conserva la clave para reintentar en la proxima carga (no se pierde el dato)
           console.error(`Fallo al migrar favorito "${key}" a la API`, err);
           failedKeys.push(key);
