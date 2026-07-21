@@ -194,6 +194,21 @@ export const api = {
   recipes: (token: string) =>
     request<{ recipes: Recipe[] }>("/api/recipes", {}, token),
 
+  favorites: (token: string) =>
+    request<{ favorites: Favorite[] }>("/api/favorites", {}, token),
+
+  addFavorite: (token: string, type: "food" | "recipe", ref: string) =>
+    request<{ favorite: Favorite }>("/api/favorites", {
+      method: "POST",
+      body: JSON.stringify({ type, ref }),
+    }, token),
+
+  removeFavorite: (token: string, type: "food" | "recipe", ref: string) =>
+    request<{ message?: string }>("/api/favorites", {
+      method: "DELETE",
+      body: JSON.stringify({ type, ref }),
+    }, token),
+
   workouts: (token: string) =>
     request<{ workouts: Workout[] }>("/api/workouts", {}, token),
 
@@ -340,6 +355,13 @@ export type Recipe = {
   title: string;
   description?: string;
   totals_per_serving?: MacroTargets;
+};
+
+export type Favorite = {
+  id: string;
+  type: "food" | "recipe";
+  ref: string;
+  created_at?: string;
 };
 
 export type Challenge = {
