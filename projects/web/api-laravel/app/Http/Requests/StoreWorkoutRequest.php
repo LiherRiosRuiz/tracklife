@@ -16,9 +16,16 @@ class StoreWorkoutRequest extends FormRequest
         return [
             'name' => 'required|string|max:120',
             'date' => 'nullable|date',
-            'sets' => 'required|array',
-            'duration_minutes' => 'nullable|integer',
-            'notes' => 'nullable|string',
+            'sets' => 'required|array|max:200',
+            'sets.*.exercise' => 'required|string|max:120',
+            'sets.*.exercise_id' => 'nullable|string',
+            'sets.*.set_number' => 'nullable|integer',
+            'sets.*.type' => 'nullable|string|in:normal,warmup,dropset,failure',
+            'sets.*.reps' => 'nullable|integer|min:0|max:1000',
+            'sets.*.weight' => 'nullable|numeric|min:0|max:1000',
+            'sets.*.rest_seconds' => 'nullable|integer|min:0',
+            'duration_minutes' => 'nullable|integer|min:0',
+            'notes' => 'nullable|string|max:500',
             'shared_to_feed' => 'nullable|boolean',
         ];
     }
