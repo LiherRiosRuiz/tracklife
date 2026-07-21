@@ -16,9 +16,9 @@ class StoreBiometricRequest extends FormRequest
         return [
             'type' => 'required|in:sleep_score,hrv,resting_hr,recovery_score,strain,steps,weight,body_fat,muscle_mass,spO2',
             'value' => 'required|numeric',
-            'unit' => 'nullable|string',
+            'unit' => 'nullable|string|max:50',
             'timestamp' => 'nullable|date',
-            'source' => 'nullable|string',
+            'source' => 'nullable|string|max:50',
             'metadata' => 'nullable|array',
         ];
     }

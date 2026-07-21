@@ -92,6 +92,21 @@ class RecipeTest extends TestCase
             ->assertJsonPath('recipe.title', 'Secret Recipe');
     }
 
+    // ─── Store: description length cap ───────────────────────────────────────
+
+    public function test_recipe_store_rejects_description_over_500_chars(): void
+    {
+        $response = $this->actingAsTestUser()
+            ->postJson('/api/recipes', [
+                'title' => 'Test Recipe',
+                'description' => str_repeat('a', 501),
+                'ingredients' => [],
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['description']);
+    }
+
     // ─── T4: Show ajeno y privado -> 404 (IDOR) ──────────────────────────────
 
     public function test_user_cannot_view_another_users_private_recipe(): void

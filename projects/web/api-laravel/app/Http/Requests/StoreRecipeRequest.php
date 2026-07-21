@@ -15,7 +15,7 @@ class StoreRecipeRequest extends FormRequest
     {
         return [
             'title' => 'required|string|max:200',
-            'description' => 'nullable|string',
+            'description' => 'nullable|string|max:500',
             'ingredients' => 'required|array',
             'steps' => 'nullable|array',
             'servings' => 'nullable|integer|min:1',

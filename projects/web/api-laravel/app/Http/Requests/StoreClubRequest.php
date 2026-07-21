@@ -15,7 +15,7 @@ class StoreClubRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:120',
-            'description' => 'nullable|string',
+            'description' => 'nullable|string|max:500',
             'is_public' => 'nullable|boolean',
         ];
     }

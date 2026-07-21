@@ -19,13 +19,13 @@ class StoreMealRequest extends FormRequest
             'items' => 'required|array|min:1',
             'items.*.name' => 'required|string|max:120',
             'items.*.quantity' => 'nullable|numeric',
-            'items.*.unit' => 'nullable|string',
+            'items.*.unit' => 'nullable|string|max:50',
             'items.*.calories' => 'nullable|numeric',
             'items.*.protein' => 'nullable|numeric',
             'items.*.carbs' => 'nullable|numeric',
             'items.*.fat' => 'nullable|numeric',
-            'photo_url' => 'nullable|string',
-            'notes' => 'nullable|string',
+            'photo_url' => 'nullable|string|max:2048',
+            'notes' => 'nullable|string|max:500',
             'shared_to_feed' => 'nullable|boolean',
         ];
     }

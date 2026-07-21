@@ -243,6 +243,19 @@ class WorkoutTest extends TestCase
             ->assertJsonValidationErrors(['duration_minutes']);
     }
 
+    // ─── T13b: Rechaza notes por encima de 500 caracteres ───────────────────
+
+    public function test_workout_store_rejects_notes_over_500_chars(): void
+    {
+        $response = $this->actingAsTestUser()
+            ->postJson('/api/workouts', $this->workoutPayload([
+                'notes' => str_repeat('a', 501),
+            ]));
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['notes']);
+    }
+
     // ─── T14: Acepta un workout realista dentro de los limites ──────────────
 
     public function test_workout_store_accepts_realistic_workout_at_boundaries(): void

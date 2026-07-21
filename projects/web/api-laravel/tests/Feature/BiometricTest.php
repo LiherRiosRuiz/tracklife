@@ -75,6 +75,30 @@ class BiometricTest extends TestCase
             ->assertJsonValidationErrors(['type']);
     }
 
+    // ─── T3b: Longitud maxima de unit/source ─────────────────────────────────
+
+    public function test_biometric_store_rejects_unit_over_50_chars(): void
+    {
+        $response = $this->actingAsTestUser()
+            ->postJson('/api/biometrics', $this->biometricPayload([
+                'unit' => str_repeat('a', 51),
+            ]));
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['unit']);
+    }
+
+    public function test_biometric_store_rejects_source_over_50_chars(): void
+    {
+        $response = $this->actingAsTestUser()
+            ->postJson('/api/biometrics', $this->biometricPayload([
+                'source' => str_repeat('a', 51),
+            ]));
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['source']);
+    }
+
     // ─── T4: Store exitoso + estructura ──────────────────────────────────────
 
     public function test_user_can_store_a_biometric_reading(): void

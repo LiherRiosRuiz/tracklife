@@ -117,6 +117,47 @@ class MealTest extends TestCase
         $response->assertStatus(201);
     }
 
+    public function test_meal_store_rejects_item_unit_over_50_chars(): void
+    {
+        $user = $this->makeUser('storeitemunit1');
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->postJson('/api/meals', $this->mealPayload([
+                'items' => [
+                    ['name' => 'Arroz', 'quantity' => 100, 'unit' => str_repeat('a', 51)],
+                ],
+            ]));
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['items.0.unit']);
+    }
+
+    public function test_meal_store_rejects_photo_url_over_2048_chars(): void
+    {
+        $user = $this->makeUser('storephotourl1');
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->postJson('/api/meals', $this->mealPayload([
+                'photo_url' => 'https://example.com/'.str_repeat('a', 2048),
+            ]));
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['photo_url']);
+    }
+
+    public function test_meal_store_rejects_notes_over_500_chars(): void
+    {
+        $user = $this->makeUser('storenotes1');
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->postJson('/api/meals', $this->mealPayload([
+                'notes' => str_repeat('a', 501),
+            ]));
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['notes']);
+    }
+
     public function test_meal_store_requires_authentication(): void
     {
         $response = $this->postJson('/api/meals', $this->mealPayload());
@@ -193,6 +234,42 @@ class MealTest extends TestCase
         $response->assertStatus(200)
             ->assertJsonPath('meal.meal_type', 'dinner')
             ->assertJsonPath('meal.notes', 'Cena actualizada');
+    }
+
+    public function test_meal_update_rejects_notes_over_500_chars(): void
+    {
+        $user = $this->makeUser('updnotes');
+
+        $createResponse = $this->actingAs($user, 'sanctum')
+            ->postJson('/api/meals', $this->mealPayload());
+
+        $mealId = $createResponse->json('meal.id');
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->putJson("/api/meals/{$mealId}", [
+                'notes' => str_repeat('a', 501),
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['notes']);
+    }
+
+    public function test_meal_update_rejects_photo_url_over_2048_chars(): void
+    {
+        $user = $this->makeUser('updphotourl');
+
+        $createResponse = $this->actingAs($user, 'sanctum')
+            ->postJson('/api/meals', $this->mealPayload());
+
+        $mealId = $createResponse->json('meal.id');
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->putJson("/api/meals/{$mealId}", [
+                'photo_url' => 'https://example.com/'.str_repeat('a', 2048),
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['photo_url']);
     }
 
     public function test_user_cannot_update_another_users_meal(): void
