@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\ClubController;
 use App\Http\Controllers\Api\CoachController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\ExerciseController;
+use App\Http\Controllers\Api\FavoriteController;
 use App\Http\Controllers\Api\FeedController;
 use App\Http\Controllers\Api\FoodController;
 use App\Http\Controllers\Api\MacroController;
@@ -79,6 +80,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/workouts', [WorkoutController::class, 'index']);
     Route::post('/workouts', [WorkoutController::class, 'store']);
     Route::get('/workouts/{id}', [WorkoutController::class, 'show']);
+
+    // Favorites
+    Route::get('/favorites', [FavoriteController::class, 'index']);
+    Route::post('/favorites', [FavoriteController::class, 'store']);
+    Route::delete('/favorites', [FavoriteController::class, 'destroy']);
 
     Route::get('/exercises', [ExerciseController::class, 'index']);
     Route::post('/exercises', [ExerciseController::class, 'store']);
