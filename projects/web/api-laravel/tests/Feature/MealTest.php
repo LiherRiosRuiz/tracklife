@@ -88,6 +88,35 @@ class MealTest extends TestCase
             ->assertJsonValidationErrors(['meal_type', 'items']);
     }
 
+    public function test_meal_store_rejects_item_name_over_120_chars(): void
+    {
+        $user = $this->makeUser('storeitemname1');
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->postJson('/api/meals', $this->mealPayload([
+                'items' => [
+                    ['name' => str_repeat('a', 121), 'quantity' => 100, 'unit' => 'g'],
+                ],
+            ]));
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['items.0.name']);
+    }
+
+    public function test_meal_store_accepts_item_name_at_120_chars(): void
+    {
+        $user = $this->makeUser('storeitemname2');
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->postJson('/api/meals', $this->mealPayload([
+                'items' => [
+                    ['name' => str_repeat('a', 120), 'quantity' => 100, 'unit' => 'g'],
+                ],
+            ]));
+
+        $response->assertStatus(201);
+    }
+
     public function test_meal_store_requires_authentication(): void
     {
         $response = $this->postJson('/api/meals', $this->mealPayload());

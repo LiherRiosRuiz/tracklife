@@ -43,7 +43,7 @@ class ProductController extends Controller
     public function scan(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'barcode' => 'required|string',
+            'barcode' => 'required|string|max:50',
             'share_to_feed' => 'nullable|boolean',
         ]);
 

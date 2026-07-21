@@ -17,7 +17,7 @@ class StoreMealRequest extends FormRequest
             'date' => 'nullable|date',
             'meal_type' => 'required|in:breakfast,lunch,snack,dinner,other',
             'items' => 'required|array|min:1',
-            'items.*.name' => 'required|string',
+            'items.*.name' => 'required|string|max:120',
             'items.*.quantity' => 'nullable|numeric',
             'items.*.unit' => 'nullable|string',
             'items.*.calories' => 'nullable|numeric',
