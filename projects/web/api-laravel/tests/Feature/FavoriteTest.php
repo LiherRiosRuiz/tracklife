@@ -4,6 +4,9 @@ namespace Tests\Feature;
 
 use App\Models\Favorite;
 use App\Models\User;
+use Illuminate\Support\Facades\Schema;
+use MongoDB\Driver\Exception\BulkWriteException;
+use MongoDB\Laravel\Schema\Blueprint;
 use Tests\TestCase;
 use Tests\Traits\MongoTestCleanup;
 
@@ -12,6 +15,21 @@ class FavoriteTest extends TestCase
     use MongoTestCleanup;
 
     protected array $mongoCollections = ['users', 'personal_access_tokens', 'favorites'];
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // MongoTestCleanup dropea la colección `favorites` completa (con sus
+        // índices) en el tearDown de cada test, así que reinstalamos aquí el
+        // mismo índice compuesto único que crea la migración
+        // 2026_07_21_120000_add_unique_index_to_favorites_collection.php.
+        // FavoriteController::store() depende de que este índice exista para
+        // detectar duplicados vía excepción en vez de un find-then-insert.
+        Schema::connection('mongodb')->table('favorites', function (Blueprint $collection) {
+            $collection->unique(['user_id', 'type', 'ref']);
+        });
+    }
 
     // ─── Helpers ─────────────────────────────────────────────────────────────
 
@@ -210,6 +228,21 @@ class FavoriteTest extends TestCase
 
         $response->assertStatus(201)
             ->assertJsonPath('favorite.ref', str_repeat('a', 120));
+    }
+
+    // ─── T13: Unique compound index prevents duplicate (user_id, type, ref) ──
+
+    public function test_unique_index_rejects_duplicate_favorite_at_db_level(): void
+    {
+        // El índice único ya lo instala setUp(); aquí solo lo ejercemos.
+        $userId = (string) $this->createTestUser()->_id;
+
+        Favorite::create(['user_id' => $userId, 'type' => 'food', 'ref' => 'race-condition-ref']);
+
+        $this->expectException(BulkWriteException::class);
+        $this->expectExceptionMessageMatches('/E11000 duplicate key error/');
+
+        Favorite::create(['user_id' => $userId, 'type' => 'food', 'ref' => 'race-condition-ref']);
     }
 
     // ─── T11: Cross-user isolation on destroy ────────────────────────────────
