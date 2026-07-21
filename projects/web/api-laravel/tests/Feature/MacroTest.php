@@ -2,7 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Models\MealEntry;
 use App\Models\User;
+use App\Services\MacroService;
+use Carbon\Carbon;
 use Tests\TestCase;
 use Tests\Traits\MongoTestCleanup;
 
@@ -159,5 +162,72 @@ class MacroTest extends TestCase
         $response = $this->getJson('/api/macros/progress');
 
         $response->assertStatus(401);
+    }
+
+    // ─── Weekly Calories ──────────────────────────────────────────────────────
+
+    public function test_weekly_calories_returns_7_days_ordered_oldest_to_newest_with_zero_when_no_meals(): void
+    {
+        $user = $this->makeUser('week1');
+
+        $result = app(MacroService::class)->weeklyCalories($user);
+
+        $this->assertCount(7, $result);
+
+        $expectedDates = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $expectedDates[] = Carbon::today()->subDays($i)->toDateString();
+        }
+
+        $this->assertSame($expectedDates, array_column($result, 'date'));
+
+        foreach ($result as $day) {
+            $this->assertArrayHasKey('date', $day);
+            $this->assertArrayHasKey('day', $day);
+            $this->assertArrayHasKey('calories', $day);
+            $this->assertSame(0.0, (float) $day['calories']);
+        }
+    }
+
+    public function test_weekly_calories_sums_multiple_meals_per_day_and_keeps_zero_days(): void
+    {
+        $user = $this->makeUser('week2');
+
+        $threeDaysAgo = Carbon::today()->subDays(3)->toDateString();
+        $twoDaysAgo = Carbon::today()->subDays(2)->toDateString();
+        $today = Carbon::today()->toDateString();
+
+        MealEntry::create([
+            'user_id' => (string) $user->_id,
+            'date' => $threeDaysAgo,
+            'meal_type' => 'breakfast',
+            'items' => [],
+            'totals' => ['calories' => 300, 'protein' => 20, 'carbs' => 30, 'fat' => 5],
+        ]);
+
+        MealEntry::create([
+            'user_id' => (string) $user->_id,
+            'date' => $threeDaysAgo,
+            'meal_type' => 'lunch',
+            'items' => [],
+            'totals' => ['calories' => 450, 'protein' => 25, 'carbs' => 40, 'fat' => 10],
+        ]);
+
+        MealEntry::create([
+            'user_id' => (string) $user->_id,
+            'date' => $today,
+            'meal_type' => 'dinner',
+            'items' => [],
+            'totals' => ['calories' => 600, 'protein' => 35, 'carbs' => 50, 'fat' => 15],
+        ]);
+
+        $result = collect(app(MacroService::class)->weeklyCalories($user))->keyBy('date');
+
+        $this->assertSame(750.0, (float) $result[$threeDaysAgo]['calories']);
+        $this->assertSame(600.0, (float) $result[$today]['calories']);
+
+        // Un día sin comidas registradas debe seguir apareciendo con 0, no omitirse.
+        $this->assertArrayHasKey($twoDaysAgo, $result);
+        $this->assertSame(0.0, (float) $result[$twoDaysAgo]['calories']);
     }
 }
