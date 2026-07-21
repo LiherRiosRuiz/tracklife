@@ -49,6 +49,13 @@ class FavoriteTest extends TestCase
         $response->assertStatus(401);
     }
 
+    public function test_destroy_favorite_requires_authentication(): void
+    {
+        $response = $this->deleteJson('/api/favorites', ['type' => 'food', 'ref' => 'Banana']);
+
+        $response->assertStatus(401);
+    }
+
     // ─── T5: Happy path store ────────────────────────────────────────────────
 
     public function test_store_creates_new_favorite_returns_201(): void
@@ -92,7 +99,31 @@ class FavoriteTest extends TestCase
 
         $favorites = $response->json('favorites');
         $this->assertCount(2, $favorites);
-        $this->assertArrayNotHasKey('user_id', $favorites[0]);
+        foreach ($favorites as $favorite) {
+            $this->assertArrayNotHasKey('user_id', $favorite);
+        }
+    }
+
+    // ─── T12: Same ref favorited independently by two users ─────────────────
+
+    public function test_same_ref_favorited_independently_by_two_users(): void
+    {
+        $userA = $this->createTestUser();
+        $userB = $this->createTestUser();
+
+        $responseA = $this->actingAs($userA, 'sanctum')
+            ->postJson('/api/favorites', ['type' => 'recipe', 'ref' => 'shared-recipe']);
+        $responseB = $this->actingAs($userB, 'sanctum')
+            ->postJson('/api/favorites', ['type' => 'recipe', 'ref' => 'shared-recipe']);
+
+        $responseA->assertStatus(201);
+        $responseB->assertStatus(201);
+
+        $this->assertSame(1, Favorite::where('user_id', (string) $userA->_id)
+            ->where('type', 'recipe')->where('ref', 'shared-recipe')->count());
+        $this->assertSame(1, Favorite::where('user_id', (string) $userB->_id)
+            ->where('type', 'recipe')->where('ref', 'shared-recipe')->count());
+        $this->assertSame(2, Favorite::where('type', 'recipe')->where('ref', 'shared-recipe')->count());
     }
 
     // ─── T7: Idempotent store ─────────────────────────────────────────────────
