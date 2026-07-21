@@ -44,8 +44,15 @@ class RecipeController extends Controller
         return response()->json(['recipe' => $recipe], 201);
     }
 
-    public function show(string $id): JsonResponse
+    public function show(Request $request, string $id): JsonResponse
     {
-        return response()->json(['recipe' => Recipe::findOrFail($id)]);
+        $recipe = Recipe::where('_id', $id)
+            ->where(function ($q) use ($request) {
+                $q->where('is_public', true)
+                    ->orWhere('user_id', (string) $request->user()->_id);
+            })
+            ->firstOrFail();
+
+        return response()->json(['recipe' => $recipe]);
     }
 }
