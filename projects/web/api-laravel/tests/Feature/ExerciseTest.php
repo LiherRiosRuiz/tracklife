@@ -73,6 +73,26 @@ class ExerciseTest extends TestCase
         $this->assertCount(1, $exercises);
     }
 
+    public function test_exercise_index_does_not_exceed_page_limit(): void
+    {
+        for ($i = 0; $i < 110; $i++) {
+            Exercise::create([
+                'name' => sprintf('Exercise %03d', $i),
+                'muscle_group' => 'chest',
+                'equipment' => 'barbell',
+                'is_custom' => false,
+                'category' => 'strength',
+            ]);
+        }
+
+        $response = $this->actingAsTestUser()
+            ->getJson('/api/exercises');
+
+        $response->assertOk();
+        $exercises = $response->json('exercises');
+        $this->assertLessThanOrEqual(100, count($exercises));
+    }
+
     public function test_exercise_show_returns_full_detail(): void
     {
         $exercise = Exercise::create([

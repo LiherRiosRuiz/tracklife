@@ -37,7 +37,7 @@ class ExerciseController extends Controller
             $query->where('name', 'regex', new Regex($search, 'i'));
         }
 
-        $exercises = $query->orderBy('name')->get();
+        $exercises = $query->orderBy('name')->limit(100)->get();
 
         return response()->json(['exercises' => ExerciseResource::collection($exercises)]);
     }
