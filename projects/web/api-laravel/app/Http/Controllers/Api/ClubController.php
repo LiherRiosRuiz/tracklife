@@ -34,15 +34,27 @@ class ClubController extends Controller
         return response()->json(['club' => $club], 201);
     }
 
-    public function show(string $id): JsonResponse
+    public function show(Request $request, string $id): JsonResponse
     {
-        return response()->json(['club' => Club::findOrFail($id)]);
+        $club = Club::findOrFail($id);
+        $userId = (string) $request->user()->_id;
+
+        if (! $this->canAccess($club, $userId)) {
+            abort(404);
+        }
+
+        return response()->json(['club' => $club]);
     }
 
     public function join(Request $request, string $id): JsonResponse
     {
         $club = Club::findOrFail($id);
         $userId = (string) $request->user()->_id;
+
+        if (! $this->canAccess($club, $userId)) {
+            abort(404);
+        }
+
         $members = $club->member_ids ?? [];
 
         if (! in_array($userId, $members, true)) {
@@ -52,5 +64,14 @@ class ClubController extends Controller
         }
 
         return response()->json(['club' => $club->fresh()]);
+    }
+
+    private function canAccess(Club $club, string $userId): bool
+    {
+        $members = $club->member_ids ?? [];
+
+        return $club->is_public
+            || $club->owner_id === $userId
+            || in_array($userId, $members, true);
     }
 }
