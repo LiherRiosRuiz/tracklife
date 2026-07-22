@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { api, type Club } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { Button, Card, PageHeader } from "@/components/ui";
@@ -9,6 +10,7 @@ import { ErrorState } from "@/components/ErrorState";
 
 export default function ClubsPage() {
   const { token } = useAuth();
+  const [joinError, setJoinError] = useState("");
 
   const { data, loading, error, refetch } = useApiData(
     () => api.clubs(),
@@ -19,8 +21,13 @@ export default function ClubsPage() {
 
   const join = async (id: string) => {
     if (!token) return;
-    await api.joinClub(token, id);
-    refetch();
+    setJoinError("");
+    try {
+      await api.joinClub(token, id);
+      refetch();
+    } catch (err) {
+      setJoinError(err instanceof Error ? err.message : "No se pudo unir al club");
+    }
   };
 
   return (
@@ -28,6 +35,7 @@ export default function ClubsPage() {
       <PageHeader title="Clubs" />
       {loading && <SkeletonList />}
       {error && <ErrorState message={error} onRetry={refetch} />}
+      {joinError && <p className="mb-3 text-sm text-danger">{joinError}</p>}
       {!loading && !error && clubs.map((c, i) => (
         <Card key={c._id ?? i} className="mb-3">
           <h3 className="font-semibold">{c.name}</h3>

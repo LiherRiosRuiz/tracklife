@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { api, type Challenge } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { Button, Card, PageHeader } from "@/components/ui";
@@ -9,6 +10,7 @@ import { ErrorState } from "@/components/ErrorState";
 
 export default function RetosPage() {
   const { token } = useAuth();
+  const [joinError, setJoinError] = useState("");
 
   const { data, loading, error, refetch } = useApiData(
     () => api.challenges(),
@@ -19,8 +21,13 @@ export default function RetosPage() {
 
   const join = async (id: string) => {
     if (!token) return;
-    await api.joinChallenge(token, id);
-    refetch();
+    setJoinError("");
+    try {
+      await api.joinChallenge(token, id);
+      refetch();
+    } catch (err) {
+      setJoinError(err instanceof Error ? err.message : "No se pudo unir al reto");
+    }
   };
 
   return (
@@ -28,6 +35,7 @@ export default function RetosPage() {
       <PageHeader title="Retos" />
       {loading && <SkeletonList />}
       {error && <ErrorState message={error} onRetry={refetch} />}
+      {joinError && <p className="mb-3 text-sm text-danger">{joinError}</p>}
       {!loading && !error && challenges.map((c, i) => (
         <Card key={c._id ?? i} className="mb-3">
           <h3 className="font-semibold">{c.title}</h3>
