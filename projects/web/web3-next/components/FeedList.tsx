@@ -9,11 +9,17 @@ import { Card } from "./ui";
 export function FeedList({ posts: initial, showKudos = true }: { posts: FeedPost[]; showKudos?: boolean }) {
   const { token } = useAuth();
   const [posts, setPosts] = useState(initial);
+  const [kudosError, setKudosError] = useState("");
 
   const handleKudos = async (id: string) => {
     if (!token) return;
-    const { post } = await api.kudos(token, id);
-    setPosts((prev) => prev.map((p) => (p.id === id ? post : p)));
+    setKudosError("");
+    try {
+      const { post } = await api.kudos(token, id);
+      setPosts((prev) => prev.map((p) => (p.id === id ? post : p)));
+    } catch (err) {
+      setKudosError(err instanceof Error ? err.message : "No se pudo dar kudos");
+    }
   };
 
   if (posts.length === 0) {
@@ -22,6 +28,7 @@ export function FeedList({ posts: initial, showKudos = true }: { posts: FeedPost
 
   return (
     <div className="space-y-3">
+      {kudosError && <p className="text-xs text-danger">{kudosError}</p>}
       {posts.map((post) => (
         <Card key={post.id}>
           <div className="flex items-start justify-between gap-3">

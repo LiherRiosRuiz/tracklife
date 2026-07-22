@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { type ActiveWorkoutSet, type Exercise } from "@/lib/api";
-import { useAuth } from "@/lib/auth";
 import { Button, Card, PageHeader } from "@/components/ui";
 import { ExercisePickerModal } from "@/components/ExercisePickerModal";
 
@@ -21,7 +20,6 @@ function emptySet(exercise: string, exerciseId: string, num: number): ActiveWork
 }
 
 export default function GymPage() {
-  const { token } = useAuth();
   const router = useRouter();
   const [name, setName] = useState("Sesion de fuerza");
   const [sets, setSets] = useState<ActiveWorkoutSet[]>([]);

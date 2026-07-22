@@ -13,6 +13,7 @@ const providers = ["zepp", "whoop", "garmin", "apple_health", "strava"];
 export default function DispositivosPage() {
   const { token } = useAuth();
   const [msg, setMsg] = useState("");
+  const [actionError, setActionError] = useState("");
 
   const { data, loading, error, refetch } = useApiData(
     () => api.wearables(token!),
@@ -24,21 +25,32 @@ export default function DispositivosPage() {
 
   const connect = async (provider: string) => {
     if (!token) return;
-    await api.connectWearable(token, provider);
-    refetch();
+    setActionError("");
+    try {
+      await api.connectWearable(token, provider);
+      refetch();
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "No se pudo conectar el dispositivo");
+    }
   };
 
   const sync = async (provider: string) => {
     if (!token) return;
-    const r = await api.syncWearable(token, provider);
-    setMsg(r.message);
-    refetch();
+    setActionError("");
+    try {
+      const r = await api.syncWearable(token, provider);
+      setMsg(r.message);
+      refetch();
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "No se pudo sincronizar el dispositivo");
+    }
   };
 
   return (
     <div>
       <PageHeader title="Dispositivos" subtitle="Conecta tus wearables" />
       {msg && <p className="mb-3 text-sm text-accent">{msg}</p>}
+      {actionError && <p className="mb-3 text-sm text-danger">{actionError}</p>}
       {loading && <SkeletonList count={5} />}
       {error && <ErrorState message={error} onRetry={refetch} />}
       {!loading && !error && (

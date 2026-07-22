@@ -220,8 +220,17 @@ export const api = {
       body: JSON.stringify(data),
     }, token),
 
-  exercises: (token: string) =>
-    request<{ exercises: Exercise[] }>("/api/exercises", {}, token),
+  exercises: (token: string, filters?: { q?: string; muscle_group?: string }) => {
+    const params = new URLSearchParams();
+    if (filters?.q) params.set("q", filters.q);
+    if (filters?.muscle_group) params.set("muscle_group", filters.muscle_group);
+    const qs = params.toString();
+    return request<{ exercises: Exercise[] }>(
+      `/api/exercises${qs ? `?${qs}` : ""}`,
+      {},
+      token,
+    );
+  },
 
   exerciseDetail: (token: string, id: string) =>
     request<{ exercise: Exercise }>(`/api/exercises/${id}`, {}, token),

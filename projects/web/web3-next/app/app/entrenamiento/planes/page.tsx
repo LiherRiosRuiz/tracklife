@@ -10,6 +10,7 @@ export default function PlanesPage() {
   const { token } = useAuth();
   const [plans, setPlans] = useState<WorkoutPlan[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleteError, setDeleteError] = useState("");
 
   useEffect(() => {
     if (!token) return;
@@ -21,8 +22,13 @@ export default function PlanesPage() {
 
   const deletePlan = async (id: string) => {
     if (!token || !confirm("Eliminar este plan?")) return;
-    await api.deleteWorkoutPlan(token, id);
-    setPlans(plans.filter((p) => p._id !== id));
+    setDeleteError("");
+    try {
+      await api.deleteWorkoutPlan(token, id);
+      setPlans(plans.filter((p) => p._id !== id));
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : "Error al eliminar el plan");
+    }
   };
 
   return (
@@ -31,6 +37,8 @@ export default function PlanesPage() {
         <PageHeader title="Mis planes" subtitle={`${plans.length} planes`} />
         <Button href="/app/entrenamiento/planes/nuevo">+ Crear plan</Button>
       </div>
+
+      {deleteError && <p className="mb-3 text-sm text-danger">{deleteError}</p>}
 
       {loading ? (
         <p className="text-center text-muted">Cargando...</p>

@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\PersonalAccessToken;
 use App\Models\User;
+use Illuminate\Support\Facades\Log;
 use Tests\TestCase;
 use Tests\Traits\MongoTestCleanup;
 
@@ -112,6 +113,35 @@ class AuthTest extends TestCase
         // AuthController throws ValidationException → 422 with error on 'email'
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['email']);
+    }
+
+    public function test_login_failure_logs_warning_without_leaking_password(): void
+    {
+        User::create([
+            'name' => 'Logged Fail User',
+            'email' => 'loggedfail@test.com',
+            'username' => 'loggedfailuser',
+            'password' => 'correctpassword',
+            'macro_targets' => User::defaultMacroTargets(),
+            'privacy_settings' => User::defaultPrivacySettings(),
+            'streak_days' => 0,
+        ]);
+
+        Log::spy();
+
+        $this->postJson('/api/auth/login', [
+            'email' => 'loggedfail@test.com',
+            'password' => 'wrongpassword',
+        ])->assertStatus(422);
+
+        Log::shouldHaveReceived('warning')
+            ->once()
+            ->withArgs(function (string $message, array $context) {
+                $haystack = $message.' '.json_encode($context);
+
+                return str_contains($haystack, 'loggedfail@test.com')
+                    && ! str_contains($haystack, 'wrongpassword');
+            });
     }
 
     public function test_login_fails_with_nonexistent_email(): void

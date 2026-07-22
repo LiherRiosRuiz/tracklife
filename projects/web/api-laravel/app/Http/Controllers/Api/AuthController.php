@@ -10,6 +10,7 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -54,6 +55,13 @@ class AuthController extends Controller
         $user = User::where('email', $data['email'])->first();
 
         if (! $user || ! Hash::check($data['password'], $user->password)) {
+            // Deliberately no password in this log line — visibility into
+            // brute-force/enumeration attempts without leaking credentials.
+            Log::warning('Failed login attempt', [
+                'email' => $data['email'],
+                'ip' => $request->ip(),
+            ]);
+
             throw ValidationException::withMessages(['email' => ['Credenciales incorrectas.']]);
         }
 

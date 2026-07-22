@@ -22,7 +22,12 @@
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="BROADCAST_CONNECTION" value="null"/>
-        <env name="CACHE_STORE" value="array"/>
+        <!-- Forced like DB_CONNECTION/MONGODB_URI/MONGO_DATABASE below: this
+             container's real .env sets CACHE_STORE=database, which would
+             silently leak through here (and make rate-limiter state persist
+             across separate `php artisan test` runs instead of resetting
+             per-test) without force="true". -->
+        <env name="CACHE_STORE" value="array" force="true"/>
         <env name="DB_CONNECTION" value="mongodb" force="true"/>
         <env name="MONGODB_URI" value="mongodb://admin:changeme_in_production@mongodb:27017/tracklife_testing?authSource=admin" force="true"/>
         <env name="MONGO_DATABASE" value="tracklife_testing" force="true"/>

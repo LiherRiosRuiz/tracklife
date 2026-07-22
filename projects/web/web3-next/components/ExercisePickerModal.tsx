@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { type Exercise } from "@/lib/api";
+import { useState } from "react";
+import { api, type Exercise } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { useApiData } from "@/hooks/use-api-data";
 import { MUSCLE_GROUPS, muscleLabel } from "@/lib/muscles";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://api.tracklife.test";
 
 export function ExercisePickerModal({
   onSelect,
@@ -15,24 +14,16 @@ export function ExercisePickerModal({
   onClose: () => void;
 }) {
   const { token } = useAuth();
-  const [exercises, setExercises] = useState<Exercise[]>([]);
   const [search, setSearch] = useState("");
   const [selectedMuscle, setSelectedMuscle] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!token) return;
+  const { data, error } = useApiData(
+    () => api.exercises(token!, { q: search || undefined, muscle_group: selectedMuscle || undefined }),
+    [token, search, selectedMuscle],
+    { enabled: !!token },
+  );
 
-    const params = new URLSearchParams();
-    if (search) params.set("q", search);
-    if (selectedMuscle) params.set("muscle_group", selectedMuscle);
-
-    fetch(`${API_URL}/api/exercises?${params}`, {
-      headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
-    })
-      .then((r) => r.json())
-      .then((data) => setExercises(data.exercises ?? []))
-      .catch(console.error);
-  }, [token, search, selectedMuscle]);
+  const exercises: Exercise[] = data?.exercises ?? [];
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 sm:items-center">
@@ -81,7 +72,8 @@ export function ExercisePickerModal({
 
         {/* Results */}
         <div className="max-h-[50vh] overflow-y-auto px-4 pb-4">
-          {exercises.map((ex) => (
+          {error && <p className="py-8 text-center text-sm text-danger">{error}</p>}
+          {!error && exercises.map((ex) => (
             <button
               key={ex._id}
               onClick={() => onSelect(ex)}
@@ -96,7 +88,7 @@ export function ExercisePickerModal({
               </div>
             </button>
           ))}
-          {exercises.length === 0 && (
+          {!error && exercises.length === 0 && (
             <p className="py-8 text-center text-sm text-muted">No se encontraron ejercicios</p>
           )}
         </div>

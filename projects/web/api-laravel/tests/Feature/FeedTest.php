@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\SocialPost;
 use App\Models\User;
 use Tests\TestCase;
 use Tests\Traits\MongoTestCleanup;
@@ -14,7 +15,7 @@ class FeedTest extends TestCase
 
     // ─── Helpers ─────────────────────────────────────────────────────────────
 
-    private function createTestUser(): User
+    private function createTestUser(array $privacyOverrides = []): User
     {
         return User::create([
             'name' => 'Test User',
@@ -22,7 +23,7 @@ class FeedTest extends TestCase
             'username' => 'testuser'.uniqid(),
             'password' => 'password123',
             'macro_targets' => User::defaultMacroTargets(),
-            'privacy_settings' => User::defaultPrivacySettings(),
+            'privacy_settings' => array_merge(User::defaultPrivacySettings(), $privacyOverrides),
             'streak_days' => 0,
         ]);
     }
@@ -66,12 +67,76 @@ class FeedTest extends TestCase
         $response->assertStatus(401);
     }
 
+    // ─── Index: requires authentication (feed exposed privacy-sensitive data) ──
+
+    public function test_feed_index_requires_authentication(): void
+    {
+        $response = $this->getJson('/api/feed');
+
+        $response->assertStatus(401);
+    }
+
+    // ─── Index: privacy filtering ───────────────────────────────────────────
+
+    public function test_feed_index_hides_other_users_followers_only_post(): void
+    {
+        $userA = $this->createTestUser();
+        $userB = $this->createTestUser();
+
+        // Default privacy for 'meals' is 'followers'. There is no follow-graph
+        // in this codebase, so a followers-visibility post must be visible
+        // only to the poster themself for now.
+        $this->actingAs($userA, 'sanctum')->postJson('/api/feed', [
+            'type' => 'meal_logged',
+            'payload' => ['message' => 'private meal from A'],
+        ])->assertStatus(201);
+
+        $response = $this->actingAs($userB, 'sanctum')->getJson('/api/feed');
+
+        $response->assertStatus(200);
+        $feed = collect($response->json('feed'));
+
+        $this->assertFalse($feed->contains(fn (array $post) => $post['payload']['message'] === 'private meal from A'));
+    }
+
+    public function test_feed_index_shows_own_posts_and_others_public_posts(): void
+    {
+        $userA = $this->createTestUser();
+        $userB = $this->createTestUser();
+
+        // userA's own followers-visibility post: always visible to herself.
+        $this->actingAs($userA, 'sanctum')->postJson('/api/feed', [
+            'type' => 'meal_logged',
+            'payload' => ['message' => 'my own meal'],
+        ])->assertStatus(201);
+
+        // userB's product_scanned post defaults to 'public' visibility.
+        $this->actingAs($userB, 'sanctum')->postJson('/api/feed', [
+            'type' => 'product_scanned',
+            'payload' => ['message' => 'public scan from B'],
+        ])->assertStatus(201);
+
+        $response = $this->actingAs($userA, 'sanctum')->getJson('/api/feed');
+
+        $response->assertStatus(200);
+        $feed = collect($response->json('feed'));
+
+        $this->assertTrue($feed->contains(fn (array $post) => $post['payload']['message'] === 'my own meal'));
+        $this->assertTrue($feed->contains(fn (array $post) => $post['payload']['message'] === 'public scan from B'));
+    }
+
     // ─── Index: user info must be correct per post, even across multiple users ─
 
     public function test_feed_index_attaches_correct_user_to_each_post(): void
     {
         $userA = $this->createTestUser();
-        $userB = $this->createTestUser();
+        // userB's meal posts are made public here on purpose: 'meals' defaults
+        // to 'followers' visibility and there is no follow-graph in this
+        // codebase yet, so a followers-visibility post from another user
+        // would otherwise be filtered out of userA's feed (see FeedService
+        // privacy filtering). This test is about per-post user attachment
+        // across authors, not about privacy rules, so we make B's post public.
+        $userB = $this->createTestUser(['meals' => 'public']);
 
         $this->actingAs($userA, 'sanctum')->postJson('/api/feed', [
             'type' => 'workout_completed',
@@ -128,5 +193,188 @@ class FeedTest extends TestCase
         $secondPageIds = collect($secondFeed)->pluck('id');
 
         $this->assertEmpty($firstPageIds->intersect($secondPageIds));
+    }
+
+    // ─── Regression: privacy filter must not under-deliver a fixed-size page ───
+
+    public function test_feed_index_returns_full_page_when_invisible_posts_occupy_naive_fetch_window(): void
+    {
+        $viewer = $this->createTestUser();
+        // Default privacy for 'meals' is 'followers', which this codebase
+        // treats as poster-only visibility (no follow graph yet) — so these
+        // posts are invisible to $viewer.
+        $otherUser = $this->createTestUser();
+
+        // 60 NEWEST posts, all invisible to $viewer. A naive
+        // "fetch top 50 by created_at desc, then filter" would grab
+        // exclusively these and return an empty page.
+        foreach (range(1, 60) as $i) {
+            $post = SocialPost::create([
+                'user_id' => (string) $otherUser->_id,
+                'type' => 'meal_logged',
+                'payload' => ['message' => "invisible {$i}"],
+                'kudos_count' => 0,
+                'kudos_user_ids' => [],
+                'comments' => [],
+            ]);
+            $post->created_at = now()->addMinutes($i);
+            $post->save();
+        }
+
+        // 55 OLDER posts, all visible to $viewer (their own posts).
+        foreach (range(1, 55) as $i) {
+            $post = SocialPost::create([
+                'user_id' => (string) $viewer->_id,
+                'type' => 'workout_completed',
+                'payload' => ['message' => "visible {$i}"],
+                'kudos_count' => 0,
+                'kudos_user_ids' => [],
+                'comments' => [],
+            ]);
+            $post->created_at = now()->subMinutes(200 - $i);
+            $post->save();
+        }
+
+        $response = $this->actingAs($viewer, 'sanctum')->getJson('/api/feed');
+
+        $response->assertStatus(200);
+        $feed = $response->json('feed');
+
+        // 55 genuinely-visible posts exist and the page size is 50, so the
+        // full page must be filled with visible posts.
+        $this->assertCount(50, $feed);
+        $this->assertTrue(collect($feed)->every(
+            fn (array $post) => str_starts_with($post['payload']['message'], 'visible')
+        ));
+    }
+
+    // ─── Kudos/comment: visibility must be enforced the same as index ──────────
+
+    public function test_user_can_kudos_own_post_regardless_of_privacy(): void
+    {
+        $userA = $this->createTestUser();
+
+        // Default privacy for 'meals' is 'followers', but it's the poster's
+        // own post, so it must always be kudos-able by herself.
+        $post = SocialPost::create([
+            'user_id' => (string) $userA->_id,
+            'type' => 'meal_logged',
+            'payload' => ['message' => 'my own meal'],
+            'kudos_count' => 0,
+            'kudos_user_ids' => [],
+            'comments' => [],
+        ]);
+
+        $response = $this->actingAs($userA, 'sanctum')->postJson("/api/feed/{$post->_id}/kudos");
+
+        $response->assertStatus(200)
+            ->assertJsonPath('post.kudos_count', 1);
+    }
+
+    public function test_user_can_comment_own_post_regardless_of_privacy(): void
+    {
+        $userA = $this->createTestUser();
+
+        $post = SocialPost::create([
+            'user_id' => (string) $userA->_id,
+            'type' => 'meal_logged',
+            'payload' => ['message' => 'my own meal'],
+            'kudos_count' => 0,
+            'kudos_user_ids' => [],
+            'comments' => [],
+        ]);
+
+        $response = $this->actingAs($userA, 'sanctum')->postJson("/api/feed/{$post->_id}/comments", [
+            'text' => 'nice work',
+        ]);
+
+        $response->assertStatus(200);
+        $this->assertCount(1, $response->json('post.comments'));
+    }
+
+    public function test_user_can_kudos_other_users_public_post(): void
+    {
+        $userA = $this->createTestUser();
+        $userB = $this->createTestUser();
+
+        // product_scanned defaults to 'public' visibility.
+        $post = SocialPost::create([
+            'user_id' => (string) $userB->_id,
+            'type' => 'product_scanned',
+            'payload' => ['message' => 'public scan from B'],
+            'kudos_count' => 0,
+            'kudos_user_ids' => [],
+            'comments' => [],
+        ]);
+
+        $response = $this->actingAs($userA, 'sanctum')->postJson("/api/feed/{$post->_id}/kudos");
+
+        $response->assertStatus(200)
+            ->assertJsonPath('post.kudos_count', 1);
+    }
+
+    public function test_user_can_comment_other_users_public_post(): void
+    {
+        $userA = $this->createTestUser();
+        $userB = $this->createTestUser();
+
+        $post = SocialPost::create([
+            'user_id' => (string) $userB->_id,
+            'type' => 'product_scanned',
+            'payload' => ['message' => 'public scan from B'],
+            'kudos_count' => 0,
+            'kudos_user_ids' => [],
+            'comments' => [],
+        ]);
+
+        $response = $this->actingAs($userA, 'sanctum')->postJson("/api/feed/{$post->_id}/comments", [
+            'text' => 'nice work',
+        ]);
+
+        $response->assertStatus(200);
+        $this->assertCount(1, $response->json('post.comments'));
+    }
+
+    public function test_user_gets_404_kudos_other_users_followers_only_post(): void
+    {
+        $userA = $this->createTestUser();
+        // Default privacy for 'meals' is 'followers'. There is no follow-graph
+        // in this codebase, so this post must be invisible (and un-kudos-able)
+        // to anyone other than the poster.
+        $userB = $this->createTestUser();
+
+        $post = SocialPost::create([
+            'user_id' => (string) $userB->_id,
+            'type' => 'meal_logged',
+            'payload' => ['message' => 'private meal from B'],
+            'kudos_count' => 0,
+            'kudos_user_ids' => [],
+            'comments' => [],
+        ]);
+
+        $response = $this->actingAs($userA, 'sanctum')->postJson("/api/feed/{$post->_id}/kudos");
+
+        $response->assertStatus(404);
+    }
+
+    public function test_user_gets_404_commenting_other_users_followers_only_post(): void
+    {
+        $userA = $this->createTestUser();
+        $userB = $this->createTestUser();
+
+        $post = SocialPost::create([
+            'user_id' => (string) $userB->_id,
+            'type' => 'meal_logged',
+            'payload' => ['message' => 'private meal from B'],
+            'kudos_count' => 0,
+            'kudos_user_ids' => [],
+            'comments' => [],
+        ]);
+
+        $response = $this->actingAs($userA, 'sanctum')->postJson("/api/feed/{$post->_id}/comments", [
+            'text' => 'nice work',
+        ]);
+
+        $response->assertStatus(404);
     }
 }
