@@ -159,4 +159,58 @@ class DashboardTest extends TestCase
         $this->assertSame((string) $otherUser->_id, $postFromOther['user']['id']);
         $this->assertSame($otherUser->username, $postFromOther['user']['username']);
     }
+
+    // ─── Regression: privacy filter must not under-deliver a fixed-size preview ─
+
+    public function test_dashboard_feed_preview_returns_full_preview_when_invisible_posts_occupy_naive_fetch_window(): void
+    {
+        $user = $this->makeUser();
+        $otherUser = User::create([
+            'name' => 'Other',
+            'email' => 'other-window@test.com',
+            'password' => bcrypt('password'),
+            'username' => 'otherwindow',
+            'privacy_settings' => User::defaultPrivacySettings(),
+        ]);
+
+        // 5 NEWEST posts, all invisible to $user. A naive "fetch top 5 by
+        // created_at desc, then filter" would grab exclusively these and
+        // return an empty preview.
+        foreach (range(1, 5) as $i) {
+            $post = SocialPost::create([
+                'user_id' => (string) $otherUser->_id,
+                'type' => 'meal_logged',
+                'payload' => ['message' => "invisible {$i}"],
+                'kudos_count' => 0,
+                'kudos_user_ids' => [],
+                'comments' => [],
+            ]);
+            $post->created_at = Carbon::now()->addMinutes($i);
+            $post->save();
+        }
+
+        // 5 OLDER posts, all visible to $user (their own posts).
+        foreach (range(1, 5) as $i) {
+            $post = SocialPost::create([
+                'user_id' => (string) $user->_id,
+                'type' => 'workout_completed',
+                'payload' => ['message' => "visible {$i}"],
+                'kudos_count' => 0,
+                'kudos_user_ids' => [],
+                'comments' => [],
+            ]);
+            $post->created_at = Carbon::now()->subMinutes(50 - $i);
+            $post->save();
+        }
+
+        $response = $this->actingAs($user, 'sanctum')->getJson('/api/dashboard');
+
+        $response->assertOk();
+        $feed = $response->json('feed_preview');
+
+        $this->assertCount(5, $feed);
+        $this->assertTrue(collect($feed)->every(
+            fn (array $post) => str_starts_with($post['payload']['message'], 'visible')
+        ));
+    }
 }

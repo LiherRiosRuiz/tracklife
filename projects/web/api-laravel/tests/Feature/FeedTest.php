@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\SocialPost;
 use App\Models\User;
 use Tests\TestCase;
 use Tests\Traits\MongoTestCleanup;
@@ -192,5 +193,58 @@ class FeedTest extends TestCase
         $secondPageIds = collect($secondFeed)->pluck('id');
 
         $this->assertEmpty($firstPageIds->intersect($secondPageIds));
+    }
+
+    // ─── Regression: privacy filter must not under-deliver a fixed-size page ───
+
+    public function test_feed_index_returns_full_page_when_invisible_posts_occupy_naive_fetch_window(): void
+    {
+        $viewer = $this->createTestUser();
+        // Default privacy for 'meals' is 'followers', which this codebase
+        // treats as poster-only visibility (no follow graph yet) — so these
+        // posts are invisible to $viewer.
+        $otherUser = $this->createTestUser();
+
+        // 60 NEWEST posts, all invisible to $viewer. A naive
+        // "fetch top 50 by created_at desc, then filter" would grab
+        // exclusively these and return an empty page.
+        foreach (range(1, 60) as $i) {
+            $post = SocialPost::create([
+                'user_id' => (string) $otherUser->_id,
+                'type' => 'meal_logged',
+                'payload' => ['message' => "invisible {$i}"],
+                'kudos_count' => 0,
+                'kudos_user_ids' => [],
+                'comments' => [],
+            ]);
+            $post->created_at = now()->addMinutes($i);
+            $post->save();
+        }
+
+        // 55 OLDER posts, all visible to $viewer (their own posts).
+        foreach (range(1, 55) as $i) {
+            $post = SocialPost::create([
+                'user_id' => (string) $viewer->_id,
+                'type' => 'workout_completed',
+                'payload' => ['message' => "visible {$i}"],
+                'kudos_count' => 0,
+                'kudos_user_ids' => [],
+                'comments' => [],
+            ]);
+            $post->created_at = now()->subMinutes(200 - $i);
+            $post->save();
+        }
+
+        $response = $this->actingAs($viewer, 'sanctum')->getJson('/api/feed');
+
+        $response->assertStatus(200);
+        $feed = $response->json('feed');
+
+        // 55 genuinely-visible posts exist and the page size is 50, so the
+        // full page must be filled with visible posts.
+        $this->assertCount(50, $feed);
+        $this->assertTrue(collect($feed)->every(
+            fn (array $post) => str_starts_with($post['payload']['message'], 'visible')
+        ));
     }
 }

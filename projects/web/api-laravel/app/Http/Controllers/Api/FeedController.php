@@ -19,13 +19,19 @@ class FeedController extends Controller
         $perPage = 50;
         $page = max(1, (int) $request->query('page', 1));
 
-        $posts = SocialPost::orderBy('created_at', 'desc')
-            ->skip(($page - 1) * $perPage)
-            ->take($perPage)
-            ->get();
+        // See FeedService::paginateVisiblePosts for why privacy filtering
+        // can't be applied after a fixed-size ->skip()->take()->get(): it
+        // can silently under-deliver a page when posts in that window
+        // aren't visible to the viewer.
+        $feed = $this->feedService->paginateVisiblePosts(
+            SocialPost::orderBy('created_at', 'desc'),
+            $request->user(),
+            ($page - 1) * $perPage,
+            $perPage
+        );
 
         return response()->json([
-            'feed' => $this->feedService->formatPosts($posts, $request->user()),
+            'feed' => $feed,
         ]);
     }
 

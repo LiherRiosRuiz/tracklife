@@ -26,9 +26,15 @@ class DashboardController extends Controller
         $user = $request->user();
         $macros = $this->macroService->dailyProgress($user, $request->query('date'));
 
-        $feed = $this->feedService->formatPosts(
-            SocialPost::orderBy('created_at', 'desc')->limit(5)->get(),
-            $user
+        // See FeedService::paginateVisiblePosts for why the privacy filter
+        // can't be applied after a fixed-size ->limit(5)->get(): it can
+        // silently under-deliver when posts in that window aren't visible
+        // to $user.
+        $feed = $this->feedService->paginateVisiblePosts(
+            SocialPost::orderBy('created_at', 'desc'),
+            $user,
+            0,
+            5
         );
 
         $weeklyCalories = $this->macroService->weeklyCalories($user);
