@@ -40,8 +40,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const { user } = await api.me(saved);
           setToken(saved);
           setUser(user);
-        } catch {
-          localStorage.removeItem(TOKEN_KEY);
+        } catch (e: unknown) {
+          // Only a genuine 401 means the token is actually invalid/expired.
+          // Anything else (429 rate-limited, network hiccup, 5xx, timeout)
+          // is transient — keep the token and let the user retry, instead
+          // of silently logging them out of a perfectly valid session.
+          const status = e instanceof Error ? (e as Error & { status?: number }).status : undefined;
+          if (status === 401) {
+            localStorage.removeItem(TOKEN_KEY);
+          }
         }
       }
       setLoading(false);
