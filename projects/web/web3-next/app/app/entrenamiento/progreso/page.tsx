@@ -10,9 +10,18 @@ import { ErrorState } from "@/components/ErrorState";
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
+// Workout.date comes from a Laravel `date`-cast attribute, which
+// serializes as a full ISO8601 datetime ("2026-07-22T00:00:00.000000Z"),
+// not a bare "YYYY-MM-DD" — take just the date portion before treating
+// it as a local date, or `new Date(dateStr + "T12:00:00")` below
+// produces "Invalid Date" for every workout.
+function dateOnly(dateStr: string): string {
+  return dateStr.slice(0, 10);
+}
+
 function isoWeekKey(dateStr: string): string {
   // Returns "YYYY-Www" (ISO week)
-  const d = new Date(dateStr + "T12:00:00");
+  const d = new Date(dateOnly(dateStr) + "T12:00:00");
   const jan4 = new Date(d.getFullYear(), 0, 4);
   const weekNum = Math.ceil(
     ((d.getTime() - jan4.getTime()) / 86_400_000 + jan4.getDay() + 1) / 7,
@@ -35,14 +44,14 @@ function deriveWorkoutType(workout: Workout): string {
 }
 
 function formatDate(dateStr: string): string {
-  const d = new Date(dateStr + "T12:00:00");
+  const d = new Date(dateOnly(dateStr) + "T12:00:00");
   return d.toLocaleDateString("es-ES", { day: "2-digit", month: "short" });
 }
 
 // Consecutive-day streak from an ordered set of date strings (most-recent first)
 function computeStreak(dates: string[]): number {
   if (dates.length === 0) return 0;
-  const unique = [...new Set(dates)].sort((a, b) => (a < b ? 1 : -1));
+  const unique = [...new Set(dates.map(dateOnly))].sort((a, b) => (a < b ? 1 : -1));
   const today = new Date().toISOString().slice(0, 10);
   const yesterday = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
 
