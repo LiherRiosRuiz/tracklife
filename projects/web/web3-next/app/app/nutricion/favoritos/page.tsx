@@ -1,12 +1,10 @@
 "use client";
 
-// NOTE: No existe endpoint de favoritos en la API.
-// Los favoritos se gestionan en localStorage (FAVORITES_KEY).
+// Los favoritos se gestionan via API (/api/favorites), persistidos por usuario.
 // Los candidatos de alimentos se extraen del historial de meals (api.meals).
 // Los candidatos de recetas provienen de api.recipes.
-// TODO: replace with API endpoint when available (/api/favorites)
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { api, type MealEntry, type Recipe, type FoodItem } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { Button, Card, PageHeader } from "@/components/ui";
@@ -18,22 +16,14 @@ const FAVORITES_KEY = "tracklife_favorites";
 
 type FavoriteEntry = { type: "food"; name: string } | { type: "recipe"; id: string };
 
-function loadFavorites(): Set<string> {
-  if (typeof window === "undefined") return new Set();
-  try {
-    const raw = localStorage.getItem(FAVORITES_KEY);
-    return new Set(raw ? (JSON.parse(raw) as string[]) : []);
-  } catch {
-    return new Set();
-  }
-}
-
-function saveFavorites(set: Set<string>) {
-  localStorage.setItem(FAVORITES_KEY, JSON.stringify(Array.from(set)));
-}
-
+// Clave local con prefijo de tipo, usada para el Set de favoritos y para deduplicar en UI.
 function favoriteKey(entry: FavoriteEntry): string {
   return entry.type === "food" ? `food:${entry.name}` : `recipe:${entry.id}`;
+}
+
+// Referencia cruda (sin prefijo de tipo) que se envia a la API como `ref`.
+function entryRef(entry: FavoriteEntry): string {
+  return entry.type === "food" ? entry.name : entry.id;
 }
 
 // Deduplica items de meals por nombre. Conserva los macros de la primera aparicion y acumula el conteo.
@@ -59,7 +49,7 @@ type AddToDiaryState = "idle" | "loading" | "done" | "error";
 
 export default function FavoritosPage() {
   const { token } = useAuth();
-  const [favorites, setFavorites] = useState<Set<string>>(() => loadFavorites());
+  const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState("");
   const [mealTypeModal, setMealTypeModal] = useState<{ item: FoodItem | null; recipe: Recipe | null } | null>(null);
   const [selectedMealType, setSelectedMealType] = useState("lunch");
@@ -77,6 +67,72 @@ export default function FavoritosPage() {
     { enabled: !!token },
   );
 
+  const { data: favoritesData, loading: loadingFavorites, error: errorFavorites, refetch: refetchFavorites } = useApiData(
+    () => api.favorites(token!),
+    [token],
+    { enabled: !!token },
+  );
+
+  // Hidrata el Set local de favoritos desde la API cada vez que llega una lista nueva.
+  // Ajuste de estado durante el render (no en un efecto) para evitar el re-render en
+  // cascada que produciria un setState dentro de useEffect.
+  const [syncedFavoritesData, setSyncedFavoritesData] = useState(favoritesData);
+  if (favoritesData !== syncedFavoritesData) {
+    setSyncedFavoritesData(favoritesData);
+    if (favoritesData) {
+      setFavorites(new Set(favoritesData.favorites.map((f) => `${f.type}:${f.ref}`)));
+    }
+  }
+
+  // Migracion unica: si quedan favoritos guardados en localStorage de la version anterior,
+  // los envia a la API (best-effort, sin abortar por un fallo puntual) y limpia la clave local.
+  useEffect(() => {
+    if (!token) return;
+    const raw = localStorage.getItem(FAVORITES_KEY);
+    if (!raw) return;
+
+    let keys: string[];
+    try {
+      keys = JSON.parse(raw) as string[];
+    } catch {
+      localStorage.removeItem(FAVORITES_KEY);
+      return;
+    }
+
+    (async () => {
+      const failedKeys: string[] = [];
+      for (const key of keys) {
+        const i = key.indexOf(":");
+        if (i === -1) continue;
+        const type = key.slice(0, i) as "food" | "recipe";
+        const ref = key.slice(i + 1);
+        try {
+          await api.addFavorite(token, type, ref);
+        } catch (err) {
+          const status = (err as Error & { status?: number }).status;
+          const isPermanentClientError = status !== undefined && status >= 400 && status < 500;
+          if (isPermanentClientError) {
+            // error de validacion (4xx): reintentar no lo arreglara nunca (p.ej. un
+            // favorito legado con un nombre demasiado largo), se descarta en forma permanente
+            console.error(`Favorito "${key}" invalido (status ${status}), se descarta sin reintentar`, err);
+            continue;
+          }
+          // best-effort: un fallo puntual (red, 5xx) no debe abortar el resto de la migracion,
+          // pero se conserva la clave para reintentar en la proxima carga (no se pierde el dato)
+          console.error(`Fallo al migrar favorito "${key}" a la API`, err);
+          failedKeys.push(key);
+        }
+      }
+      if (failedKeys.length > 0) {
+        localStorage.setItem(FAVORITES_KEY, JSON.stringify(failedKeys));
+      } else {
+        localStorage.removeItem(FAVORITES_KEY);
+      }
+      refetchFavorites();
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
+
   const allFoods = useMemo(
     () => extractFoodCandidates(mealsData?.meals ?? []),
     [mealsData],
@@ -85,18 +141,39 @@ export default function FavoritosPage() {
   const allRecipes: Recipe[] = recipesData?.recipes ?? [];
 
   const toggle = useCallback((entry: FavoriteEntry) => {
+    if (!token) return;
     const key = favoriteKey(entry);
+    const wasFav = favorites.has(key);
+    const ref = entryRef(entry);
+
     setFavorites((prev) => {
       const next = new Set(prev);
-      if (next.has(key)) {
+      if (wasFav) {
         next.delete(key);
       } else {
         next.add(key);
       }
-      saveFavorites(next);
       return next;
     });
-  }, []);
+
+    const request = wasFav
+      ? api.removeFavorite(token, entry.type, ref)
+      : api.addFavorite(token, entry.type, ref);
+
+    request.catch((err) => {
+      // revierte la mutacion optimista si la API falla
+      console.error(`Fallo al ${wasFav ? "quitar" : "anadir"} favorito "${key}"`, err);
+      setFavorites((prev) => {
+        const next = new Set(prev);
+        if (wasFav) {
+          next.add(key);
+        } else {
+          next.delete(key);
+        }
+        return next;
+      });
+    });
+  }, [favorites, token]);
 
   const isFav = (entry: FavoriteEntry) => favorites.has(favoriteKey(entry));
 
@@ -175,9 +252,9 @@ export default function FavoritosPage() {
     }
   };
 
-  const loading = loadingMeals || loadingRecipes;
-  const error = errorMeals ?? errorRecipes;
-  const refetch = () => { refetchMeals(); refetchRecipes(); };
+  const loading = loadingMeals || loadingRecipes || loadingFavorites;
+  const error = errorMeals ?? errorRecipes ?? errorFavorites;
+  const refetch = () => { refetchMeals(); refetchRecipes(); refetchFavorites(); };
 
   return (
     <div>
