@@ -75,6 +75,30 @@ class BiometricTest extends TestCase
             ->assertJsonValidationErrors(['type']);
     }
 
+    // ─── T3b: Longitud maxima de unit/source ─────────────────────────────────
+
+    public function test_biometric_store_rejects_unit_over_50_chars(): void
+    {
+        $response = $this->actingAsTestUser()
+            ->postJson('/api/biometrics', $this->biometricPayload([
+                'unit' => str_repeat('a', 51),
+            ]));
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['unit']);
+    }
+
+    public function test_biometric_store_rejects_source_over_50_chars(): void
+    {
+        $response = $this->actingAsTestUser()
+            ->postJson('/api/biometrics', $this->biometricPayload([
+                'source' => str_repeat('a', 51),
+            ]));
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['source']);
+    }
+
     // ─── T4: Store exitoso + estructura ──────────────────────────────────────
 
     public function test_user_can_store_a_biometric_reading(): void
@@ -211,6 +235,125 @@ class BiometricTest extends TestCase
 
         $this->assertSame(70.0, (float) $response->json('summary.recovery_score.value'));
         $this->assertNull($response->json('summary.strain'));
+    }
+
+    // ─── T10: Bounds por tipo — valores fuera de rango rechazados ─────────────
+
+    public function test_biometric_store_rejects_weight_out_of_range(): void
+    {
+        $response = $this->actingAsTestUser()
+            ->postJson('/api/biometrics', $this->biometricPayload([
+                'type' => 'weight',
+                'value' => 900,
+            ]));
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['value']);
+    }
+
+    public function test_biometric_store_rejects_negative_weight(): void
+    {
+        $response = $this->actingAsTestUser()
+            ->postJson('/api/biometrics', $this->biometricPayload([
+                'type' => 'weight',
+                'value' => -5,
+            ]));
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['value']);
+    }
+
+    public function test_biometric_store_rejects_body_fat_over_100_percent(): void
+    {
+        $response = $this->actingAsTestUser()
+            ->postJson('/api/biometrics', $this->biometricPayload([
+                'type' => 'body_fat',
+                'value' => 150,
+            ]));
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['value']);
+    }
+
+    public function test_biometric_store_rejects_strain_over_whoop_scale(): void
+    {
+        $response = $this->actingAsTestUser()
+            ->postJson('/api/biometrics', $this->biometricPayload([
+                'type' => 'strain',
+                'value' => 25,
+            ]));
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['value']);
+    }
+
+    public function test_biometric_store_rejects_resting_hr_out_of_range(): void
+    {
+        $response = $this->actingAsTestUser()
+            ->postJson('/api/biometrics', $this->biometricPayload([
+                'type' => 'resting_hr',
+                'value' => 5,
+            ]));
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['value']);
+    }
+
+    // ─── T11: Bounds por tipo — valores realistas aceptados ───────────────────
+
+    public function test_biometric_store_accepts_realistic_weight(): void
+    {
+        $response = $this->actingAsTestUser()
+            ->postJson('/api/biometrics', $this->biometricPayload([
+                'type' => 'weight',
+                'value' => 78.5,
+            ]));
+
+        $response->assertStatus(201);
+    }
+
+    public function test_biometric_store_accepts_realistic_body_fat(): void
+    {
+        $response = $this->actingAsTestUser()
+            ->postJson('/api/biometrics', $this->biometricPayload([
+                'type' => 'body_fat',
+                'value' => 18.5,
+            ]));
+
+        $response->assertStatus(201);
+    }
+
+    public function test_biometric_store_accepts_realistic_strain(): void
+    {
+        $response = $this->actingAsTestUser()
+            ->postJson('/api/biometrics', $this->biometricPayload([
+                'type' => 'strain',
+                'value' => 14.2,
+            ]));
+
+        $response->assertStatus(201);
+    }
+
+    public function test_biometric_store_accepts_realistic_resting_hr(): void
+    {
+        $response = $this->actingAsTestUser()
+            ->postJson('/api/biometrics', $this->biometricPayload([
+                'type' => 'resting_hr',
+                'value' => 60,
+            ]));
+
+        $response->assertStatus(201);
+    }
+
+    public function test_biometric_store_accepts_realistic_steps(): void
+    {
+        $response = $this->actingAsTestUser()
+            ->postJson('/api/biometrics', $this->biometricPayload([
+                'type' => 'steps',
+                'value' => 8500,
+            ]));
+
+        $response->assertStatus(201);
     }
 
     // ─── T9: Aislamiento de datos entre usuarios ──────────────────────────────

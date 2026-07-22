@@ -110,4 +110,17 @@ class UserProfileTest extends TestCase
             ->assertJsonPath('user.avatar_url',  'https://example.com/avatar.jpg')
             ->assertJsonPath('user.streak_days', 7);
     }
+
+    public function test_update_rejects_avatar_url_over_2048_chars(): void
+    {
+        $user = $this->createUser();
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->putJson('/api/profile', [
+                'avatar_url' => 'https://example.com/'.str_repeat('a', 2048),
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['avatar_url']);
+    }
 }

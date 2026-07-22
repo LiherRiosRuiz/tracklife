@@ -173,4 +173,101 @@ class WorkoutTest extends TestCase
 
         $this->assertSame(1, SocialPost::where('type', 'workout_completed')->count());
     }
+
+    // ─── T9: Rechaza weight fuera de rango ──────────────────────────────────
+
+    public function test_workout_store_rejects_set_with_weight_over_max(): void
+    {
+        $response = $this->actingAsTestUser()
+            ->postJson('/api/workouts', $this->workoutPayload([
+                'sets' => [
+                    ['exercise' => 'Bench Press', 'reps' => 10, 'weight' => 1001],
+                ],
+            ]));
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['sets.0.weight']);
+    }
+
+    // ─── T10: Rechaza reps fuera de rango ───────────────────────────────────
+
+    public function test_workout_store_rejects_set_with_reps_over_max(): void
+    {
+        $response = $this->actingAsTestUser()
+            ->postJson('/api/workouts', $this->workoutPayload([
+                'sets' => [
+                    ['exercise' => 'Bench Press', 'reps' => 1001, 'weight' => 60],
+                ],
+            ]));
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['sets.0.reps']);
+    }
+
+    // ─── T11: Rechaza weight negativo ───────────────────────────────────────
+
+    public function test_workout_store_rejects_set_with_negative_weight(): void
+    {
+        $response = $this->actingAsTestUser()
+            ->postJson('/api/workouts', $this->workoutPayload([
+                'sets' => [
+                    ['exercise' => 'Bench Press', 'reps' => 10, 'weight' => -5],
+                ],
+            ]));
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['sets.0.weight']);
+    }
+
+    // ─── T12: Rechaza sets array por encima del maximo ──────────────────────
+
+    public function test_workout_store_rejects_sets_array_over_max_count(): void
+    {
+        $sets = array_fill(0, 201, ['exercise' => 'Bench Press', 'reps' => 10, 'weight' => 60]);
+
+        $response = $this->actingAsTestUser()
+            ->postJson('/api/workouts', $this->workoutPayload(['sets' => $sets]));
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['sets']);
+    }
+
+    // ─── T13: Rechaza duration_minutes negativo ─────────────────────────────
+
+    public function test_workout_store_rejects_negative_duration_minutes(): void
+    {
+        $response = $this->actingAsTestUser()
+            ->postJson('/api/workouts', $this->workoutPayload(['duration_minutes' => -10]));
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['duration_minutes']);
+    }
+
+    // ─── T13b: Rechaza notes por encima de 500 caracteres ───────────────────
+
+    public function test_workout_store_rejects_notes_over_500_chars(): void
+    {
+        $response = $this->actingAsTestUser()
+            ->postJson('/api/workouts', $this->workoutPayload([
+                'notes' => str_repeat('a', 501),
+            ]));
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['notes']);
+    }
+
+    // ─── T14: Acepta un workout realista dentro de los limites ──────────────
+
+    public function test_workout_store_accepts_realistic_workout_at_boundaries(): void
+    {
+        $sets = array_fill(0, 200, ['exercise' => 'Deadlift', 'reps' => 1000, 'weight' => 1000, 'type' => 'failure']);
+
+        $response = $this->actingAsTestUser()
+            ->postJson('/api/workouts', $this->workoutPayload([
+                'sets' => $sets,
+                'duration_minutes' => 0,
+            ]));
+
+        $response->assertStatus(201);
+    }
 }

@@ -23,8 +23,8 @@ class StoreActivityRequest extends FormRequest
             'avg_heart_rate' => 'nullable|integer',
             'route' => 'nullable|array',
             'elevation_gain' => 'nullable|numeric',
-            'notes' => 'nullable|string',
-            'source' => 'nullable|string',
+            'notes' => 'nullable|string|max:500',
+            'source' => 'nullable|string|max:50',
             'shared_to_feed' => 'nullable|boolean',
         ];
     }

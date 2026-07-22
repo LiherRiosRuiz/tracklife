@@ -73,6 +73,26 @@ class ExerciseTest extends TestCase
         $this->assertCount(1, $exercises);
     }
 
+    public function test_exercise_index_does_not_exceed_page_limit(): void
+    {
+        for ($i = 0; $i < 110; $i++) {
+            Exercise::create([
+                'name' => sprintf('Exercise %03d', $i),
+                'muscle_group' => 'chest',
+                'equipment' => 'barbell',
+                'is_custom' => false,
+                'category' => 'strength',
+            ]);
+        }
+
+        $response = $this->actingAsTestUser()
+            ->getJson('/api/exercises');
+
+        $response->assertOk();
+        $exercises = $response->json('exercises');
+        $this->assertLessThanOrEqual(100, count($exercises));
+    }
+
     public function test_exercise_show_returns_full_detail(): void
     {
         $exercise = Exercise::create([
@@ -95,6 +115,123 @@ class ExerciseTest extends TestCase
             ->assertJsonPath('exercise.category', 'strength');
 
         $this->assertIsArray($response->json('exercise.instructions'));
+    }
+
+    public function test_exercise_store_rejects_muscle_group_over_50_chars(): void
+    {
+        $response = $this->actingAsTestUser()
+            ->postJson('/api/exercises', [
+                'name' => 'Custom Exercise',
+                'muscle_group' => str_repeat('a', 51),
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['muscle_group']);
+    }
+
+    public function test_exercise_store_rejects_equipment_over_50_chars(): void
+    {
+        $response = $this->actingAsTestUser()
+            ->postJson('/api/exercises', [
+                'name' => 'Custom Exercise',
+                'equipment' => str_repeat('a', 51),
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['equipment']);
+    }
+
+    public function test_exercise_store_rejects_category_over_50_chars(): void
+    {
+        $response = $this->actingAsTestUser()
+            ->postJson('/api/exercises', [
+                'name' => 'Custom Exercise',
+                'category' => str_repeat('a', 51),
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['category']);
+    }
+
+    public function test_exercise_update_rejects_muscle_group_over_50_chars(): void
+    {
+        $user = User::create([
+            'name' => 'Owner',
+            'email' => 'owner-'.uniqid().'@test.com',
+            'username' => 'owner'.uniqid(),
+            'password' => 'password123',
+            'macro_targets' => User::defaultMacroTargets(),
+            'privacy_settings' => User::defaultPrivacySettings(),
+            'streak_days' => 0,
+        ]);
+
+        $exercise = Exercise::create([
+            'name' => 'Custom Exercise',
+            'user_id' => (string) $user->_id,
+            'is_custom' => true,
+        ]);
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->putJson("/api/exercises/{$exercise->_id}", [
+                'muscle_group' => str_repeat('a', 51),
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['muscle_group']);
+    }
+
+    public function test_exercise_update_rejects_equipment_over_50_chars(): void
+    {
+        $user = User::create([
+            'name' => 'Owner',
+            'email' => 'owner-'.uniqid().'@test.com',
+            'username' => 'owner'.uniqid(),
+            'password' => 'password123',
+            'macro_targets' => User::defaultMacroTargets(),
+            'privacy_settings' => User::defaultPrivacySettings(),
+            'streak_days' => 0,
+        ]);
+
+        $exercise = Exercise::create([
+            'name' => 'Custom Exercise',
+            'user_id' => (string) $user->_id,
+            'is_custom' => true,
+        ]);
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->putJson("/api/exercises/{$exercise->_id}", [
+                'equipment' => str_repeat('a', 51),
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['equipment']);
+    }
+
+    public function test_exercise_update_rejects_category_over_50_chars(): void
+    {
+        $user = User::create([
+            'name' => 'Owner',
+            'email' => 'owner-'.uniqid().'@test.com',
+            'username' => 'owner'.uniqid(),
+            'password' => 'password123',
+            'macro_targets' => User::defaultMacroTargets(),
+            'privacy_settings' => User::defaultPrivacySettings(),
+            'streak_days' => 0,
+        ]);
+
+        $exercise = Exercise::create([
+            'name' => 'Custom Exercise',
+            'user_id' => (string) $user->_id,
+            'is_custom' => true,
+        ]);
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->putJson("/api/exercises/{$exercise->_id}", [
+                'category' => str_repeat('a', 51),
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['category']);
     }
 
     private function actingAsTestUser(): static

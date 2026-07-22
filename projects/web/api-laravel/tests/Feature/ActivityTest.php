@@ -76,6 +76,30 @@ class ActivityTest extends TestCase
             ->assertJsonValidationErrors(['type']);
     }
 
+    // ─── T3b: Longitud maxima de notes/source ────────────────────────────────
+
+    public function test_activity_store_rejects_notes_over_500_chars(): void
+    {
+        $response = $this->actingAsTestUser()
+            ->postJson('/api/activities', $this->activityPayload([
+                'notes' => str_repeat('a', 501),
+            ]));
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['notes']);
+    }
+
+    public function test_activity_store_rejects_source_over_50_chars(): void
+    {
+        $response = $this->actingAsTestUser()
+            ->postJson('/api/activities', $this->activityPayload([
+                'source' => str_repeat('a', 51),
+            ]));
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['source']);
+    }
+
     // ─── T4: Store exitoso + calorías persistidas ─────────────────────────────
 
     public function test_user_can_log_cardio_activity_with_calories(): void

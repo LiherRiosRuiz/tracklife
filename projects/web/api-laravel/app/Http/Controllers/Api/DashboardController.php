@@ -9,6 +9,7 @@ use App\Models\Workout;
 use App\Services\CoachService;
 use App\Services\FeedService;
 use App\Services\MacroService;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -25,13 +26,14 @@ class DashboardController extends Controller
         $user = $request->user();
         $macros = $this->macroService->dailyProgress($user, $request->query('date'));
 
-        $feed = SocialPost::orderBy('created_at', 'desc')->limit(5)->get()
-            ->map(fn ($p) => $this->feedService->formatPost($p));
+        $feed = $this->feedService->formatPosts(
+            SocialPost::orderBy('created_at', 'desc')->limit(5)->get()
+        );
 
         $weeklyCalories = $this->macroService->weeklyCalories($user);
 
         $recentWorkouts = Workout::where('user_id', (string) $user->_id)
-            ->where('date', '>=', \Carbon\Carbon::today()->subDays(7)->startOfDay())
+            ->where('date', '>=', Carbon::today()->subDays(7)->startOfDay())
             ->orderBy('date', 'desc')
             ->limit(5)
             ->get();
@@ -42,8 +44,8 @@ class DashboardController extends Controller
                 'streak_days' => $user->streak_days ?? 0,
             ],
             'macros' => $macros,
-            'weekly_calories'  => $weeklyCalories,
-            'recent_workouts'  => WorkoutResource::collection($recentWorkouts),
+            'weekly_calories' => $weeklyCalories,
+            'recent_workouts' => WorkoutResource::collection($recentWorkouts),
             'insights' => $this->coachService->dailyInsights($user),
             'feed_preview' => $feed,
         ]);

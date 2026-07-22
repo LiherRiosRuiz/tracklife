@@ -14,7 +14,7 @@ class ChallengeController extends Controller
 
     public function index(): JsonResponse
     {
-        $challenges = Challenge::orderBy('start_date', 'desc')->get();
+        $challenges = Challenge::orderBy('start_date', 'desc')->limit(50)->get();
 
         return response()->json(['challenges' => $challenges]);
     }

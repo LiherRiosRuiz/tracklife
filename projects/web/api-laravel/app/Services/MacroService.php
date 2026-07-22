@@ -8,7 +8,7 @@ use Carbon\Carbon;
 
 class MacroService
 {
-    public function dailyProgress(User $user, string|null $date = null): array
+    public function dailyProgress(User $user, ?string $date = null): array
     {
         $date = $date ?? Carbon::today()->toDateString();
 
@@ -35,22 +35,27 @@ class MacroService
 
     public function weeklyCalories(User $user): array
     {
+        $startDate = Carbon::today()->subDays(6)->startOfDay();
+        $endDate = Carbon::today()->endOfDay();
+
+        $meals = MealEntry::where('user_id', (string) $user->_id)
+            ->whereBetween('date', [$startDate, $endDate])
+            ->get();
+
+        $caloriesByDate = [];
+        foreach ($meals as $meal) {
+            $mealDate = $meal->date->toDateString();
+            $caloriesByDate[$mealDate] = ($caloriesByDate[$mealDate] ?? 0) + (float) ($meal->totals['calories'] ?? 0);
+        }
+
         $days = [];
         for ($i = 6; $i >= 0; $i--) {
-            $date = \Carbon\Carbon::today()->subDays($i)->toDateString();
-            $meals = \App\Models\MealEntry::where('user_id', (string) $user->_id)
-                ->whereDate('date', $date)
-                ->get();
-
-            $total = 0;
-            foreach ($meals as $meal) {
-                $total += (float) ($meal->totals['calories'] ?? 0);
-            }
+            $date = Carbon::today()->subDays($i)->toDateString();
 
             $days[] = [
-                'date'     => $date,
-                'day'      => \Carbon\Carbon::parse($date)->locale('es')->isoFormat('ddd'),
-                'calories' => round($total, 1),
+                'date' => $date,
+                'day' => Carbon::parse($date)->locale('es')->isoFormat('ddd'),
+                'calories' => round($caloriesByDate[$date] ?? 0, 1),
             ];
         }
 

@@ -48,6 +48,45 @@ class WorkoutPlanTest extends TestCase
         $this->assertCount(3, $response->json('plan.exercises.0.sets'));
     }
 
+    public function test_workout_plan_store_rejects_exercise_name_over_120_chars(): void
+    {
+        $response = $this->actingAsTestUser()->postJson('/api/workout-plans', [
+            'name' => 'Push Day',
+            'exercises' => [
+                [
+                    'exercise_id' => 'ex-1',
+                    'exercise_name' => str_repeat('a', 121),
+                    'order' => 1,
+                    'sets' => [
+                        ['set_number' => 1, 'type' => 'normal', 'reps' => 10, 'weight' => 60, 'rest_seconds' => 90],
+                    ],
+                ],
+            ],
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['exercises.0.exercise_name']);
+    }
+
+    public function test_workout_plan_store_accepts_exercise_name_at_120_chars(): void
+    {
+        $response = $this->actingAsTestUser()->postJson('/api/workout-plans', [
+            'name' => 'Push Day',
+            'exercises' => [
+                [
+                    'exercise_id' => 'ex-1',
+                    'exercise_name' => str_repeat('a', 120),
+                    'order' => 1,
+                    'sets' => [
+                        ['set_number' => 1, 'type' => 'normal', 'reps' => 10, 'weight' => 60, 'rest_seconds' => 90],
+                    ],
+                ],
+            ],
+        ]);
+
+        $response->assertCreated();
+    }
+
     public function test_can_list_own_plans(): void
     {
         $user = $this->createTestUser();

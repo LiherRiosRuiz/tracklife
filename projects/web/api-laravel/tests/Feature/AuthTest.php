@@ -210,6 +210,50 @@ class AuthTest extends TestCase
             ->assertJsonValidationErrors(['password']);
     }
 
+    public function test_register_fails_with_password_over_255_chars(): void
+    {
+        $response = $this->postJson('/api/auth/register', [
+            'name' => 'Long Pass User',
+            'email' => 'longpass@test.com',
+            'password' => str_repeat('a', 256),
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['password']);
+    }
+
+    public function test_register_succeeds_with_password_at_255_chars(): void
+    {
+        $response = $this->postJson('/api/auth/register', [
+            'name' => 'Max Pass User',
+            'email' => 'maxpass@test.com',
+            'password' => str_repeat('a', 255),
+        ]);
+
+        $response->assertStatus(201);
+    }
+
+    public function test_login_fails_with_password_over_255_chars(): void
+    {
+        User::create([
+            'name' => 'Login Long Pass User',
+            'email' => 'loginlongpass@test.com',
+            'username' => 'loginlongpassuser',
+            'password' => 'password123',
+            'macro_targets' => User::defaultMacroTargets(),
+            'privacy_settings' => User::defaultPrivacySettings(),
+            'streak_days' => 0,
+        ]);
+
+        $response = $this->postJson('/api/auth/login', [
+            'email' => 'loginlongpass@test.com',
+            'password' => str_repeat('a', 256),
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['password']);
+    }
+
     public function test_register_fails_with_invalid_email_format(): void
     {
         $response = $this->postJson('/api/auth/register', [

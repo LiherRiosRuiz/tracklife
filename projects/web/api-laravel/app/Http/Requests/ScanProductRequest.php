@@ -14,7 +14,7 @@ class ScanProductRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'barcode' => 'required|string',
+            'barcode' => 'required|string|max:50',
             'share_to_feed' => 'nullable|boolean',
         ];
     }

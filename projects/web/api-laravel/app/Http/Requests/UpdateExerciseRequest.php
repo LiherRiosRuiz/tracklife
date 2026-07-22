@@ -15,9 +15,9 @@ class UpdateExerciseRequest extends FormRequest
     {
         return [
             'name' => 'sometimes|string|max:120',
-            'muscle_group' => 'nullable|string',
-            'equipment' => 'nullable|string',
-            'category' => 'nullable|string',
+            'muscle_group' => 'nullable|string|max:50',
+            'equipment' => 'nullable|string|max:50',
+            'category' => 'nullable|string|max:50',
             'instructions' => 'nullable|array',
             'instructions.*' => 'string',
             'tips' => 'nullable|array',

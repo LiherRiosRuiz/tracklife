@@ -19,7 +19,7 @@ class StoreWorkoutPlanRequest extends FormRequest
             'days_per_week' => 'nullable|integer|min:1|max:7',
             'exercises' => 'required|array',
             'exercises.*.exercise_id' => 'required|string',
-            'exercises.*.exercise_name' => 'required|string',
+            'exercises.*.exercise_name' => 'required|string|max:120',
             'exercises.*.order' => 'required|integer',
             'exercises.*.sets' => 'required|array|min:1',
             'exercises.*.sets.*.set_number' => 'required|integer',

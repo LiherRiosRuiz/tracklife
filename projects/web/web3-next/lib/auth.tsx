@@ -16,6 +16,17 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 const TOKEN_KEY = "tracklife_token";
 
+// Claves locales asociadas a un usuario concreto. Se limpian en logout() para
+// evitar que, en un dispositivo compartido, el siguiente usuario que inicie
+// sesion vea brevemente datos residuales del usuario anterior.
+// - tracklife_favorites: legacy, en localStorage (ver app/app/nutricion/favoritos/page.tsx).
+// - tracklife_active_workout / tracklife_workout_start: en sessionStorage, no
+//   localStorage (ver app/app/entrenamiento/gym/activo/page.tsx). sessionStorage
+//   no se comparte entre pestanas, pero persiste dentro de la misma pestana tras
+//   un logout/login sin recarga completa, por lo que igualmente se limpia aqui.
+const LOCAL_STORAGE_USER_KEYS = ["tracklife_favorites"];
+const SESSION_STORAGE_USER_KEYS = ["tracklife_active_workout", "tracklife_workout_start"];
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
@@ -75,6 +86,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Se ignoran errores de red — el usuario cierra sesión de todas formas.
     fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
     localStorage.removeItem(TOKEN_KEY);
+    for (const key of LOCAL_STORAGE_USER_KEYS) localStorage.removeItem(key);
+    for (const key of SESSION_STORAGE_USER_KEYS) sessionStorage.removeItem(key);
     setToken(null);
     setUser(null);
   };

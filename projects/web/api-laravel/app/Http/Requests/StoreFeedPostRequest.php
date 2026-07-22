@@ -14,7 +14,7 @@ class StoreFeedPostRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'type' => 'required|string',
+            'type' => 'required|string|in:workout_completed,recipe_shared,product_scanned,meal_logged,challenge_joined,recovery_milestone,cardio_activity',
             'payload' => 'required|array',
         ];
     }

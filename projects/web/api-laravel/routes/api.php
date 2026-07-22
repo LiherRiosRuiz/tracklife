@@ -31,7 +31,6 @@ Route::get('/feed', [FeedController::class, 'index']);
 Route::get('/challenges', [ChallengeController::class, 'index']);
 Route::get('/challenges/{id}', [ChallengeController::class, 'show']);
 Route::get('/clubs', [ClubController::class, 'index']);
-Route::get('/clubs/{id}', [ClubController::class, 'show']);
 Route::get('/products/barcode/{barcode}', [ProductController::class, 'byBarcode']);
 Route::get('/products/{id}', [ProductController::class, 'show']);
 
@@ -106,5 +105,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/coach/daily', [CoachController::class, 'daily']);
 
     Route::post('/clubs', [ClubController::class, 'store']);
+    Route::get('/clubs/{id}', [ClubController::class, 'show']);
     Route::post('/clubs/{id}/join', [ClubController::class, 'join']);
 });

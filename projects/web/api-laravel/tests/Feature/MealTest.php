@@ -88,11 +88,140 @@ class MealTest extends TestCase
             ->assertJsonValidationErrors(['meal_type', 'items']);
     }
 
+    public function test_meal_store_rejects_item_name_over_120_chars(): void
+    {
+        $user = $this->makeUser('storeitemname1');
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->postJson('/api/meals', $this->mealPayload([
+                'items' => [
+                    ['name' => str_repeat('a', 121), 'quantity' => 100, 'unit' => 'g'],
+                ],
+            ]));
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['items.0.name']);
+    }
+
+    public function test_meal_store_accepts_item_name_at_120_chars(): void
+    {
+        $user = $this->makeUser('storeitemname2');
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->postJson('/api/meals', $this->mealPayload([
+                'items' => [
+                    ['name' => str_repeat('a', 120), 'quantity' => 100, 'unit' => 'g'],
+                ],
+            ]));
+
+        $response->assertStatus(201);
+    }
+
+    public function test_meal_store_rejects_item_unit_over_50_chars(): void
+    {
+        $user = $this->makeUser('storeitemunit1');
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->postJson('/api/meals', $this->mealPayload([
+                'items' => [
+                    ['name' => 'Arroz', 'quantity' => 100, 'unit' => str_repeat('a', 51)],
+                ],
+            ]));
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['items.0.unit']);
+    }
+
+    public function test_meal_store_rejects_photo_url_over_2048_chars(): void
+    {
+        $user = $this->makeUser('storephotourl1');
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->postJson('/api/meals', $this->mealPayload([
+                'photo_url' => 'https://example.com/'.str_repeat('a', 2048),
+            ]));
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['photo_url']);
+    }
+
+    public function test_meal_store_rejects_notes_over_500_chars(): void
+    {
+        $user = $this->makeUser('storenotes1');
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->postJson('/api/meals', $this->mealPayload([
+                'notes' => str_repeat('a', 501),
+            ]));
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['notes']);
+    }
+
     public function test_meal_store_requires_authentication(): void
     {
         $response = $this->postJson('/api/meals', $this->mealPayload());
 
         $response->assertStatus(401);
+    }
+
+    public function test_meal_store_rejects_negative_calories(): void
+    {
+        $user = $this->makeUser('storenegcal');
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->postJson('/api/meals', $this->mealPayload([
+                'items' => [
+                    ['name' => 'Arroz', 'quantity' => 100, 'unit' => 'g', 'calories' => -500],
+                ],
+            ]));
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['items.0.calories']);
+    }
+
+    public function test_meal_store_rejects_absurd_calories(): void
+    {
+        $user = $this->makeUser('storeabsurdcal');
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->postJson('/api/meals', $this->mealPayload([
+                'items' => [
+                    ['name' => 'Arroz', 'quantity' => 100, 'unit' => 'g', 'calories' => 999999999],
+                ],
+            ]));
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['items.0.calories']);
+    }
+
+    public function test_meal_store_rejects_negative_quantity(): void
+    {
+        $user = $this->makeUser('storenegqty');
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->postJson('/api/meals', $this->mealPayload([
+                'items' => [
+                    ['name' => 'Arroz', 'quantity' => -100, 'unit' => 'g', 'calories' => 260],
+                ],
+            ]));
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['items.0.quantity']);
+    }
+
+    public function test_meal_store_accepts_realistic_large_batch_meal(): void
+    {
+        $user = $this->makeUser('storebigbatch');
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->postJson('/api/meals', $this->mealPayload([
+                'items' => [
+                    ['name' => 'Arroz cocido en olla grande', 'quantity' => 5000, 'unit' => 'g', 'calories' => 6500, 'protein' => 120, 'carbs' => 1400, 'fat' => 20],
+                ],
+            ]));
+
+        $response->assertStatus(201);
     }
 
     // ─── Index ───────────────────────────────────────────────────────────────
@@ -164,6 +293,121 @@ class MealTest extends TestCase
         $response->assertStatus(200)
             ->assertJsonPath('meal.meal_type', 'dinner')
             ->assertJsonPath('meal.notes', 'Cena actualizada');
+    }
+
+    public function test_meal_update_rejects_notes_over_500_chars(): void
+    {
+        $user = $this->makeUser('updnotes');
+
+        $createResponse = $this->actingAs($user, 'sanctum')
+            ->postJson('/api/meals', $this->mealPayload());
+
+        $mealId = $createResponse->json('meal.id');
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->putJson("/api/meals/{$mealId}", [
+                'notes' => str_repeat('a', 501),
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['notes']);
+    }
+
+    public function test_meal_update_rejects_photo_url_over_2048_chars(): void
+    {
+        $user = $this->makeUser('updphotourl');
+
+        $createResponse = $this->actingAs($user, 'sanctum')
+            ->postJson('/api/meals', $this->mealPayload());
+
+        $mealId = $createResponse->json('meal.id');
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->putJson("/api/meals/{$mealId}", [
+                'photo_url' => 'https://example.com/'.str_repeat('a', 2048),
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['photo_url']);
+    }
+
+    public function test_meal_update_rejects_negative_calories(): void
+    {
+        $user = $this->makeUser('updnegcal');
+
+        $createResponse = $this->actingAs($user, 'sanctum')
+            ->postJson('/api/meals', $this->mealPayload());
+
+        $mealId = $createResponse->json('meal.id');
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->putJson("/api/meals/{$mealId}", [
+                'items' => [
+                    ['name' => 'Arroz', 'quantity' => 100, 'unit' => 'g', 'calories' => -500],
+                ],
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['items.0.calories']);
+    }
+
+    public function test_meal_update_rejects_absurd_calories(): void
+    {
+        $user = $this->makeUser('updabsurdcal');
+
+        $createResponse = $this->actingAs($user, 'sanctum')
+            ->postJson('/api/meals', $this->mealPayload());
+
+        $mealId = $createResponse->json('meal.id');
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->putJson("/api/meals/{$mealId}", [
+                'items' => [
+                    ['name' => 'Arroz', 'quantity' => 100, 'unit' => 'g', 'calories' => 999999999],
+                ],
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['items.0.calories']);
+    }
+
+    public function test_meal_update_rejects_negative_quantity(): void
+    {
+        $user = $this->makeUser('updnegqty');
+
+        $createResponse = $this->actingAs($user, 'sanctum')
+            ->postJson('/api/meals', $this->mealPayload());
+
+        $mealId = $createResponse->json('meal.id');
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->putJson("/api/meals/{$mealId}", [
+                'items' => [
+                    ['name' => 'Arroz', 'quantity' => -100, 'unit' => 'g', 'calories' => 260],
+                ],
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['items.0.quantity']);
+    }
+
+    public function test_meal_update_accepts_realistic_large_batch_meal(): void
+    {
+        $user = $this->makeUser('updbigbatch');
+
+        $createResponse = $this->actingAs($user, 'sanctum')
+            ->postJson('/api/meals', $this->mealPayload());
+
+        $mealId = $createResponse->json('meal.id');
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->putJson("/api/meals/{$mealId}", [
+                'items' => [
+                    ['name' => 'Arroz cocido en olla grande', 'quantity' => 5000, 'unit' => 'g', 'calories' => 6500, 'protein' => 120, 'carbs' => 1400, 'fat' => 20],
+                ],
+            ]);
+
+        $response->assertStatus(200);
     }
 
     public function test_user_cannot_update_another_users_meal(): void
