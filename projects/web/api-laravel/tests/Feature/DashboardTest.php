@@ -160,6 +160,40 @@ class DashboardTest extends TestCase
         $this->assertSame($otherUser->username, $postFromOther['user']['username']);
     }
 
+    public function test_dashboard_feed_preview_hides_other_users_followers_default_post(): void
+    {
+        $user = $this->makeUser();
+
+        // 'meals' defaults to 'followers' visibility and there is no
+        // follow-graph in this codebase yet, so a followers-visibility post
+        // from another user must NOT appear in the viewer's feed_preview.
+        $otherUser = User::create([
+            'name' => 'Other',
+            'email' => 'other-private@test.com',
+            'password' => bcrypt('password'),
+            'username' => 'otherprivate',
+            'privacy_settings' => User::defaultPrivacySettings(),
+        ]);
+
+        SocialPost::create([
+            'user_id' => (string) $otherUser->_id,
+            'type' => 'meal_logged',
+            'payload' => ['message' => 'should stay hidden'],
+            'kudos_count' => 0,
+            'kudos_user_ids' => [],
+            'comments' => [],
+        ]);
+
+        $response = $this->actingAs($user, 'sanctum')->getJson('/api/dashboard');
+
+        $response->assertOk();
+        $feed = $response->json('feed_preview');
+
+        $this->assertFalse(collect($feed)->contains(
+            fn (array $post) => $post['payload']['message'] === 'should stay hidden'
+        ));
+    }
+
     // ─── Regression: privacy filter must not under-deliver a fixed-size preview ─
 
     public function test_dashboard_feed_preview_returns_full_preview_when_invisible_posts_occupy_naive_fetch_window(): void
