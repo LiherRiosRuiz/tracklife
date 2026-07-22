@@ -2,22 +2,43 @@
 
 namespace App\Services;
 
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class OpenFoodFactsService
 {
     public function fetchByBarcode(string $barcode): ?array
     {
-        $response = Http::timeout(10)->get(
-            "https://world.openfoodfacts.org/api/v2/product/{$barcode}.json"
-        );
+        try {
+            $response = Http::timeout(10)->get(
+                "https://world.openfoodfacts.org/api/v2/product/{$barcode}.json"
+            );
+        } catch (ConnectionException $e) {
+            Log::warning('OpenFoodFacts request timed out or failed to connect', [
+                'barcode' => $barcode,
+                'error' => $e->getMessage(),
+            ]);
+
+            return null;
+        }
 
         if (! $response->ok()) {
+            Log::warning('OpenFoodFacts returned a non-OK response', [
+                'barcode' => $barcode,
+                'status' => $response->status(),
+            ]);
+
             return null;
         }
 
         $data = $response->json();
         if (($data['status'] ?? 0) !== 1) {
+            Log::warning('OpenFoodFacts returned malformed or not-found product data', [
+                'barcode' => $barcode,
+                'status_field' => $data['status'] ?? null,
+            ]);
+
             return null;
         }
 
@@ -37,16 +58,30 @@ class OpenFoodFactsService
 
     public function searchFoods(string $query): array
     {
-        $response = Http::timeout(10)->get('https://world.openfoodfacts.org/cgi/search.pl', [
-            'search_terms' => $query,
-            'search_simple' => 1,
-            'action' => 'process',
-            'json' => 1,
-            'page_size' => 15,
-            'fields' => 'product_name,brands,nutriments,code',
-        ]);
+        try {
+            $response = Http::timeout(10)->get('https://world.openfoodfacts.org/cgi/search.pl', [
+                'search_terms' => $query,
+                'search_simple' => 1,
+                'action' => 'process',
+                'json' => 1,
+                'page_size' => 15,
+                'fields' => 'product_name,brands,nutriments,code',
+            ]);
+        } catch (ConnectionException $e) {
+            Log::warning('OpenFoodFacts search request timed out or failed to connect', [
+                'query' => $query,
+                'error' => $e->getMessage(),
+            ]);
+
+            return [];
+        }
 
         if (! $response->ok()) {
+            Log::warning('OpenFoodFacts search returned a non-OK response', [
+                'query' => $query,
+                'status' => $response->status(),
+            ]);
+
             return [];
         }
 
