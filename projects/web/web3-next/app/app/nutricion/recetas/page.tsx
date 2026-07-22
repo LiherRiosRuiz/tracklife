@@ -29,7 +29,7 @@ export default function RecetasPage() {
         ) : (
           <div className="grid gap-3 sm:grid-cols-2">
             {recipes.map((r, i) => (
-              <Card key={r._id ?? i}>
+              <Card key={r.id ?? i}>
                 <h3 className="font-semibold">{r.title}</h3>
                 {r.description && <p className="mt-1 text-sm text-muted">{r.description}</p>}
               </Card>

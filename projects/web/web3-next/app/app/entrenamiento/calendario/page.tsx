@@ -284,7 +284,7 @@ function DayDetail({
           <ul className="space-y-2">
             {workouts.map((w) => (
               <li
-                key={w._id ?? dateKey + w.name}
+                key={w.id ?? dateKey + w.name}
                 className="rounded-xl border border-border bg-background px-3 py-2"
               >
                 <p className="text-sm font-medium">{w.name}</p>
@@ -311,7 +311,7 @@ function DayDetail({
           <ul className="space-y-2">
             {meals.map((m) => (
               <li
-                key={m._id ?? m.meal_type}
+                key={m.id ?? m.meal_type}
                 className="rounded-xl border border-border bg-background px-3 py-2"
               >
                 <p className="text-sm font-medium">

@@ -179,7 +179,7 @@ export default function FavoritosPage() {
 
   // Todos los favoritos (sin filtro de busqueda) — para el estado vacio real
   const favFoods = allFoods.filter((f) => isFav({ type: "food", name: f.name }));
-  const favRecipes = allRecipes.filter((r) => isFav({ type: "recipe", id: r._id ?? "" }));
+  const favRecipes = allRecipes.filter((r) => isFav({ type: "recipe", id: r.id ?? "" }));
   const hasFavorites = favFoods.length > 0 || favRecipes.length > 0;
 
   // Con filtro de busqueda aplicado
@@ -199,7 +199,7 @@ export default function FavoritosPage() {
     .slice(0, 5);
 
   const topRecipes = allRecipes
-    .filter((r) => !isFav({ type: "recipe", id: r._id ?? "" }))
+    .filter((r) => !isFav({ type: "recipe", id: r.id ?? "" }))
     .slice(0, 5);
 
   const openModal = (item?: FoodItem, recipe?: Recipe) => {
@@ -314,10 +314,10 @@ export default function FavoritosPage() {
                   <div className="space-y-2">
                     {filteredRecipes.map((recipe) => (
                       <RecipeCard
-                        key={recipe._id}
+                        key={recipe.id}
                         recipe={recipe}
                         starred
-                        onToggle={() => toggle({ type: "recipe", id: recipe._id ?? "" })}
+                        onToggle={() => toggle({ type: "recipe", id: recipe.id ?? "" })}
                         onAdd={() => openModal(undefined, recipe)}
                       />
                     ))}
@@ -345,10 +345,10 @@ export default function FavoritosPage() {
                 ))}
                 {topRecipes.map((recipe) => (
                   <RecipeCard
-                    key={recipe._id}
+                    key={recipe.id}
                     recipe={recipe}
                     starred={false}
-                    onToggle={() => toggle({ type: "recipe", id: recipe._id ?? "" })}
+                    onToggle={() => toggle({ type: "recipe", id: recipe.id ?? "" })}
                     onAdd={() => openModal(undefined, recipe)}
                   />
                 ))}

@@ -53,7 +53,7 @@ export default function CardioPage() {
       {loading && <SkeletonList />}
       {error && <ErrorState message={error} onRetry={refetch} />}
       {!loading && !error && activities.map((a, i) => (
-        <Card key={a._id ?? i} className="mb-2">
+        <Card key={a.id ?? i} className="mb-2">
           <h3 className="font-semibold">{a.title}</h3>
           <p className="text-sm text-muted">{a.distance_km} km — {a.duration_minutes} min</p>
         </Card>

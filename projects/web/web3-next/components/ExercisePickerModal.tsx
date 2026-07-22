@@ -75,7 +75,7 @@ export function ExercisePickerModal({
           {error && <p className="py-8 text-center text-sm text-danger">{error}</p>}
           {!error && exercises.map((ex) => (
             <button
-              key={ex._id}
+              key={ex.id}
               onClick={() => onSelect(ex)}
               className="mb-2 flex w-full items-center gap-3 rounded-xl border border-border p-3 text-left hover:border-accent transition"
             >

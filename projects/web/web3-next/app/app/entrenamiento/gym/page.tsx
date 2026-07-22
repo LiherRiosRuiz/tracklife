@@ -27,7 +27,7 @@ export default function GymPage() {
 
   const addExercise = (ex: Exercise) => {
     const newSets: ActiveWorkoutSet[] = [1, 2, 3].map((n) =>
-      emptySet(ex.name, ex._id!, n)
+      emptySet(ex.name, ex.id!, n)
     );
     setSets([...sets, ...newSets]);
     setShowPicker(false);
