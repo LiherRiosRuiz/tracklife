@@ -144,6 +144,19 @@ class FeedService
 
     /**
      * Whether $viewer is allowed to see $post, based on the poster's
+     * `privacy_settings` for the post's content type. Resolves the poster
+     * from $post->user_id and delegates to isVisibleTo(), so callers outside
+     * this service (e.g. FeedController::kudos/comment) reuse the exact same
+     * privacy rules as formatPosts()/paginateVisiblePosts() instead of
+     * duplicating them.
+     */
+    public function canView(SocialPost $post, ?User $viewer): bool
+    {
+        return $this->isVisibleTo($post, User::find($post->user_id), $viewer);
+    }
+
+    /**
+     * Whether $viewer is allowed to see $post, based on the poster's
      * `privacy_settings` for the post's content type.
      *
      * NOTE: this codebase has no follow-graph / followers relationship yet

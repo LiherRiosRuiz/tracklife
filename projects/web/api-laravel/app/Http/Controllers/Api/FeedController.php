@@ -47,6 +47,11 @@ class FeedController extends Controller
     public function kudos(Request $request, string $id): JsonResponse
     {
         $post = SocialPost::findOrFail($id);
+
+        if (! $this->feedService->canView($post, $request->user())) {
+            abort(404);
+        }
+
         $userId = (string) $request->user()->_id;
         $kudos = $post->kudos_user_ids ?? [];
 
@@ -64,6 +69,10 @@ class FeedController extends Controller
     {
         $data = $request->validated();
         $post = SocialPost::findOrFail($id);
+
+        if (! $this->feedService->canView($post, $request->user())) {
+            abort(404);
+        }
 
         $comments = $post->comments ?? [];
         $comments[] = [
