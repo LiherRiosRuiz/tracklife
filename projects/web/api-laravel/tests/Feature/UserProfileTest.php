@@ -123,4 +123,84 @@ class UserProfileTest extends TestCase
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['avatar_url']);
     }
+
+    public function test_update_rejects_privacy_settings_with_unknown_key(): void
+    {
+        $user = $this->createUser();
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->putJson('/api/profile', [
+                'privacy_settings' => ['meals' => 'public', 'admin_override' => true],
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['privacy_settings']);
+    }
+
+    public function test_update_rejects_privacy_settings_with_invalid_visibility_value(): void
+    {
+        $user = $this->createUser();
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->putJson('/api/profile', [
+                'privacy_settings' => ['meals' => 'everyone-on-earth'],
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['privacy_settings.meals']);
+    }
+
+    public function test_update_accepts_valid_privacy_settings(): void
+    {
+        $user = $this->createUser();
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->putJson('/api/profile', [
+                'privacy_settings' => ['meals' => 'public', 'workouts' => 'private'],
+            ]);
+
+        $response->assertStatus(200);
+    }
+
+    public function test_update_rejects_transformation_goal_with_unknown_key(): void
+    {
+        $user = $this->createUser();
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->putJson('/api/profile', [
+                'transformation_goal' => ['target_weight' => 80, 'inject' => '<script>'],
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['transformation_goal']);
+    }
+
+    public function test_update_rejects_transformation_goal_target_weight_out_of_bounds(): void
+    {
+        $user = $this->createUser();
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->putJson('/api/profile', [
+                'transformation_goal' => ['target_weight' => 5000],
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['transformation_goal.target_weight']);
+    }
+
+    public function test_update_accepts_valid_transformation_goal(): void
+    {
+        $user = $this->createUser();
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->putJson('/api/profile', [
+                'transformation_goal' => [
+                    'target_weight' => 80,
+                    'target_body_fat' => 15,
+                    'deadline' => '2026-12-31',
+                ],
+            ]);
+
+        $response->assertStatus(200);
+    }
 }
