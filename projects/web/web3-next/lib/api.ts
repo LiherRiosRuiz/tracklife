@@ -375,7 +375,7 @@ export type Favorite = {
 };
 
 export type Challenge = {
-  _id?: string;
+  id?: string;
   title: string;
   description?: string;
   participant_ids?: string[];
@@ -383,7 +383,7 @@ export type Challenge = {
 };
 
 export type Club = {
-  _id?: string;
+  id?: string;
   name: string;
   description?: string;
   member_ids?: string[];
