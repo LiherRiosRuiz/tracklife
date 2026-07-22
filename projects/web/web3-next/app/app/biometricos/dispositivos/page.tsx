@@ -62,11 +62,11 @@ export default function DispositivosPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="font-semibold capitalize">{p.replace("_", " ")}</h3>
-                    <p className="text-sm text-muted">{conn?.status ?? "No conectado"}</p>
+                    <p className="text-sm text-muted">{conn ? "Conectado" : "No conectado"}</p>
                   </div>
                   <div className="flex gap-2">
                     <Button onClick={() => connect(p)} variant="secondary">Conectar</Button>
-                    {conn && <Button onClick={() => sync(p)}>Sync</Button>}
+                    {conn && <Button onClick={() => sync(p)}>Sincronizar</Button>}
                   </div>
                 </div>
               </Card>
