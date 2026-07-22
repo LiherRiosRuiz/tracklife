@@ -1,6 +1,7 @@
 "use client";
 
 import { api, type FeedPost } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
 import { FeedList } from "@/components/FeedList";
 import { Button, PageHeader } from "@/components/ui";
 import { useApiData } from "@/hooks/use-api-data";
@@ -8,9 +9,11 @@ import { SkeletonList } from "@/components/Skeleton";
 import { ErrorState } from "@/components/ErrorState";
 
 export default function ComunidadPage() {
+  const { token } = useAuth();
   const { data, loading, error, refetch } = useApiData(
-    () => api.feed(),
-    [],
+    () => api.feed(token!),
+    [token],
+    { enabled: !!token },
   );
 
   const posts: FeedPost[] = data?.feed ?? [];
