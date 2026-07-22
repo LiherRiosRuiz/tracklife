@@ -221,7 +221,7 @@ export default function ProgresoPage() {
             <p className="text-sm text-muted">Sin entrenamientos registrados.</p>
           ) : (
             recentWorkouts.map((w, i) => {
-              const id = w._id ?? String(i);
+              const id = w.id ?? String(i);
               const isOpen = expanded === id;
               const tipo = deriveWorkoutType(w);
               return (

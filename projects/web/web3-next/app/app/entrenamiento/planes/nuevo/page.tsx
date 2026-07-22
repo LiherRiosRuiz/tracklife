@@ -24,7 +24,7 @@ export default function NuevoPlanPage() {
     setExercises([
       ...exercises,
       {
-        exercise_id: ex._id!,
+        exercise_id: ex.id!,
         exercise_name: ex.name,
         order: exercises.length + 1,
         sets: [emptySet(1), emptySet(2), emptySet(3)],

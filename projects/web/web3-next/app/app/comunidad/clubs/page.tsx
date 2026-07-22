@@ -37,11 +37,11 @@ export default function ClubsPage() {
       {error && <ErrorState message={error} onRetry={refetch} />}
       {joinError && <p className="mb-3 text-sm text-danger">{joinError}</p>}
       {!loading && !error && clubs.map((c, i) => (
-        <Card key={c._id ?? i} className="mb-3">
+        <Card key={c.id ?? i} className="mb-3">
           <h3 className="font-semibold">{c.name}</h3>
           <p className="mt-1 text-sm text-muted">{c.description}</p>
           <p className="mt-2 text-xs text-muted">{c.member_ids?.length ?? 0} miembros</p>
-          <Button onClick={() => join(String(c._id))} className="mt-3" variant="secondary">
+          <Button onClick={() => join(String(c.id))} className="mt-3" variant="secondary">
             Unirse al club
           </Button>
         </Card>

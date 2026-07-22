@@ -328,7 +328,6 @@ export const api = {
 };
 
 export type MealEntry = {
-  _id?: string;
   id?: string;
   meal_type: string;
   items: FoodItem[];
@@ -362,7 +361,7 @@ export type Product = {
 };
 
 export type Recipe = {
-  _id?: string;
+  id?: string;
   title: string;
   description?: string;
   totals_per_serving?: MacroTargets;
@@ -376,7 +375,7 @@ export type Favorite = {
 };
 
 export type Challenge = {
-  _id?: string;
+  id?: string;
   title: string;
   description?: string;
   participant_ids?: string[];
@@ -384,14 +383,14 @@ export type Challenge = {
 };
 
 export type Club = {
-  _id?: string;
+  id?: string;
   name: string;
   description?: string;
   member_ids?: string[];
 };
 
 export type Workout = {
-  _id?: string;
+  id?: string;
   name: string;
   sets: Array<{ exercise: string; exercise_id?: string; set_number?: number; weight: number; reps: number; type?: string }>;
   total_volume?: number;
@@ -401,7 +400,7 @@ export type Workout = {
 };
 
 export type Exercise = {
-  _id?: string;
+  id?: string;
   name: string;
   muscle_group?: string;
   equipment?: string;
@@ -432,7 +431,7 @@ export type PlanExercise = {
 };
 
 export type WorkoutPlan = {
-  _id?: string;
+  id?: string;
   name: string;
   description?: string;
   days_per_week?: number;
@@ -460,7 +459,7 @@ export type ActiveWorkout = {
 };
 
 export type Activity = {
-  _id?: string;
+  id?: string;
   type: string;
   title: string;
   distance_km?: number;

@@ -23,10 +23,10 @@ export default function PlanDetailPage() {
   }, [token, id, router]);
 
   const startWorkout = async () => {
-    if (!token || !plan?._id) return;
+    if (!token || !plan?.id) return;
     setStarting(true);
     try {
-      const { workout } = await api.workoutFromPlan(token, plan._id);
+      const { workout } = await api.workoutFromPlan(token, plan.id);
       // Store the draft workout in sessionStorage and navigate to active page
       sessionStorage.setItem("tracklife_active_workout", JSON.stringify(workout));
       sessionStorage.setItem("tracklife_workout_start", Date.now().toString());

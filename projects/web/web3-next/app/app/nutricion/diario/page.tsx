@@ -47,7 +47,7 @@ export default function DiarioPage() {
           ) : (
             <ul className="mt-2 space-y-2">
               {(grouped[type] ?? []).map((meal, i) => (
-                <li key={meal._id ?? i} className="text-sm">
+                <li key={meal.id ?? i} className="text-sm">
                   {meal.items.map((it) => it.name).join(", ")} — {Math.round(meal.totals?.calories ?? 0)} kcal
                 </li>
               ))}

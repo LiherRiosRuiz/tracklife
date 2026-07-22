@@ -37,11 +37,11 @@ export default function RetosPage() {
       {error && <ErrorState message={error} onRetry={refetch} />}
       {joinError && <p className="mb-3 text-sm text-danger">{joinError}</p>}
       {!loading && !error && challenges.map((c, i) => (
-        <Card key={c._id ?? i} className="mb-3">
+        <Card key={c.id ?? i} className="mb-3">
           <h3 className="font-semibold">{c.title}</h3>
           <p className="mt-1 text-sm text-muted">{c.description}</p>
           <p className="mt-2 text-xs text-muted">{c.participant_ids?.length ?? 0} participantes</p>
-          <Button onClick={() => join(String(c._id))} className="mt-3" variant="secondary">
+          <Button onClick={() => join(String(c.id))} className="mt-3" variant="secondary">
             Unirse
           </Button>
         </Card>

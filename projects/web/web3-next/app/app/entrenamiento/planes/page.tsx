@@ -25,7 +25,7 @@ export default function PlanesPage() {
     setDeleteError("");
     try {
       await api.deleteWorkoutPlan(token, id);
-      setPlans(plans.filter((p) => p._id !== id));
+      setPlans(plans.filter((p) => p.id !== id));
     } catch (err) {
       setDeleteError(err instanceof Error ? err.message : "Error al eliminar el plan");
     }
@@ -50,8 +50,8 @@ export default function PlanesPage() {
       ) : (
         <div className="space-y-3">
           {plans.map((plan) => (
-            <Card key={plan._id} className="flex items-center justify-between">
-              <Link href={`/app/entrenamiento/planes/${plan._id}`} className="flex-1">
+            <Card key={plan.id} className="flex items-center justify-between">
+              <Link href={`/app/entrenamiento/planes/${plan.id}`} className="flex-1">
                 <h3 className="font-semibold">{plan.name}</h3>
                 {plan.description && <p className="mt-1 text-sm text-muted">{plan.description}</p>}
                 <p className="mt-1 text-xs text-muted">
@@ -59,7 +59,7 @@ export default function PlanesPage() {
                   {plan.exercises.reduce((sum, ex) => sum + ex.sets.length, 0)} series
                 </p>
               </Link>
-              <button onClick={() => deletePlan(plan._id!)} className="ml-4 text-sm text-muted hover:text-danger">
+              <button onClick={() => deletePlan(plan.id!)} className="ml-4 text-sm text-muted hover:text-danger">
                 Eliminar
               </button>
             </Card>

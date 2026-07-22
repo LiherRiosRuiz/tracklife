@@ -108,7 +108,7 @@ export default function EjerciciosPage() {
       {!loading && !error && (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {exercises.map((e) => (
-            <Link key={e._id ?? e.name} href={`/app/entrenamiento/gym/ejercicios/${e._id}`}>
+            <Link key={e.id ?? e.name} href={`/app/entrenamiento/gym/ejercicios/${e.id}`}>
               <Card className="cursor-pointer transition hover:border-accent">
                 {e.image_url && (
                   <img
