@@ -48,7 +48,7 @@ Controller (mirrors `WorkoutController`):
 ```php
 public function index(Request $request): JsonResponse   // ['favorites' => FavoriteResource::collection($rows)]
 public function store(StoreFavoriteRequest $request): JsonResponse // firstOrCreate → 200|201, ['favorite' => new FavoriteResource($fav)]
-public function destroy(StoreFavoriteRequest $request): JsonResponse // deleteWhere(user_id,type,ref) → response()->json(['message' => 'Favorite removed']) (200)
+public function destroy(StoreFavoriteRequest $request): JsonResponse // deleteWhere(user_id,type,ref) → response()->json(['message' => 'Favorito eliminado']) (200)
 ```
 `store` uses `Favorite::firstOrCreate(['user_id'=>$uid,'type'=>$data['type'],'ref'=>$data['ref']])`; return 201 when `wasRecentlyCreated`, else 200.
 
