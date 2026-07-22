@@ -40,6 +40,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/dashboard', [DashboardController::class, 'index']);
 
+    // Feed reads privacy-sensitive content (see FeedService visibility
+    // filtering), so it must be authenticated like every other feed action.
+    Route::get('/feed', [FeedController::class, 'index']);
+
     Route::get('/meals', [MealController::class, 'index']);
     Route::post('/meals', [MealController::class, 'store']);
     Route::put('/meals/{id}', [MealController::class, 'update']);

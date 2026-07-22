@@ -27,7 +27,8 @@ class DashboardController extends Controller
         $macros = $this->macroService->dailyProgress($user, $request->query('date'));
 
         $feed = $this->feedService->formatPosts(
-            SocialPost::orderBy('created_at', 'desc')->limit(5)->get()
+            SocialPost::orderBy('created_at', 'desc')->limit(5)->get(),
+            $user
         );
 
         $weeklyCalories = $this->macroService->weeklyCalories($user);

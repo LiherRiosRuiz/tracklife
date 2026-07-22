@@ -25,7 +25,7 @@ class FeedController extends Controller
             ->get();
 
         return response()->json([
-            'feed' => $this->feedService->formatPosts($posts),
+            'feed' => $this->feedService->formatPosts($posts, $request->user()),
         ]);
     }
 

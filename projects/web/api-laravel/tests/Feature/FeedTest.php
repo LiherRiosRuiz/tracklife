@@ -14,7 +14,7 @@ class FeedTest extends TestCase
 
     // ─── Helpers ─────────────────────────────────────────────────────────────
 
-    private function createTestUser(): User
+    private function createTestUser(array $privacyOverrides = []): User
     {
         return User::create([
             'name' => 'Test User',
@@ -22,7 +22,7 @@ class FeedTest extends TestCase
             'username' => 'testuser'.uniqid(),
             'password' => 'password123',
             'macro_targets' => User::defaultMacroTargets(),
-            'privacy_settings' => User::defaultPrivacySettings(),
+            'privacy_settings' => array_merge(User::defaultPrivacySettings(), $privacyOverrides),
             'streak_days' => 0,
         ]);
     }
@@ -66,12 +66,76 @@ class FeedTest extends TestCase
         $response->assertStatus(401);
     }
 
+    // ─── Index: requires authentication (feed exposed privacy-sensitive data) ──
+
+    public function test_feed_index_requires_authentication(): void
+    {
+        $response = $this->getJson('/api/feed');
+
+        $response->assertStatus(401);
+    }
+
+    // ─── Index: privacy filtering ───────────────────────────────────────────
+
+    public function test_feed_index_hides_other_users_followers_only_post(): void
+    {
+        $userA = $this->createTestUser();
+        $userB = $this->createTestUser();
+
+        // Default privacy for 'meals' is 'followers'. There is no follow-graph
+        // in this codebase, so a followers-visibility post must be visible
+        // only to the poster themself for now.
+        $this->actingAs($userA, 'sanctum')->postJson('/api/feed', [
+            'type' => 'meal_logged',
+            'payload' => ['message' => 'private meal from A'],
+        ])->assertStatus(201);
+
+        $response = $this->actingAs($userB, 'sanctum')->getJson('/api/feed');
+
+        $response->assertStatus(200);
+        $feed = collect($response->json('feed'));
+
+        $this->assertFalse($feed->contains(fn (array $post) => $post['payload']['message'] === 'private meal from A'));
+    }
+
+    public function test_feed_index_shows_own_posts_and_others_public_posts(): void
+    {
+        $userA = $this->createTestUser();
+        $userB = $this->createTestUser();
+
+        // userA's own followers-visibility post: always visible to herself.
+        $this->actingAs($userA, 'sanctum')->postJson('/api/feed', [
+            'type' => 'meal_logged',
+            'payload' => ['message' => 'my own meal'],
+        ])->assertStatus(201);
+
+        // userB's product_scanned post defaults to 'public' visibility.
+        $this->actingAs($userB, 'sanctum')->postJson('/api/feed', [
+            'type' => 'product_scanned',
+            'payload' => ['message' => 'public scan from B'],
+        ])->assertStatus(201);
+
+        $response = $this->actingAs($userA, 'sanctum')->getJson('/api/feed');
+
+        $response->assertStatus(200);
+        $feed = collect($response->json('feed'));
+
+        $this->assertTrue($feed->contains(fn (array $post) => $post['payload']['message'] === 'my own meal'));
+        $this->assertTrue($feed->contains(fn (array $post) => $post['payload']['message'] === 'public scan from B'));
+    }
+
     // ─── Index: user info must be correct per post, even across multiple users ─
 
     public function test_feed_index_attaches_correct_user_to_each_post(): void
     {
         $userA = $this->createTestUser();
-        $userB = $this->createTestUser();
+        // userB's meal posts are made public here on purpose: 'meals' defaults
+        // to 'followers' visibility and there is no follow-graph in this
+        // codebase yet, so a followers-visibility post from another user
+        // would otherwise be filtered out of userA's feed (see FeedService
+        // privacy filtering). This test is about per-post user attachment
+        // across authors, not about privacy rules, so we make B's post public.
+        $userB = $this->createTestUser(['meals' => 'public']);
 
         $this->actingAs($userA, 'sanctum')->postJson('/api/feed', [
             'type' => 'workout_completed',

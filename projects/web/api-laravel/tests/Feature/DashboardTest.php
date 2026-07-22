@@ -111,11 +111,17 @@ class DashboardTest extends TestCase
     {
         $user = $this->makeUser();
 
+        // 'meals' defaults to 'followers' visibility and this codebase has no
+        // follow-graph yet, so a followers-visibility post from another user
+        // is filtered out of the viewer's feed_preview (see FeedService
+        // privacy filtering). This test is about per-post author attachment
+        // across users, not privacy rules, so we make the post public.
         $otherUser = User::create([
             'name' => 'Other',
             'email' => 'other@test.com',
             'password' => bcrypt('password'),
             'username' => 'otheruser',
+            'privacy_settings' => array_merge(User::defaultPrivacySettings(), ['meals' => 'public']),
         ]);
 
         SocialPost::create([
