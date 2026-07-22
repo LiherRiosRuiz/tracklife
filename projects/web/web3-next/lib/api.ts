@@ -177,7 +177,7 @@ export const api = {
       body: JSON.stringify({ barcode, share_to_feed: share }),
     }, token),
 
-  feed: () => request<{ feed: FeedPost[] }>("/api/feed"),
+  feed: (token?: string) => request<{ feed: FeedPost[] }>("/api/feed", {}, token),
 
   kudos: (token: string, postId: string) =>
     request<{ post: FeedPost }>(`/api/feed/${postId}/kudos`, { method: "POST" }, token),
