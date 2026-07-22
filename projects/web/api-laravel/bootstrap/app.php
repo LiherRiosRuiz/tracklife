@@ -39,7 +39,31 @@ return Application::configure(basePath: dirname(__DIR__))
                 | Request::HEADER_X_FORWARDED_PROTO,
         );
 
-        $middleware->statefulApi();
+        // Intentionally NOT calling $middleware->statefulApi() here.
+        //
+        // statefulApi() adds Sanctum's EnsureFrontendRequestsAreStateful
+        // middleware, which decides whether to apply CSRF/session/cookie
+        // handling purely by checking the request's Origin/Referer host
+        // against config('sanctum.stateful') (SANCTUM_STATEFUL_DOMAINS) —
+        // it does NOT check whether the request carries a Bearer token or
+        // is otherwise already authenticated. Since that list includes the
+        // frontend's real origin (app.tracklife.test / tracklife.test),
+        // every real-browser request (which always sends Origin/Referer)
+        // was being forced through EncryptCookies+StartSession+
+        // VerifyCsrfToken, which rejects it for lacking a CSRF token —
+        // producing the 419 "CSRF token mismatch" seen when marking a
+        // favorite from the actual app, even though `curl` (no
+        // Origin/Referer) sailed through with the same Bearer token.
+        //
+        // This app has no cookie/session-based auth anywhere: every login
+        // (AuthController::login/register) only ever issues a Sanctum
+        // personal-access Bearer token, never calls Auth::login(), and no
+        // route relies on the 'web' session guard. CSRF protection exists
+        // specifically to protect cookie-authenticated requests; a pure
+        // Bearer-token API has no CSRF exposure to protect, so enabling
+        // Sanctum's stateful/CSRF handling here only broke real usage
+        // without buying any real security. See tests/Feature/
+        // CsrfBrowserRequestTest.php for the regression coverage.
         $middleware->api(prepend: [
             HandleCors::class,
         ], append: [
