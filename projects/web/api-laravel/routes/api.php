@@ -24,10 +24,11 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/health', fn () => response()->json(['status' => 'ok', 'app' => 'TRACKLIFE API']));
 
-Route::post('/auth/register', [AuthController::class, 'register']);
-Route::post('/auth/login', [AuthController::class, 'login']);
+// Stricter throttle on top of the api-wide baseline: brute-force/enumeration
+// protection for the two unauthenticated auth endpoints.
+Route::post('/auth/register', [AuthController::class, 'register'])->middleware('throttle:5,1,auth-strict');
+Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:5,1,auth-strict');
 
-Route::get('/feed', [FeedController::class, 'index']);
 Route::get('/challenges', [ChallengeController::class, 'index']);
 Route::get('/challenges/{id}', [ChallengeController::class, 'show']);
 Route::get('/clubs', [ClubController::class, 'index']);

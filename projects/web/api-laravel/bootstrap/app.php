@@ -17,6 +17,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->statefulApi();
         $middleware->api(prepend: [
             HandleCors::class,
+        ], append: [
+            // Sane API-wide baseline rate limit. Uses a distinct prefix so its
+            // counter never shares a cache key with the stricter per-route
+            // throttles (e.g. auth-strict on /auth/login, /auth/register).
+            'throttle:60,1,api-global',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
