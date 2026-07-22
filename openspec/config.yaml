@@ -1,0 +1,57 @@
+schema: spec-driven
+
+context: |
+  Monorepo "tracklife": web3-next (Next.js 16/React 19/TS/Tailwind 4, main app),
+  api-laravel (Laravel 13 + MongoDB + Sanctum, REST API), web1-astro (Astro 6,
+  landing only), web2-nuxt (unrelated Nuxt scaffold — do NOT touch for TrackLife
+  work). Docker/Traefik infra at repo root, no shared root package manager.
+  Strict TDD Mode: enabled (global user marker). See testing capabilities below
+  per subproject — web3-next currently has no test runner installed.
+
+strict_tdd: true
+
+testing:
+  web3-next:
+    ready: false
+    reason: "No vitest/jest installed, no test directories. Install vitest + @testing-library/react before TDD work here."
+    lint: "npm run lint (eslint 9)"
+    build: "npm run build"
+  api-laravel:
+    ready: true
+    runner: "PHPUnit 12 via `composer test` / `php artisan test`"
+    existing_tests: "tests/Feature (ActivityTest, AuthTest, BiometricTest, DashboardTest, ExampleTest, ExerciseTest, MacroTest, MealTest, TestDatabaseIsolationTest, UserProfileTest, UserSearchTest, WorkoutPlanTest, WorkoutTest), tests/Unit, tests/Traits"
+  web1-astro:
+    ready: false
+    reason: "No test runner configured; thin landing page, low priority for TDD."
+  web2-nuxt:
+    ready: false
+    reason: "Unrelated scaffold, not part of the TrackLife product — out of scope."
+
+rules:
+  proposal:
+    - State which subproject(s) (web3-next, api-laravel, web1-astro) a change targets
+    - Never scope changes into web2-nuxt unless explicitly requested — it is an unrelated scaffold
+    - Include rollback plan for risky changes
+  specs:
+    - Use Given/When/Then for scenarios
+    - Use RFC 2119 keywords (MUST, SHALL, SHOULD, MAY)
+  design:
+    - Document architecture decisions with rationale
+    - For cross-service changes, describe the Next.js <-> Laravel/MongoDB contract explicitly
+  tasks:
+    - Group by phase, use hierarchical numbering
+    - Keep tasks completable in one session
+    - Split tasks per subproject when a change spans web3-next and api-laravel
+  apply:
+    guidelines:
+      - Follow existing code patterns per subproject
+      - For api-laravel, write PHPUnit feature tests first (TDD ready)
+      - For web3-next, flag that vitest is not installed before enabling strict TDD there
+    tdd: true
+    test_command: "api-laravel: composer test | web3-next: npm run lint (no test runner yet)"
+  verify:
+    test_command: "api-laravel: composer test"
+    build_command: "web3-next: npm run build"
+    coverage_threshold: 0
+  archive:
+    - Warn before merging destructive deltas
