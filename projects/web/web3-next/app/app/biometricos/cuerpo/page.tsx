@@ -198,7 +198,7 @@ export default function CuerpoPage() {
   return (
     <div className="space-y-8">
       <PageHeader
-        title="Composicion corporal"
+        title="Composición corporal"
         subtitle="Peso, grasa y masa muscular"
       />
 

@@ -9,6 +9,13 @@ import { SkeletonCard } from "@/components/Skeleton";
 
 const DEFAULTS: MacroTargets = { calories: 2200, protein: 150, carbs: 220, fat: 70 };
 
+const LABELS: Record<keyof MacroTargets, string> = {
+  calories: "Calorías (kcal)",
+  protein: "Proteína (g)",
+  carbs: "Carbohidratos (g)",
+  fat: "Grasa (g)",
+};
+
 export default function MacrosPage() {
   const { token } = useAuth();
   const [overrides, setOverrides] = useState<Partial<MacroTargets>>({});
@@ -39,7 +46,7 @@ export default function MacrosPage() {
         <div className="space-y-3">
           {(["calories", "protein", "carbs", "fat"] as const).map((key) => (
             <div key={key}>
-              <label className="text-sm text-muted capitalize">{key}</label>
+              <label className="text-sm text-muted">{LABELS[key]}</label>
               <input
                 type="number"
                 value={targets[key]}
