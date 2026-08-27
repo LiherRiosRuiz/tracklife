@@ -17,7 +17,7 @@
   /* — Texto — */
   --color-fg:            oklch(97% 0.004 150);
   --color-fg-muted:      oklch(70% 0.008 160);
-  --color-fg-subtle:     oklch(55% 0.008 160);
+  --color-fg-subtle:     oklch(63% 0.008 160);
 
   /* — Marca / accent — */
   --color-accent:        oklch(82% 0.21 142);

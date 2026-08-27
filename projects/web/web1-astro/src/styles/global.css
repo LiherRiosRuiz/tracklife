@@ -16,7 +16,7 @@
   /* — Texto — */
   --color-fg:            oklch(97% 0.004 150);
   --color-fg-muted:      oklch(70% 0.008 160);
-  --color-fg-subtle:     oklch(55% 0.008 160);
+  --color-fg-subtle:     oklch(63% 0.008 160);
 
   /* — Marca / accent — */
   --color-accent:        oklch(82% 0.21 142);
@@ -87,6 +87,20 @@ body {
   font-feature-settings: "tnum";
 }
 
+@layer base {
+  /* Respeta prefers-reduced-motion (a11y) — sitewide, cubre animate-pulse de Tailwind
+     (ej. el punto del badge del hero) y las animaciones .energy-glow/.energy-sheen */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
 /* Wordmark con gradiente accent→cyan */
 .brand-gradient {
   background: linear-gradient(135deg, var(--color-accent), var(--color-cyan));
@@ -137,7 +151,7 @@ body {
   color: var(--color-on-accent);
 }
 
-/* Glow pulsante (solo dentro de .energy); respeta prefers-reduced-motion abajo */
+/* Glow pulsante (solo dentro de .energy); respeta prefers-reduced-motion via @layer base */
 .energy .energy-glow {
   animation: pulse-glow 3.5s ease-in-out infinite;
 }
@@ -157,9 +171,5 @@ body {
   pointer-events: none;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .energy .energy-glow,
-  .energy .energy-sheen::after {
-    animation: none;
-  }
-}
+/* prefers-reduced-motion para .energy-glow/.energy-sheen: cubierto por el reset
+   sitewide en @layer base (arriba) — sin regla duplicada aqui. */
