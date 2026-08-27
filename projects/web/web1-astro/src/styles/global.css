@@ -2,47 +2,89 @@
 
 /* =============================================================================
    TrackLife Landing — Design System "Bioluminiscencia" (lockstep con la app)
-   Sincronizado con web3-next/app/globals.css · ver .sdd/skills/design-system.md
+   Sincronizado con web3-next/app/globals.css · ver docs/design-system.md
    ============================================================================= */
 
 @theme {
-  /* Superficies */
-  --color-bg:            oklch(16% 0.018 165);
-  --color-surface:       oklch(20% 0.020 165);
-  --color-surface-2:     oklch(24% 0.022 165);
-  --color-border:        oklch(28% 0.020 165);
-  --color-border-strong: oklch(36% 0.022 165);
+  /* — Superficies (dark, tinte cool faint hue-165) — */
+  --color-bg:            oklch(15% 0.006 165);
+  --color-surface:       oklch(19% 0.007 165);
+  --color-surface-2:     oklch(23% 0.008 165);
+  --color-border:        oklch(27% 0.006 165);
+  --color-border-strong: oklch(34% 0.008 165);
 
-  /* Texto */
-  --color-fg:            oklch(97% 0.012 150);
-  --color-fg-muted:      oklch(72% 0.018 160);
-  --color-fg-subtle:     oklch(58% 0.016 160);
+  /* — Texto — */
+  --color-fg:            oklch(97% 0.004 150);
+  --color-fg-muted:      oklch(70% 0.008 160);
+  --color-fg-subtle:     oklch(55% 0.008 160);
 
-  /* Marca */
+  /* — Marca / accent — */
   --color-accent:        oklch(82% 0.21 142);
   --color-accent-strong: oklch(74% 0.20 142);
   --color-accent-dim:    oklch(38% 0.09 142);
   --color-on-accent:     oklch(18% 0.03 150);
 
-  /* Acentos viz */
+  /* — Acentos secundarios (data-viz, firma "bio") — */
   --color-cyan:          oklch(80% 0.13 210);
   --color-violet:        oklch(72% 0.15 295);
   --color-amber:         oklch(80% 0.15 75);
   --color-coral:         oklch(72% 0.17 25);
 
-  /* Alias legacy (utilidades existentes de la landing) */
+  /* — Semanticos de estado — */
+  --color-success:       oklch(80% 0.18 150);
+  --color-warning:       oklch(82% 0.16 85);
+  --color-danger:        oklch(67% 0.20 25);
+
+  /* — Semanticos de dominio (macros) — */
+  --color-protein:       var(--color-cyan);
+  --color-carbs:         var(--color-amber);
+  --color-fat:           var(--color-coral);
+
+  /* — Alias legacy: mantienen las utilidades existentes de la landing — */
   --color-background:    var(--color-bg);
   --color-foreground:    var(--color-fg);
   --color-card:          var(--color-surface);
   --color-muted:         var(--color-fg-muted);
 
+  /* — Radii (sistema coherente) — */
+  --radius-sm:  0.5rem;
+  --radius-md:  0.75rem;
+  --radius-lg:  1rem;
+  --radius-xl:  1.25rem;
+  --radius-2xl: 1.5rem;
+
+  /* — Escala tipografica modular (ratio ~1.25, base 16px) — */
+  --text-xs:   0.75rem;
+  --text-sm:   0.875rem;
+  --text-base: 1rem;
+  --text-lg:   1.125rem;
+  --text-xl:   1.25rem;
+  --text-2xl:  1.5rem;
+  --text-3xl:  1.875rem;
+  --text-4xl:  2.5rem;
+  --text-5xl:  3.5rem;
+
+  /* — Elevacion (sombras suaves + glow de accent: la firma) — */
+  --shadow-sm:   0 1px 2px oklch(0% 0 0 / 0.4);
+  --shadow-md:   0 4px 16px oklch(0% 0 0 / 0.45);
+  --shadow-lg:   0 12px 32px oklch(0% 0 0 / 0.5);
+  --shadow-glow: 0 0 24px oklch(82% 0.21 142 / 0.25);
+
+  /* — Fuentes (Sora + JetBrains Mono via Google Fonts <link> en Layout.astro) — */
   --font-sans: "Sora", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
 }
 
 body {
   background-color: var(--color-bg);
   color: var(--color-fg);
   font-family: var(--font-sans);
+}
+
+/* Numeros tabulares por defecto en metricas (los digitos no "bailan") */
+.tabular {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
 }
 
 /* Wordmark con gradiente accent→cyan */
