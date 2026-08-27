@@ -94,3 +94,72 @@ body {
   background-clip: text;
   color: transparent;
 }
+
+/* =============================================================================
+   ENERGY — La Velada, tratamiento exclusivo de landing (aislado: NUNCA en web3-next)
+   Doble gate: (1) estos tokens solo existen en el bundle de web1-astro,
+   (2) el tratamiento intenso solo se activa dentro del scope `.energy`.
+   Uso permitido: hero, CTA y stats strip de index/precios/como-funciona.
+   Ver docs/design-system.md § "Where's the line".
+   ============================================================================= */
+@theme {
+  --color-energy:   oklch(86% 0.25 140);
+  --color-energy-2: oklch(82% 0.16 210);
+  --text-display:   4.5rem;
+  --shadow-hype:    0 0 64px oklch(86% 0.25 140 / 0.35);
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 24px oklch(86% 0.25 140 / 0.25); }
+  50%      { box-shadow: var(--shadow-hype); }
+}
+
+@keyframes energy-sheen {
+  from { transform: translateX(-60%) skewX(-12deg); }
+  to   { transform: translateX(160%) skewX(-12deg); }
+}
+
+.energy {
+  --energy-gradient: linear-gradient(135deg, var(--color-energy), var(--color-energy-2));
+}
+
+/* Texto con gradiente energy→energy-2 (solo dentro de .energy) */
+.energy .energy-text {
+  background: var(--energy-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Boton/superficie con fondo gradiente energy (solo dentro de .energy) */
+.energy .energy-btn {
+  background: var(--energy-gradient);
+  color: var(--color-on-accent);
+}
+
+/* Glow pulsante (solo dentro de .energy); respeta prefers-reduced-motion abajo */
+.energy .energy-glow {
+  animation: pulse-glow 3.5s ease-in-out infinite;
+}
+
+/* Sheen/brillo que recorre el contenedor (solo dentro de .energy) */
+.energy .energy-sheen {
+  position: relative;
+  overflow: hidden;
+}
+.energy .energy-sheen::after {
+  content: "";
+  position: absolute;
+  inset: -20% -10%;
+  width: 40%;
+  background: linear-gradient(115deg, transparent, oklch(97% 0.02 150 / 0.16), transparent);
+  animation: energy-sheen 5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .energy .energy-glow,
+  .energy .energy-sheen::after {
+    animation: none;
+  }
+}
