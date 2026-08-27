@@ -33,10 +33,10 @@ export function Celebration({ duration = 1800 }: { duration?: number }) {
       return c || fallback;
     };
     const colors = [
-      read("--color-accent", "#86ef2b"),
-      read("--color-cyan", "#33d6ea"),
-      read("--color-amber", "#f2b705"),
-      read("--color-coral", "#f2664e"),
+      read("--color-accent", "#67e45b"),
+      read("--color-cyan", "#2fd4ec"),
+      read("--color-amber", "#f5ae39"),
+      read("--color-coral", "#fd736d"),
     ];
 
     type P = { x: number; y: number; vx: number; vy: number; s: number; rot: number; vr: number; c: string };
