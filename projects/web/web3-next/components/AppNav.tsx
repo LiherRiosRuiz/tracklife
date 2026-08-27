@@ -64,7 +64,7 @@ export function AppNav() {
                 key={href}
                 href={href}
                 aria-current={active ? "page" : undefined}
-                className={`flex min-w-12 flex-col items-center gap-0.5 px-2 py-1 text-[10px] font-medium transition-colors ${
+                className={`flex min-w-12 flex-col items-center gap-0.5 px-2 py-1 text-xs font-medium transition-colors ${
                   active ? "text-accent" : "text-fg-subtle hover:text-fg-muted"
                 }`}
               >

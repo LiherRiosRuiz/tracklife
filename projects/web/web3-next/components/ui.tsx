@@ -5,7 +5,7 @@ import type { ComponentType, CSSProperties, InputHTMLAttributes, ReactNode } fro
 export function Brand({ className = "" }: { className?: string }) {
   return (
     <span
-      className={`bg-gradient-to-r from-accent to-cyan bg-clip-text font-extrabold tracking-wider text-transparent ${className}`}
+      className={`bg-gradient-to-r from-accent to-cyan bg-clip-text font-extrabold tracking-tight text-transparent ${className}`}
     >
       TRACKLIFE
     </span>
@@ -208,11 +208,11 @@ export function Badge({
   tone?: "accent" | "success" | "warning" | "danger" | "neutral";
 }) {
   const tones = {
-    accent: "bg-accent-dim text-accent",
-    success: "bg-success/15 text-success",
-    warning: "bg-warning/15 text-warning",
-    danger: "bg-danger/15 text-danger",
-    neutral: "bg-surface-2 text-fg-muted",
+    accent: "border border-accent/25 bg-accent-dim text-accent",
+    success: "border border-success/25 bg-success/15 text-success",
+    warning: "border border-warning/25 bg-warning/15 text-warning",
+    danger: "border border-danger/25 bg-danger/15 text-danger",
+    neutral: "border border-border bg-surface-2 text-fg-muted",
   }[tone];
   return (
     <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${tones}`}>
@@ -223,7 +223,11 @@ export function Badge({
 
 export function ScoreBadge({ score }: { score: number }) {
   const tone = score >= 70 ? "success" : score >= 40 ? "warning" : "danger";
-  return <Badge tone={tone}>{score}/100</Badge>;
+  return (
+    <Badge tone={tone}>
+      <span className="tabular">{score}</span>/100
+    </Badge>
+  );
 }
 
 export function EmptyState({
