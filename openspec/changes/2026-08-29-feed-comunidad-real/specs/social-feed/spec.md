@@ -72,12 +72,13 @@ to poster-only, per an explicit TODO — no follow relationship existed.)
 - WHEN user C calls GET `/api/feed`
 - THEN A's post is NOT included in C's results
 
-#### Scenario: Followed-but-not-following user does not see the post
+#### Scenario: Being followed by the poster does not grant visibility
 
-- GIVEN user A follows user D, but user D does not follow user A
+- GIVEN user D follows user A, but user A does not follow user D
 - AND user D creates a `followers`-visibility post
 - WHEN user A calls GET `/api/feed`
 - THEN D's post is NOT included in A's results
+- (the poster following the viewer grants nothing; only viewer-follows-poster does)
 
 ### Requirement: Toggleable Like
 

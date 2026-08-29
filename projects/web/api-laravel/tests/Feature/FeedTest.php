@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Follow;
 use App\Models\SocialPost;
 use App\Models\User;
 use Tests\TestCase;
@@ -11,7 +12,7 @@ class FeedTest extends TestCase
 {
     use MongoTestCleanup;
 
-    protected array $mongoCollections = ['users', 'personal_access_tokens', 'social_posts'];
+    protected array $mongoCollections = ['users', 'personal_access_tokens', 'social_posts', 'follows'];
 
     // ─── Helpers ─────────────────────────────────────────────────────────────
 
@@ -376,5 +377,76 @@ class FeedTest extends TestCase
         ]);
 
         $response->assertStatus(404);
+    }
+
+    // ─── Real follow-graph visibility (P4.3) ────────────────────────────────
+
+    public function test_feed_index_shows_followers_only_post_to_actual_follower(): void
+    {
+        $poster = $this->createTestUser();
+        $follower = $this->createTestUser();
+
+        Follow::create(['follower_id' => (string) $follower->_id, 'followed_id' => (string) $poster->_id]);
+
+        $this->actingAs($poster, 'sanctum')->postJson('/api/feed', [
+            'type' => 'meal_logged',
+            'payload' => ['message' => 'followers-only meal from poster'],
+        ])->assertStatus(201);
+
+        $response = $this->actingAs($follower, 'sanctum')->getJson('/api/feed');
+
+        $response->assertStatus(200);
+        $feed = collect($response->json('feed'));
+
+        $this->assertTrue($feed->contains(fn (array $post) => $post['payload']['message'] === 'followers-only meal from poster'));
+    }
+
+    public function test_feed_index_hides_followers_only_post_from_non_follower_and_kudos_returns_404(): void
+    {
+        $poster = $this->createTestUser();
+        $nonFollower = $this->createTestUser();
+
+        $post = SocialPost::create([
+            'user_id' => (string) $poster->_id,
+            'type' => 'meal_logged',
+            'payload' => ['message' => 'followers-only meal, no follower'],
+            'kudos_count' => 0,
+            'kudos_user_ids' => [],
+            'comments' => [],
+        ]);
+
+        $response = $this->actingAs($nonFollower, 'sanctum')->getJson('/api/feed');
+
+        $response->assertStatus(200);
+        $feed = collect($response->json('feed'));
+        $this->assertFalse($feed->contains(fn (array $item) => $item['payload']['message'] === 'followers-only meal, no follower'));
+
+        $this->actingAs($nonFollower, 'sanctum')
+            ->postJson("/api/feed/{$post->_id}/kudos")
+            ->assertStatus(404);
+    }
+
+    public function test_feed_index_hides_followers_only_post_from_followed_but_not_following_user(): void
+    {
+        $userA = $this->createTestUser();
+        $userD = $this->createTestUser();
+
+        // D (the poster) follows A (the viewer), but A does not follow D —
+        // the reverse direction of visibility grants nothing (per
+        // FeedService::followsPoster()'s "viewer follows poster" contract).
+        // This must NOT grant A visibility into D's followers-only content.
+        Follow::create(['follower_id' => (string) $userD->_id, 'followed_id' => (string) $userA->_id]);
+
+        $this->actingAs($userD, 'sanctum')->postJson('/api/feed', [
+            'type' => 'meal_logged',
+            'payload' => ['message' => 'followers-only meal from D'],
+        ])->assertStatus(201);
+
+        $response = $this->actingAs($userA, 'sanctum')->getJson('/api/feed');
+
+        $response->assertStatus(200);
+        $feed = collect($response->json('feed'));
+
+        $this->assertFalse($feed->contains(fn (array $post) => $post['payload']['message'] === 'followers-only meal from D'));
     }
 }
