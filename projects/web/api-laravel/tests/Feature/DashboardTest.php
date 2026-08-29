@@ -111,11 +111,12 @@ class DashboardTest extends TestCase
     {
         $user = $this->makeUser();
 
-        // 'meals' defaults to 'followers' visibility and this codebase has no
-        // follow-graph yet, so a followers-visibility post from another user
-        // is filtered out of the viewer's feed_preview (see FeedService
-        // privacy filtering). This test is about per-post author attachment
-        // across users, not privacy rules, so we make the post public.
+        // 'meals' defaults to 'followers' visibility, and the viewer here
+        // does not follow $otherUser, so a followers-visibility post from
+        // $otherUser would be filtered out of the viewer's feed_preview (see
+        // FeedService privacy filtering / the real follow-graph). This test
+        // is about per-post author attachment across users, not privacy
+        // rules, so we make the post public.
         $otherUser = User::create([
             'name' => 'Other',
             'email' => 'other@test.com',
@@ -164,9 +165,10 @@ class DashboardTest extends TestCase
     {
         $user = $this->makeUser();
 
-        // 'meals' defaults to 'followers' visibility and there is no
-        // follow-graph in this codebase yet, so a followers-visibility post
-        // from another user must NOT appear in the viewer's feed_preview.
+        // 'meals' defaults to 'followers' visibility and the viewer does not
+        // follow $otherUser (no `Follow` record is created here), so a
+        // followers-visibility post from another user must NOT appear in the
+        // viewer's feed_preview — this exercises the real follow-graph.
         $otherUser = User::create([
             'name' => 'Other',
             'email' => 'other-private@test.com',

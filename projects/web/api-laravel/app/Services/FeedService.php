@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Follow;
 use App\Models\SocialPost;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
@@ -9,6 +10,14 @@ use Illuminate\Support\Collection;
 
 class FeedService
 {
+    /**
+     * Per-request memo of the viewer's own following set, keyed by viewer id
+     * so a reused instance cannot cross-contaminate between viewers.
+     *
+     * @var array<string, array<string, true>> viewerId => set of followed ids
+     */
+    private array $followingCache = [];
+
     /**
      * Maps a SocialPost `type` to the `privacy_settings` key that governs its
      * visibility. Types with no entry here have no privacy dimension and are
@@ -43,7 +52,7 @@ class FeedService
         ]);
     }
 
-    public function formatPost(SocialPost $post, ?User $user = null): array
+    public function formatPost(SocialPost $post, ?User $user = null, ?User $viewer = null): array
     {
         $user = $user ?? User::find($post->user_id);
 
@@ -51,7 +60,8 @@ class FeedService
             'id' => (string) $post->_id,
             'type' => $post->type,
             'payload' => $post->payload,
-            'kudos_count' => $post->kudos_count ?? 0,
+            'likes_count' => $post->kudos_count ?? 0,
+            'liked' => $viewer !== null && in_array((string) $viewer->_id, $post->kudos_user_ids ?? [], true),
             'comments' => $post->comments ?? [],
             'created_at' => $post->created_at?->toIso8601String(),
             'user' => $user ? [
@@ -77,7 +87,7 @@ class FeedService
 
         return $posts
             ->filter(fn (SocialPost $post) => $this->isVisibleTo($post, $users->get($post->user_id), $viewer))
-            ->map(fn (SocialPost $post) => $this->formatPost($post, $users->get($post->user_id)))
+            ->map(fn (SocialPost $post) => $this->formatPost($post, $users->get($post->user_id), $viewer))
             ->values()
             ->all();
     }
@@ -98,14 +108,14 @@ class FeedService
      * including zero — even though enough visible posts exist further back.
      *
      * Fix approach (over-fetch-and-widen), chosen over pushing the privacy
-     * predicate into a Mongo aggregation `$lookup`: this app
-     * (mongodb/laravel-mongodb) has no follow-graph yet and isVisibleTo()
-     * mixes an owner-exception with a per-post-type privacy key mapping
-     * (TYPE_PRIVACY_KEY). Re-expressing that exact logic inside an
-     * aggregation pipeline would duplicate the single source of truth
-     * outside PHP and risk drifting out of sync with isVisibleTo() as
-     * privacy rules evolve. At this app's real-world scale (tens/hundreds of
-     * posts, not millions), over-fetching a widening candidate window from
+     * predicate into a Mongo aggregation `$lookup`: isVisibleTo() mixes an
+     * owner-exception, a per-post-type privacy key mapping
+     * (TYPE_PRIVACY_KEY), and a follow-graph lookup for `followers`
+     * visibility. Re-expressing that exact logic inside an aggregation
+     * pipeline would duplicate the single source of truth outside PHP and
+     * risk drifting out of sync with isVisibleTo() as privacy rules evolve.
+     * At this app's real-world scale (tens/hundreds of posts, not millions),
+     * over-fetching a widening candidate window from
      * the front of the query, filtering it, and slicing out the requested
      * page is simpler and correct. The loop is capped at
      * self::MAX_WIDEN_ATTEMPTS so a viewer who can see almost nothing cannot
@@ -146,7 +156,7 @@ class FeedService
      * Whether $viewer is allowed to see $post, based on the poster's
      * `privacy_settings` for the post's content type. Delegates to
      * isVisibleTo(), so callers outside this service (e.g.
-     * FeedController::kudos/comment) reuse the exact same privacy rules as
+     * FeedController::like/comment) reuse the exact same privacy rules as
      * formatPosts()/paginateVisiblePosts() instead of duplicating them.
      *
      * Accepts an already-resolved $poster so callers that need it for
@@ -161,13 +171,6 @@ class FeedService
     /**
      * Whether $viewer is allowed to see $post, based on the poster's
      * `privacy_settings` for the post's content type.
-     *
-     * NOTE: this codebase has no follow-graph / followers relationship yet
-     * (verified: no "follow" model, table, or relation exists anywhere in
-     * app/). Until one exists, 'followers'-visibility content is treated as
-     * visible only to the poster themself, same as 'private' — everyone else
-     * only sees 'public' content. Revisit this once a real follow graph
-     * exists so 'followers' can check actual follower relationships instead.
      */
     private function isVisibleTo(SocialPost $post, ?User $poster, ?User $viewer): bool
     {
@@ -188,6 +191,28 @@ class FeedService
         $settings = $poster->privacy_settings ?? User::defaultPrivacySettings();
         $visibility = $settings[$privacyKey] ?? 'public';
 
-        return $visibility === 'public';
+        return match ($visibility) {
+            'public' => true,
+            'followers' => $viewer !== null && $this->followsPoster($viewer, $poster),
+            default => false,   // 'private' and any unknown value: poster only
+        };
+    }
+
+    /**
+     * Whether $viewer follows $poster (viewer → poster direction only; the
+     * reverse grants nothing). Memoized per viewer per FeedService instance:
+     * one `pluck('followed_id')` query per viewer per request, regardless of
+     * how many posts/widen-attempts paginateVisiblePosts() runs through.
+     */
+    private function followsPoster(User $viewer, User $poster): bool
+    {
+        $viewerId = (string) $viewer->_id;
+
+        $this->followingCache[$viewerId] ??= array_fill_keys(
+            array_map('strval', Follow::where('follower_id', $viewerId)->pluck('followed_id')->all()),
+            true
+        );
+
+        return isset($this->followingCache[$viewerId][(string) $poster->_id]);
     }
 }
