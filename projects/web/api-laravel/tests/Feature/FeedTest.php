@@ -55,7 +55,10 @@ class FeedTest extends TestCase
         ]);
 
         $response->assertStatus(201)
-            ->assertJsonPath('post.type', 'workout_completed');
+            ->assertJsonPath('post.type', 'workout_completed')
+            ->assertJsonPath('post.likes_count', 0)
+            ->assertJsonPath('post.liked', false)
+            ->assertJsonMissingPath('post.kudos_count');
     }
 
     public function test_feed_post_store_requires_authentication(): void
@@ -84,9 +87,8 @@ class FeedTest extends TestCase
         $userA = $this->createTestUser();
         $userB = $this->createTestUser();
 
-        // Default privacy for 'meals' is 'followers'. There is no follow-graph
-        // in this codebase, so a followers-visibility post must be visible
-        // only to the poster themself for now.
+        // Default privacy for 'meals' is 'followers'. userB does not follow
+        // userA, so this post must stay invisible to userB.
         $this->actingAs($userA, 'sanctum')->postJson('/api/feed', [
             'type' => 'meal_logged',
             'payload' => ['message' => 'private meal from A'],
@@ -132,11 +134,11 @@ class FeedTest extends TestCase
     {
         $userA = $this->createTestUser();
         // userB's meal posts are made public here on purpose: 'meals' defaults
-        // to 'followers' visibility and there is no follow-graph in this
-        // codebase yet, so a followers-visibility post from another user
-        // would otherwise be filtered out of userA's feed (see FeedService
-        // privacy filtering). This test is about per-post user attachment
-        // across authors, not about privacy rules, so we make B's post public.
+        // to 'followers' visibility, and userA does not follow userB, so a
+        // followers-visibility post from userB would otherwise be filtered
+        // out of userA's feed (see FeedService privacy filtering). This test
+        // is about per-post user attachment across authors, not about
+        // privacy rules, so we make B's post public.
         $userB = $this->createTestUser(['meals' => 'public']);
 
         $this->actingAs($userA, 'sanctum')->postJson('/api/feed', [
@@ -201,9 +203,8 @@ class FeedTest extends TestCase
     public function test_feed_index_returns_full_page_when_invisible_posts_occupy_naive_fetch_window(): void
     {
         $viewer = $this->createTestUser();
-        // Default privacy for 'meals' is 'followers', which this codebase
-        // treats as poster-only visibility (no follow graph yet) — so these
-        // posts are invisible to $viewer.
+        // Default privacy for 'meals' is 'followers', and $viewer does not
+        // follow $otherUser — so these posts are invisible to $viewer.
         $otherUser = $this->createTestUser();
 
         // 60 NEWEST posts, all invisible to $viewer. A naive
@@ -291,6 +292,9 @@ class FeedTest extends TestCase
 
         $response->assertStatus(200);
         $this->assertCount(1, $response->json('post.comments'));
+        $response->assertJsonPath('post.likes_count', 0)
+            ->assertJsonPath('post.liked', false)
+            ->assertJsonMissingPath('post.kudos_count');
     }
 
     public function test_user_can_like_other_users_public_post(): void
@@ -339,9 +343,8 @@ class FeedTest extends TestCase
     public function test_user_gets_404_liking_other_users_followers_only_post(): void
     {
         $userA = $this->createTestUser();
-        // Default privacy for 'meals' is 'followers'. There is no follow-graph
-        // in this codebase, so this post must be invisible (and un-like-able)
-        // to anyone other than the poster.
+        // Default privacy for 'meals' is 'followers'. userA does not follow
+        // userB, so this post must stay invisible (and un-like-able) to userA.
         $userB = $this->createTestUser();
 
         $post = SocialPost::create([
