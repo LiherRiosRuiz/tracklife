@@ -27,18 +27,18 @@ const stats = [
   title="TRACKLIFE — Tu cuerpo. Tus datos. Tu control."
   description="Plataforma integral de fitness: nutrición, entrenamiento, biométricos y comunidad. Todo conectado, todo medible, todo tuyo."
 >
-  <!-- Hero -->
-  <section class="relative overflow-hidden">
-    <div class="pointer-events-none absolute -top-40 left-1/2 h-[70vh] w-[70vh] -translate-x-1/2 rounded-full opacity-25 blur-3xl"
-         style="background: radial-gradient(circle, var(--color-accent), transparent 70%)"></div>
+  <!-- Hero (energy: única zona con tratamiento La Velada) -->
+  <section class="energy energy-sheen relative overflow-hidden">
+    <div class="energy-glow pointer-events-none absolute -top-40 left-1/2 h-[70vh] w-[70vh] -translate-x-1/2 rounded-full opacity-25 blur-3xl"
+         style="background: radial-gradient(circle, var(--color-energy), transparent 70%)"></div>
     <div class="relative max-w-5xl mx-auto px-6 pt-24 pb-20 text-center">
       <div class="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-4 py-1.5 text-xs text-fg-muted mb-8">
         <span class="h-1.5 w-1.5 rounded-full bg-accent animate-pulse"></span>
         Plataforma fitness open source
       </div>
-      <h1 class="text-6xl md:text-8xl font-extrabold tracking-tight leading-none mb-6">
+      <h1 class="text-6xl md:text-display font-extrabold tracking-tight leading-none mb-6">
         Tu cuerpo.<br />
-        <span class="brand-gradient">Tus datos.</span><br />
+        <span class="energy-text">Tus datos.</span><br />
         Tu control.
       </h1>
       <p class="text-lg md:text-xl text-fg-muted max-w-2xl mx-auto mb-10 leading-relaxed">
@@ -47,7 +47,7 @@ const stats = [
       </p>
       <div class="flex flex-wrap justify-center gap-4">
         <a href={`${appUrl}/registro`}
-           class="rounded-xl bg-accent px-8 py-4 text-base font-bold text-on-accent hover:bg-accent-strong transition-colors shadow-lg">
+           class="energy-btn energy-glow rounded-xl px-8 py-4 text-base font-bold transition-[filter] hover:brightness-110 shadow-hype">
           Empezar gratis →
         </a>
         <a href="/como-funciona"
@@ -58,12 +58,12 @@ const stats = [
     </div>
   </section>
 
-  <!-- Stats -->
-  <section class="border-y border-border bg-surface/50 py-12">
+  <!-- Stats (energy) -->
+  <section class="energy border-y border-border bg-surface/50 py-12">
     <div class="max-w-4xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
       {stats.map((s) => (
         <div>
-          <div class="text-4xl font-extrabold text-accent" style="font-variant-numeric: tabular-nums">{s.value}</div>
+          <div class="energy-text text-4xl font-extrabold" style="font-variant-numeric: tabular-nums">{s.value}</div>
           <div class="mt-1 text-sm text-fg-muted">{s.label}</div>
         </div>
       ))}
@@ -110,17 +110,17 @@ const stats = [
     </div>
   </section>
 
-  <!-- CTA Final -->
-  <section class="max-w-3xl mx-auto px-6 py-28 text-center">
+  <!-- CTA Final (energy) -->
+  <section class="energy max-w-3xl mx-auto px-6 py-28 text-center">
     <h2 class="text-4xl md:text-6xl font-extrabold mb-4 leading-tight">
       Deja de adivinar.<br />
-      <span class="brand-gradient">Empieza a medir.</span>
+      <span class="energy-text">Empieza a medir.</span>
     </h2>
     <p class="text-fg-muted mb-10 max-w-lg mx-auto text-lg">
       Toma el control de tu transformación con datos reales. Es gratis.
     </p>
     <a href={`${appUrl}/registro`}
-       class="inline-block rounded-xl bg-accent px-12 py-5 text-xl font-extrabold text-on-accent hover:bg-accent-strong transition-colors shadow-xl">
+       class="energy-btn energy-glow inline-block rounded-xl px-12 py-5 text-xl font-extrabold transition-[filter] hover:brightness-110 shadow-hype">
       Crear cuenta gratis
     </a>
   </section>

@@ -34,8 +34,10 @@ const modules = [
   title="Cómo funciona TRACKLIFE — Plataforma fitness integral"
   description="Descubre cómo TRACKLIFE integra nutrición, entrenamiento, biométricos y coach IA en una sola plataforma para tu transformación física."
 >
-  <section class="max-w-4xl mx-auto px-6 pt-20 pb-8 text-center">
-    <h1 class="text-4xl md:text-6xl font-black mb-4">Cómo funciona</h1>
+  <section class="energy max-w-4xl mx-auto px-6 pt-20 pb-8 text-center">
+    <h1 class="text-4xl md:text-display font-black mb-4">
+      <span class="energy-text">Cómo funciona</span>
+    </h1>
     <p class="text-fg-muted text-lg max-w-2xl mx-auto">
       TRACKLIFE conecta cuatro módulos en un ecosistema coherente. Los datos de cada módulo alimentan a los demás.
     </p>
@@ -64,11 +66,11 @@ const modules = [
     ))}
   </section>
 
-  <section class="border-t border-border bg-surface/30 py-20 text-center">
-    <h2 class="text-3xl font-black mb-4">¿Listo para empezar?</h2>
+  <section class="energy border-t border-border bg-surface/30 py-20 text-center">
+    <h2 class="text-3xl font-black mb-4"><span class="energy-text">¿Listo para empezar?</span></h2>
     <p class="text-fg-muted mb-8">Es gratis. Sin tarjeta de crédito.</p>
     <a href={`${appUrl}/registro`}
-       class="inline-block rounded-2xl bg-accent px-10 py-4 text-lg font-bold text-on-accent hover:bg-accent-strong transition-colors">
+       class="energy-btn energy-glow inline-block rounded-2xl px-10 py-4 text-lg font-bold transition-[filter] hover:brightness-110 shadow-hype">
       Crear cuenta gratis
     </a>
   </section>
