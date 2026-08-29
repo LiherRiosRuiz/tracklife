@@ -26,25 +26,25 @@ Chain strategy: feature-branch-chain
 
 ## Phase 1: Follow Backend Foundation (api-laravel, Strict TDD) — PR1a
 
-- [ ] 1.1 Create `app/Models/Follow.php`: mongodb, `$collection='follows'`, `$fillable=['follower_id','followed_id']`.
-- [ ] 1.2 Create migration `2026_08_29_120000_add_unique_index_to_follows_collection.php`: unique `{follower_id,followed_id}`; `down()` drops it.
-- [ ] 1.3 Create `StoreFollowRequest.php`: merge route `{id}` as `followed_id`; reject self-follow via `Rule::notIn`.
-- [ ] 1.4 RED: `FollowTest.php` — auth required on all 3 routes incl. `GET /api/follows` (401).
-- [ ] 1.5 GREEN: register `GET /follows`, `POST/DELETE /users/{id}/follow` in `auth:sanctum` group; stub `FollowController`.
-- [ ] 1.6 RED: store scenarios — 201 new, 200 duplicate, 422 self-follow, 404 unknown target.
-- [ ] 1.7 GREEN: implement `store()` — `abort_if` unknown user, insert + catch `BulkWriteException` 11000.
-- [ ] 1.8 RED: destroy scenarios — 200 removed, 200 idempotent absent, only deletes caller's own row.
-- [ ] 1.9 GREEN: implement `destroy()` scoped to `follower_id`.
-- [ ] 1.10 RED: `index_returns_only_callers_following_ids`; `unique_index_rejects_duplicate_at_db_level`.
-- [ ] 1.11 GREEN: implement `index()` → `{following_ids: string[]}`.
-- [ ] 1.12 REFACTOR: `composer test --filter=FollowTest`; `./vendor/bin/pint`.
+- [x] 1.1 Create `app/Models/Follow.php`: mongodb, `$collection='follows'`, `$fillable=['follower_id','followed_id']`.
+- [x] 1.2 Create migration `2026_08_29_120000_add_unique_index_to_follows_collection.php`: unique `{follower_id,followed_id}`; `down()` drops it.
+- [x] 1.3 Create `StoreFollowRequest.php`: merge route `{id}` as `followed_id`; reject self-follow via `Rule::notIn`.
+- [x] 1.4 RED: `FollowTest.php` — auth required on all 3 routes incl. `GET /api/follows` (401).
+- [x] 1.5 GREEN: register `GET /follows`, `POST/DELETE /users/{id}/follow` in `auth:sanctum` group; stub `FollowController`.
+- [x] 1.6 RED: store scenarios — 201 new, 200 duplicate, 422 self-follow, 404 unknown target.
+- [x] 1.7 GREEN: implement `store()` — `abort_if` unknown user, insert + catch `BulkWriteException` 11000.
+- [x] 1.8 RED: destroy scenarios — 200 removed, 200 idempotent absent, only deletes caller's own row.
+- [x] 1.9 GREEN: implement `destroy()` scoped to `follower_id`.
+- [x] 1.10 RED: `index_returns_only_callers_following_ids`; `unique_index_rejects_duplicate_at_db_level`.
+- [x] 1.11 GREEN: implement `index()` → `{following_ids: string[]}`.
+- [x] 1.12 REFACTOR: `composer test --filter=FollowTest`; `./vendor/bin/pint`.
 
 ## Phase 2: Follow Feed-Visibility Wiring (api-laravel, Strict TDD) — PR1a
 
-- [ ] 2.1 RED in `FeedTest.php`: follower sees followers-only post; non-follower filtered + 404 on like; followed-but-not-following sees nothing; poster always sees own post.
-- [ ] 2.2 GREEN: `FeedService::isVisibleTo()` → `match` w/ `followsPoster()` + `$followingCache`; remove stale TODO (L165-171) + docblock clause (L104-107).
-- [ ] 2.3 Comment-only: update `DashboardTest.php` L114-118, L167-169 (follow-graph now real; assertions unchanged).
-- [ ] 2.4 REFACTOR: full `composer test` (FollowTest, FeedTest, DashboardTest green, no regressions).
+- [x] 2.1 RED in `FeedTest.php`: follower sees followers-only post; non-follower filtered + 404 on like; followed-but-not-following sees nothing; poster always sees own post.
+- [x] 2.2 GREEN: `FeedService::isVisibleTo()` → `match` w/ `followsPoster()` + `$followingCache`; remove stale TODO (L165-171) + docblock clause (L104-107).
+- [x] 2.3 Comment-only: update `DashboardTest.php` L114-118, L167-169 (follow-graph now real; assertions unchanged).
+- [x] 2.4 REFACTOR: full `composer test` (FollowTest, FeedTest, DashboardTest green, no regressions).
 
 ## Phase 3: Follow UI (web3-next, no test runner — lint+build verified) — PR1b
 
