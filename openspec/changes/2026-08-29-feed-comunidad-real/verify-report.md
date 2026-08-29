@@ -172,3 +172,147 @@ just trusted from apply-progress — exact assertion counts match), the spec/des
 discrepancy correction was independently confirmed consistent across spec text,
 design code, and test, and zero regressions across the full 215-test suite.
 Ready for `sdd-archive` of this PR1a slice (Phase 3-6 remain tracked, unstarted).
+
+---
+
+# Verify Report: Follow UI (PR1b, web3-next)
+
+```yaml
+schema: gentle-ai.verify-result/v1
+verdict: pass
+blockers: 0
+critical_findings: 0
+requirements: 8/8 (social-follow, backend-scoped; PR1b adds no new spec requirements — UI is design-governed only, see Scope)
+scenarios: 0/0 new (no spec scenario targets web3-next UI; frontend correctness verified via source inspection + lint/build per design's Testing Strategy row, config testing.web3-next.ready: false)
+test_command: N/A - no test runner installed for web3-next (testing.web3-next.ready: false)
+test_exit_code: N/A
+test_output_hash: N/A
+build_command: npm run build (cd projects/web/web3-next)
+build_exit_code: 0
+build_output_hash: sha256:9ae1d5e56c46cfbf45dad1e9ffa0485c4f68674ad05d99231ecbadb3c08ca686
+lint_command: npm run lint (cd projects/web/web3-next)
+lint_exit_code: 0
+lint_output_hash: sha256:0b9393ddbc938d263e4dc0aaf1544effad1da25c95a3481b597145078e56fac3
+```
+
+## Scope
+
+PR1b only: Phase 3 (Follow UI, `web3-next`) from `tasks.md`. Phase 1-2
+(follow backend, previously verified PASS in the PR1a report above, merged
+into this branch's history) are not re-verified here. Phase 4-6
+(kudos→like rename + docs, `[ ]` unchecked in `tasks.md`) are out of
+scope by design and are not flagged as missing.
+Branch: `feat/feed-comunidad-real-02-follow-ui` (base:
+`feat/feed-comunidad-real-01-follow-backend`), commit `97a6edf`.
+Mode: Standard — `testing.web3-next.ready: false`, no vitest/jest
+installed, so Strict TDD does not apply to this slice even though the
+global `strict_tdd: true` marker is set (no runner exists). Verified via
+independent re-run of `npm run lint` and `npm run build`, not by trusting
+`apply-progress.md`'s reported numbers.
+
+## Completeness
+
+| Metric | Value |
+|--------|-------|
+| Phase 3 tasks (3.1-3.5) | 5/5 complete (`tasks.md` confirmed) |
+| Phase 4-6 tasks | 0/N, correctly left unchecked (future PR2) |
+
+## Build & Lint Execution (independently re-run, not trusted from apply-progress)
+
+**Build**: PASS — `npm run build` inside `projects/web/web3-next`: Turbopack
+compiled successfully in 4.8s, TypeScript check passed, all 47 routes
+generated including `○ /app/comunidad/buscar` (static) and
+`ƒ /app/comunidad/perfil/[id]` (dynamic). Exit code 0.
+
+**Lint**: PASS — `npm run lint`: 0 errors, 5 warnings, all pre-existing
+`@next/next/no-img-element` warnings on `<img>` tags this change did not
+introduce (`buscar/page.tsx:35`, `perfil/[id]/page.tsx:53`, plus 3 more in
+files untouched by this PR: `entrenamiento/gym/ejercicios/[id]/page.tsx`,
+`entrenamiento/gym/ejercicios/page.tsx`, `ExercisePickerModal.tsx`). Exit
+code 0. Numbers match `apply-progress.md`'s PR1b claims exactly.
+
+**Tests**: N/A — no test runner installed for `web3-next`
+(`testing.web3-next.ready: false`, confirmed proposal risk, not silently
+skipped). This is the documented project convention for this subproject,
+not a verification gap invented by this batch.
+
+## Git Scope Verification
+
+`git show --stat 97a6edf` confirms exactly the 4 code files the design's
+"web3-next rows" and `tasks.md` Phase 3 call for, plus `tasks.md` and
+`apply-progress.md` bookkeeping — no `api-laravel`/`web2-nuxt` changes, no
+Phase 4-5 `kudos`→`like` touches:
+
+| File | Insertions/Deletions |
+|---|---|
+| `projects/web/web3-next/lib/api.ts` | +9 |
+| `projects/web/web3-next/components/FollowButton.tsx` | +48 (new) |
+| `projects/web/web3-next/app/app/comunidad/perfil/[id]/page.tsx` | +15 |
+| `projects/web/web3-next/app/app/comunidad/buscar/page.tsx` | +36/-13 |
+
+Code-only diff (excluding SDD bookkeeping docs) is ~108 lines added, well
+under the 400-line review budget, matching the ~95-line forecast in
+`tasks.md`'s Review Workload Forecast.
+
+## Design Coherence Matrix (web3-next Follow UI, per design.md "Follow button integration")
+
+| Design element | Implemented as specified? | Evidence |
+|---|---|---|
+| `FollowButton` props `{userId, initialFollowing}` | Yes | `FollowButton.tsx:8-14` |
+| No optimistic UI (D9) — state only from server response | Yes | `setFollowing(res.following)` runs only after `await api.followUser/unfollowUser` resolves; on `catch`, `following` is left untouched, only `error` is set | 
+| `pending` state gates re-entrancy | Yes | `pending=true` before the call, `pending=false` in `finally` |
+| `disabled={pending \|\| !token}` | Yes | `FollowButton.tsx:41`, exact match |
+| Variant/label swap: `primary`/"Seguir" not following, `secondary`/"Siguiendo" following | Yes | `FollowButton.tsx:40,43`, exact match |
+| Inline error styling `<p className="text-xs text-danger">` | Yes | `FollowButton.tsx:45`, byte-identical to design's snippet and to `FeedList.tsx`'s existing convention |
+| `perfil/[id]/page.tsx`: second `useApiData(() => api.follows(token!), [token], { enabled: !!token })` alongside existing `userProfile` call | Yes | `page.tsx:33-37` |
+| `perfil/[id]/page.tsx`: self-view guard hides button when `id === currentUser.id` | Yes | `isSelf = currentUser?.id === id` (`page.tsx:45`), `{!isSelf && <FollowButton .../>}` (`page.tsx:76-78`) |
+| `buscar/page.tsx`: one page-level `following_ids` hydration, not per-card | Yes | Single `useApiData` call in `BuscarPage`, passed down as `isFollowing` prop (`page.tsx:93-97, 100, 141`) |
+| `buscar/page.tsx`: self-view guard per card | Yes | `isSelf={currentUser?.id === user.id}` computed per row (`page.tsx:142`), `UserCard` renders `{!isSelf && <FollowButton .../>}` (`page.tsx:53`) |
+| `lib/api.ts` contract shape (`follows`, `followUser`, `unfollowUser`) | Yes | `api.ts:171-178`, byte-identical to design's TS snippet |
+
+**Self-view guard verification (explicit check requested)**: Both pages
+correctly compute `isSelf`/`isSelf` from `useAuth().user.id` compared
+against the profile/row's user id, and both wrap the `<FollowButton>` in a
+`{!isSelf && ...}` conditional — the button is genuinely absent from the
+rendered tree (not merely disabled) when viewing/searching one's own
+account, making the backend's 422 self-follow path unreachable from the
+UI, as design and tasks.md 3.3/3.4 require.
+
+## Correctness (Static Evidence)
+
+| Requirement | Status | Notes |
+|---|---|---|
+| `lib/api.ts` follow methods | Implemented | Signatures match design's contract table exactly |
+| `FollowButton.tsx` | Implemented | Pessimistic UI, pending/disabled/error handling all match D9 |
+| `perfil/[id]/page.tsx` integration | Implemented | Hydration + self-guard match design |
+| `buscar/page.tsx` integration | Implemented | Page-level hydration (not per-card) + per-row self-guard match design |
+
+## Issues Found
+
+**CRITICAL**: None
+
+**WARNING**: None
+
+**SUGGESTION**:
+- Unrelated dirty file `projects/web/web2-nuxt/package-lock.json` remains
+  modified in the working tree (confirmed still present via `git status`
+  during this verify run). Flagged in the PR1a verify report and the PR1a/
+  PR1b apply-progress notes; still not cleaned up. Carry forward before
+  PR2, or clean it up out-of-band — it is unrelated to this change.
+
+## Verdict
+
+**PASS**
+
+Phase 3 (5/5 tasks) complete and matches `tasks.md`'s checklist and the
+design's "Follow button integration (web3-next)" section point-for-point,
+independently confirmed via source inspection (no rubber-stamping the
+apply report). `npm run lint` (0 errors) and `npm run build` (0 errors,
+all 47 routes including both touched pages) were re-run independently
+during this verify pass, not just trusted from `apply-progress.md` — exit
+codes and warning counts match exactly. No optimistic UI, no unreachable-
+guard, and no prop/behavior deviation from the design were found. This is
+a lint+build verification by explicit, documented project convention
+(`testing.web3-next.ready: false`), not a silently skipped test suite.
+Ready for `sdd-archive` of this PR1b slice; PR2 (Phase 4-6) remains
+tracked and unstarted, as expected.

@@ -168,6 +168,15 @@ export const api = {
   userProfile: (id: string) =>
     request<{ user: SearchUser }>(`/api/users/${id}/profile`),
 
+  follows: (token: string) =>
+    request<{ following_ids: string[] }>("/api/follows", {}, token),
+
+  followUser: (token: string, id: string) =>
+    request<{ following: boolean }>(`/api/users/${id}/follow`, { method: "POST" }, token),
+
+  unfollowUser: (token: string, id: string) =>
+    request<{ following: boolean }>(`/api/users/${id}/follow`, { method: "DELETE" }, token),
+
   productByBarcode: (barcode: string) =>
     request<{ product: Product }>(`/api/products/barcode/${barcode}`),
 
