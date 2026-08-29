@@ -2,22 +2,22 @@
 
 /* =============================================================================
    TrackLife — Design System "Bioluminiscencia"
-   Dark profundo verde-petroleo + lima electrico. Datos protagonistas.
-   Fuente de verdad visual: .sdd/skills/design-system.md
+   Dark profundo casi-monocromo (Tesla restraint) + lima electrico. Datos protagonistas.
+   Fuente de verdad visual: docs/design-system.md
    ============================================================================= */
 
 @theme {
-  /* — Superficies (dark, tinte verde-petroleo) — */
-  --color-bg:            oklch(16% 0.018 165);
-  --color-surface:       oklch(20% 0.020 165);
-  --color-surface-2:     oklch(24% 0.022 165);
-  --color-border:        oklch(28% 0.020 165);
-  --color-border-strong: oklch(36% 0.022 165);
+  /* — Superficies (dark, tinte cool faint hue-165) — */
+  --color-bg:            oklch(15% 0.006 165);
+  --color-surface:       oklch(19% 0.007 165);
+  --color-surface-2:     oklch(23% 0.008 165);
+  --color-border:        oklch(27% 0.006 165);
+  --color-border-strong: oklch(34% 0.008 165);
 
   /* — Texto — */
-  --color-fg:            oklch(97% 0.012 150);
-  --color-fg-muted:      oklch(72% 0.018 160);
-  --color-fg-subtle:     oklch(58% 0.016 160);
+  --color-fg:            oklch(97% 0.004 150);
+  --color-fg-muted:      oklch(70% 0.008 160);
+  --color-fg-subtle:     oklch(55% 0.008 160);
 
   /* — Marca / accent — */
   --color-accent:        oklch(82% 0.21 142);
