@@ -117,12 +117,14 @@ Prep técnica **completa** (CORS por env, `.env.production.example`, `assetlinks
 - Crear endpoint `POST/DELETE /api/favorites` en Laravel
 - Migrar de localStorage a API
 
-### P4.3 Feed de comunidad real
+### P4.3 Feed de comunidad real [x] COMPLETADO 2026-08-29
 
-- `GET /api/feed` ya existe pero devuelve datos mock
-- Implementar lógica real: posts de usuarios que sigues o todos si es público
-- `POST /api/feed` para crear posts
-- Botón "Like" conectado: `POST /api/feed/{id}/like`
+**Resultado:**
+- `GET /api/feed`, `POST /api/feed`, `POST /api/feed/{id}/comments` — reales desde el inicio, respaldados por `SocialPost` (Mongo); nunca fueron mock
+- Grafo de follow real: `Follow` model + `GET /api/follows` + `POST/DELETE /api/users/{id}/follow`. La visibilidad `followers` ahora se resuelve contra este grafo (antes degradaba a solo-autor)
+- Botón "Like" conectado y toggleable: `POST /api/feed/{id}/like` (antes `kudos`, solo-suma sin poder quitar); cada lectura del feed incluye `likes_count` + `liked` por viewer
+- `FollowButton` integrado en `comunidad/perfil/[id]` y `comunidad/buscar` (web3-next)
+- `FollowTest.php` (10 tests) + `FeedTest.php` ampliado — 217/217 tests verdes
 
 ### P4.4 Coach IA básico
 
@@ -178,7 +180,6 @@ Prep técnica **completa** (CORS por env, `.env.production.example`, `assetlinks
 |------|---------|-------|
 | Plan semanal estático | `coach/plan/page.tsx` L20-28 | TODO: endpoint /api/coach/plan |
 | Favoritos en localStorage | `nutricion/favoritos/page.tsx` | TODO: persistir en API (P4.2) |
-| Feed mock | `api-laravel/FeedController.php` | TODO: lógica real de following (P4.3) |
 | Coach insights mock | `api-laravel/CoachController.php` | TODO: basado en datos reales (P4.4) |
 | Deltas biométricos | `BiometricController::today()` | Gap documentado — decidir P3 vs P4 |
 

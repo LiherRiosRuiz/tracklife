@@ -52,7 +52,7 @@ class FeedService
         ]);
     }
 
-    public function formatPost(SocialPost $post, ?User $user = null): array
+    public function formatPost(SocialPost $post, ?User $user = null, ?User $viewer = null): array
     {
         $user = $user ?? User::find($post->user_id);
 
@@ -60,7 +60,8 @@ class FeedService
             'id' => (string) $post->_id,
             'type' => $post->type,
             'payload' => $post->payload,
-            'kudos_count' => $post->kudos_count ?? 0,
+            'likes_count' => $post->kudos_count ?? 0,
+            'liked' => $viewer !== null && in_array((string) $viewer->_id, $post->kudos_user_ids ?? [], true),
             'comments' => $post->comments ?? [],
             'created_at' => $post->created_at?->toIso8601String(),
             'user' => $user ? [
@@ -86,7 +87,7 @@ class FeedService
 
         return $posts
             ->filter(fn (SocialPost $post) => $this->isVisibleTo($post, $users->get($post->user_id), $viewer))
-            ->map(fn (SocialPost $post) => $this->formatPost($post, $users->get($post->user_id)))
+            ->map(fn (SocialPost $post) => $this->formatPost($post, $users->get($post->user_id), $viewer))
             ->values()
             ->all();
     }
@@ -155,7 +156,7 @@ class FeedService
      * Whether $viewer is allowed to see $post, based on the poster's
      * `privacy_settings` for the post's content type. Delegates to
      * isVisibleTo(), so callers outside this service (e.g.
-     * FeedController::kudos/comment) reuse the exact same privacy rules as
+     * FeedController::like/comment) reuse the exact same privacy rules as
      * formatPosts()/paginateVisiblePosts() instead of duplicating them.
      *
      * Accepts an already-resolved $poster so callers that need it for

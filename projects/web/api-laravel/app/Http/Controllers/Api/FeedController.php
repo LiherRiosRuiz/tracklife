@@ -42,24 +42,32 @@ class FeedController extends Controller
 
         $post = $this->feedService->createPost($request->user(), $data['type'], $data['payload']);
 
-        return response()->json(['post' => $this->feedService->formatPost($post)], 201);
+        return response()->json(['post' => $this->feedService->formatPost($post, $request->user(), $request->user())], 201);
     }
 
-    public function kudos(Request $request, string $id): JsonResponse
+    /**
+     * Toggleable like: the first call adds the requester's like, a second
+     * call removes it. Symmetric on purpose — the caller never needs to know
+     * whether this call added or removed a like, only the resulting state.
+     */
+    public function like(Request $request, string $id): JsonResponse
     {
         [$post, $poster] = $this->findVisiblePostOrAbort($id, $request->user());
 
         $userId = (string) $request->user()->_id;
-        $kudos = $post->kudos_user_ids ?? [];
+        $likes = $post->kudos_user_ids ?? [];
 
-        if (! in_array($userId, $kudos, true)) {
-            $kudos[] = $userId;
-            $post->kudos_user_ids = $kudos;
-            $post->kudos_count = count($kudos);
-            $post->save();
-        }
+        $liked = in_array($userId, $likes, true);
+        $likes = $liked ? array_values(array_diff($likes, [$userId])) : [...$likes, $userId];
+        $post->kudos_user_ids = $likes;
+        $post->kudos_count = count($likes);
+        $post->save();
 
-        return response()->json(['post' => $this->feedService->formatPost($post->fresh(), $poster)]);
+        return response()->json([
+            'liked' => ! $liked,
+            'likes_count' => count($likes),
+            'post' => $this->feedService->formatPost($post->fresh(), $poster, $request->user()),
+        ]);
     }
 
     public function comment(StoreFeedCommentRequest $request, string $id): JsonResponse
@@ -78,7 +86,7 @@ class FeedController extends Controller
         $post->comments = $comments;
         $post->save();
 
-        return response()->json(['post' => $this->feedService->formatPost($post->fresh(), $poster)]);
+        return response()->json(['post' => $this->feedService->formatPost($post->fresh(), $poster, $request->user())]);
     }
 
     /**

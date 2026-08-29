@@ -56,17 +56,17 @@ Chain strategy: feature-branch-chain
 
 ## Phase 4: Like Toggle Rename — Backend (api-laravel, Strict TDD) — PR2, ships only with Phase 5
 
-- [ ] 4.1 RED in `FeedTest.php`: `/kudos`→`/like` (L268,310,355), `kudos_count`→`likes_count` (L271,313), toggle-back case, per-viewer `liked` on `/api/feed`.
-- [ ] 4.2 GREEN: `routes/api.php` rename; `FeedController::like()` symmetric toggle; `FeedService::formatPost()` emits `likes_count`/`liked`, drops `kudos_count`; `formatPosts` forwards `$viewer`.
-- [ ] 4.3 REFACTOR: full `composer test`.
+- [x] 4.1 RED in `FeedTest.php`: `/kudos`→`/like` (L268,310,355), `kudos_count`→`likes_count` (L271,313), toggle-back case, per-viewer `liked` on `/api/feed`.
+- [x] 4.2 GREEN: `routes/api.php` rename; `FeedController::like()` symmetric toggle; `FeedService::formatPost()` emits `likes_count`/`liked`, drops `kudos_count`; `formatPosts` forwards `$viewer`.
+- [x] 4.3 REFACTOR: full `composer test`.
 
 ## Phase 5: Like Toggle Rename — Frontend (web3-next, lint+build verified) — PR2, same commit as Phase 4
 
-- [ ] 5.1 `lib/api.ts`: `kudos`→`like`; `FeedPost` type drops `kudos_count`, adds `likes_count`/`liked`.
-- [ ] 5.2 `FeedList.tsx`: `showKudos`→`showLikes`, `handleKudos`→`handleLike`, `kudosError`→`likeError`, Heart filled on `liked`.
-- [ ] 5.3 `explorar/page.tsx` L24: `showKudos={false}`→`showLikes={false}`.
-- [ ] 5.4 Verify: `npm run lint && npm run build`. Do not merge Phase 4 without Phase 5 (dead route / missing field otherwise).
+- [x] 5.1 `lib/api.ts`: `kudos`→`like`; `FeedPost` type drops `kudos_count`, adds `likes_count`/`liked`.
+- [x] 5.2 `FeedList.tsx`: `showKudos`→`showLikes`, `handleKudos`→`handleLike`, `kudosError`→`likeError`, Heart filled on `liked`.
+- [x] 5.3 `explorar/page.tsx` L24: `showKudos={false}`→`showLikes={false}`.
+- [x] 5.4 Verify: `npm run lint && npm run build`. Do not merge Phase 4 without Phase 5 (dead route / missing field otherwise).
 
 ## Phase 6: Docs — PR2
 
-- [ ] 6.1 `docs/Roadmap TrackLife.md`: correct stale P4.3 section (feed/kudos are not mock).
+- [x] 6.1 `docs/Roadmap TrackLife.md`: correct stale P4.3 section (feed/kudos are not mock).

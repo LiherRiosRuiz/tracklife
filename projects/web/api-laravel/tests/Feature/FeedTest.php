@@ -249,14 +249,14 @@ class FeedTest extends TestCase
         ));
     }
 
-    // ─── Kudos/comment: visibility must be enforced the same as index ──────────
+    // ─── Like/comment: visibility must be enforced the same as index ───────────
 
-    public function test_user_can_kudos_own_post_regardless_of_privacy(): void
+    public function test_user_can_like_own_post_regardless_of_privacy(): void
     {
         $userA = $this->createTestUser();
 
         // Default privacy for 'meals' is 'followers', but it's the poster's
-        // own post, so it must always be kudos-able by herself.
+        // own post, so it must always be like-able by herself.
         $post = SocialPost::create([
             'user_id' => (string) $userA->_id,
             'type' => 'meal_logged',
@@ -266,10 +266,10 @@ class FeedTest extends TestCase
             'comments' => [],
         ]);
 
-        $response = $this->actingAs($userA, 'sanctum')->postJson("/api/feed/{$post->_id}/kudos");
+        $response = $this->actingAs($userA, 'sanctum')->postJson("/api/feed/{$post->_id}/like");
 
         $response->assertStatus(200)
-            ->assertJsonPath('post.kudos_count', 1);
+            ->assertJsonPath('post.likes_count', 1);
     }
 
     public function test_user_can_comment_own_post_regardless_of_privacy(): void
@@ -293,7 +293,7 @@ class FeedTest extends TestCase
         $this->assertCount(1, $response->json('post.comments'));
     }
 
-    public function test_user_can_kudos_other_users_public_post(): void
+    public function test_user_can_like_other_users_public_post(): void
     {
         $userA = $this->createTestUser();
         $userB = $this->createTestUser();
@@ -308,10 +308,10 @@ class FeedTest extends TestCase
             'comments' => [],
         ]);
 
-        $response = $this->actingAs($userA, 'sanctum')->postJson("/api/feed/{$post->_id}/kudos");
+        $response = $this->actingAs($userA, 'sanctum')->postJson("/api/feed/{$post->_id}/like");
 
         $response->assertStatus(200)
-            ->assertJsonPath('post.kudos_count', 1);
+            ->assertJsonPath('post.likes_count', 1);
     }
 
     public function test_user_can_comment_other_users_public_post(): void
@@ -336,11 +336,11 @@ class FeedTest extends TestCase
         $this->assertCount(1, $response->json('post.comments'));
     }
 
-    public function test_user_gets_404_kudos_other_users_followers_only_post(): void
+    public function test_user_gets_404_liking_other_users_followers_only_post(): void
     {
         $userA = $this->createTestUser();
         // Default privacy for 'meals' is 'followers'. There is no follow-graph
-        // in this codebase, so this post must be invisible (and un-kudos-able)
+        // in this codebase, so this post must be invisible (and un-like-able)
         // to anyone other than the poster.
         $userB = $this->createTestUser();
 
@@ -353,9 +353,72 @@ class FeedTest extends TestCase
             'comments' => [],
         ]);
 
-        $response = $this->actingAs($userA, 'sanctum')->postJson("/api/feed/{$post->_id}/kudos");
+        $response = $this->actingAs($userA, 'sanctum')->postJson("/api/feed/{$post->_id}/like");
 
         $response->assertStatus(404);
+    }
+
+    // ─── Like toggle: second call unlikes, per-viewer `liked` state ────────────
+
+    public function test_like_toggles_back_and_forth(): void
+    {
+        $userA = $this->createTestUser();
+
+        $post = SocialPost::create([
+            'user_id' => (string) $userA->_id,
+            'type' => 'meal_logged',
+            'payload' => ['message' => 'my own meal'],
+            'kudos_count' => 0,
+            'kudos_user_ids' => [],
+            'comments' => [],
+        ]);
+
+        $firstCall = $this->actingAs($userA, 'sanctum')->postJson("/api/feed/{$post->_id}/like");
+        $firstCall->assertStatus(200)
+            ->assertJsonPath('liked', true)
+            ->assertJsonPath('likes_count', 1)
+            ->assertJsonPath('post.likes_count', 1)
+            ->assertJsonPath('post.liked', true);
+
+        $secondCall = $this->actingAs($userA, 'sanctum')->postJson("/api/feed/{$post->_id}/like");
+        $secondCall->assertStatus(200)
+            ->assertJsonPath('liked', false)
+            ->assertJsonPath('likes_count', 0)
+            ->assertJsonPath('post.likes_count', 0)
+            ->assertJsonPath('post.liked', false);
+    }
+
+    public function test_feed_index_reflects_each_viewers_own_liked_state(): void
+    {
+        $poster = $this->createTestUser(['product_scans' => 'public']);
+        $liker = $this->createTestUser();
+        $nonLiker = $this->createTestUser();
+
+        $this->actingAs($poster, 'sanctum')->postJson('/api/feed', [
+            'type' => 'product_scanned',
+            'payload' => ['message' => 'public scan to like'],
+        ])->assertStatus(201);
+
+        $post = SocialPost::where('user_id', (string) $poster->_id)->firstOrFail();
+
+        $this->actingAs($liker, 'sanctum')->postJson("/api/feed/{$post->_id}/like")->assertStatus(200);
+
+        $likerFeed = collect(
+            $this->actingAs($liker, 'sanctum')->getJson('/api/feed')->json('feed')
+        );
+        $nonLikerFeed = collect(
+            $this->actingAs($nonLiker, 'sanctum')->getJson('/api/feed')->json('feed')
+        );
+
+        $likerEntry = $likerFeed->firstWhere('payload.message', 'public scan to like');
+        $nonLikerEntry = $nonLikerFeed->firstWhere('payload.message', 'public scan to like');
+
+        $this->assertNotNull($likerEntry);
+        $this->assertNotNull($nonLikerEntry);
+        $this->assertTrue($likerEntry['liked']);
+        $this->assertFalse($nonLikerEntry['liked']);
+        $this->assertSame(1, $likerEntry['likes_count']);
+        $this->assertSame(1, $nonLikerEntry['likes_count']);
     }
 
     public function test_user_gets_404_commenting_other_users_followers_only_post(): void
@@ -401,7 +464,7 @@ class FeedTest extends TestCase
         $this->assertTrue($feed->contains(fn (array $post) => $post['payload']['message'] === 'followers-only meal from poster'));
     }
 
-    public function test_feed_index_hides_followers_only_post_from_non_follower_and_kudos_returns_404(): void
+    public function test_feed_index_hides_followers_only_post_from_non_follower_and_like_returns_404(): void
     {
         $poster = $this->createTestUser();
         $nonFollower = $this->createTestUser();
@@ -422,7 +485,7 @@ class FeedTest extends TestCase
         $this->assertFalse($feed->contains(fn (array $item) => $item['payload']['message'] === 'followers-only meal, no follower'));
 
         $this->actingAs($nonFollower, 'sanctum')
-            ->postJson("/api/feed/{$post->_id}/kudos")
+            ->postJson("/api/feed/{$post->_id}/like")
             ->assertStatus(404);
     }
 
