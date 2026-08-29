@@ -31,7 +31,8 @@ export type FeedPost = {
   id: string;
   type: string;
   payload: Record<string, unknown>;
-  kudos_count: number;
+  likes_count: number;
+  liked: boolean;
   comments: Array<{ user_name: string; text: string; created_at: string }>;
   created_at?: string;
   user?: { id: string; name: string; username: string; avatar_url?: string };
@@ -188,8 +189,8 @@ export const api = {
 
   feed: (token?: string) => request<{ feed: FeedPost[] }>("/api/feed", {}, token),
 
-  kudos: (token: string, postId: string) =>
-    request<{ post: FeedPost }>(`/api/feed/${postId}/kudos`, { method: "POST" }, token),
+  like: (token: string, postId: string) =>
+    request<{ liked: boolean; likes_count: number; post: FeedPost }>(`/api/feed/${postId}/like`, { method: "POST" }, token),
 
   comment: (token: string, postId: string, text: string) =>
     request<{ post: FeedPost }>(`/api/feed/${postId}/comments`, {

@@ -71,7 +71,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/recipes/{id}', [RecipeController::class, 'show']);
 
     Route::post('/feed', [FeedController::class, 'store']);
-    Route::post('/feed/{id}/kudos', [FeedController::class, 'kudos']);
+    Route::post('/feed/{id}/like', [FeedController::class, 'like']);
     Route::post('/feed/{id}/comments', [FeedController::class, 'comment']);
 
     Route::post('/challenges/{id}/join', [ChallengeController::class, 'join']);
