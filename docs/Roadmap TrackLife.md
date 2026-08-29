@@ -14,7 +14,7 @@ Sprints futuros de TRACKLIFE. Actualizado: 2026-08-29.
 | P3.2 — Server Components | [x] Completado 2026-06-25 | 79/79 |
 | P3.3 — Búsqueda usuarios real | [x] Completado 2026-06-25 | 79/79 |
 | P3.4 — Página perfil usuario | [x] Completado 2026-06-29 | 84/84 |
-| **UX — Overhaul "Bioluminiscencia"** | [x] Completado 2026-06-30/07-01 (dev; ver nota de merge abajo) | 85/85 |
+| **UX — Overhaul "Bioluminiscencia"** | [x] Completado y mergeado a `master` 2026-08-29 | 85/85 |
 | P4.1 — Plan nutricional real | [ ] Pendiente | — |
 | P4.2 — Favoritos persistentes | [x] Completado 2026-07-22 | — |
 | P4.3 — Feed de comunidad real | [x] Completado 2026-08-29 | 217/217 |
@@ -22,7 +22,7 @@ Sprints futuros de TRACKLIFE. Actualizado: 2026-08-29.
 | P4.5 — Plan semanal del coach | [ ] Pendiente | — |
 | P5 — Producción y Play Store | [~] En curso (prep completa) | — |
 
-> **Nota de merge (2026-08-29)**: el overhaul UX y P4.3 viven en una cadena de 5 PRs apilados (#14→#18) todavía sin mergear a `master` — "completado" acá significa desarrollado y testeado, no necesariamente en producción.
+> **Nota de merge (2026-08-29)**: el overhaul UX y P4.3 llegaron a `master` a través de una cadena de 5 PRs apilados (#14→#18), mergeados en orden el 2026-08-29.
 
 ---
 
