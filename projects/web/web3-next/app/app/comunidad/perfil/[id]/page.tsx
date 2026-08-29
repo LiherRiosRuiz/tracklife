@@ -3,10 +3,12 @@
 import { Flame } from "lucide-react";
 import { useParams } from "next/navigation";
 import { api } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
 import { useApiData } from "@/hooks/use-api-data";
 import { Button, Card, PageHeader } from "@/components/ui";
 import { SkeletonCard } from "@/components/Skeleton";
 import { ErrorState } from "@/components/ErrorState";
+import { FollowButton } from "@/components/FollowButton";
 
 function getInitials(name: string): string {
   return name
@@ -20,6 +22,7 @@ function getInitials(name: string): string {
 export default function PerfilPage() {
   const params = useParams();
   const id = typeof params.id === "string" ? params.id : "";
+  const { token, user: currentUser } = useAuth();
 
   const { data, loading, error, refetch } = useApiData(
     () => api.userProfile(id),
@@ -27,11 +30,19 @@ export default function PerfilPage() {
     { enabled: !!id },
   );
 
+  const { data: followsData } = useApiData(
+    () => api.follows(token!),
+    [token],
+    { enabled: !!token },
+  );
+
   if (loading) return <SkeletonCard />;
   if (error) return <ErrorState message={error} onRetry={refetch} />;
   if (!data) return null;
 
   const { user } = data;
+  const followingIds = followsData?.following_ids ?? [];
+  const isSelf = currentUser?.id === id;
 
   return (
     <div>
@@ -61,6 +72,10 @@ export default function PerfilPage() {
           <Flame size={16} />
           Racha: {user.streak_days} días
         </div>
+
+        {!isSelf && (
+          <FollowButton userId={id} initialFollowing={followingIds.includes(id)} />
+        )}
       </Card>
 
       <div className="mt-6 flex justify-center">

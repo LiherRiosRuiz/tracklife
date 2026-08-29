@@ -48,11 +48,11 @@ Chain strategy: feature-branch-chain
 
 ## Phase 3: Follow UI (web3-next, no test runner — lint+build verified) — PR1b
 
-- [ ] 3.1 `lib/api.ts`: add `follows()`, `followUser()`, `unfollowUser()`.
-- [ ] 3.2 Create `components/FollowButton.tsx`: props `{userId, initialFollowing}`, pending state, no optimistic flip (D9), inline error text.
-- [ ] 3.3 `perfil/[id]/page.tsx`: hydrate `following_ids` via `api.follows()`; render `<FollowButton>`; hide on self-view.
-- [ ] 3.4 `buscar/page.tsx`: hydrate `following_ids` once at page level; render `<FollowButton>` per `UserCard`.
-- [ ] 3.5 Verify: `npm run lint && npm run build`.
+- [x] 3.1 `lib/api.ts`: add `follows()`, `followUser()`, `unfollowUser()`.
+- [x] 3.2 Create `components/FollowButton.tsx`: props `{userId, initialFollowing}`, pending state, no optimistic flip (D9), inline error text.
+- [x] 3.3 `perfil/[id]/page.tsx`: hydrate `following_ids` via `api.follows()`; render `<FollowButton>`; hide on self-view.
+- [x] 3.4 `buscar/page.tsx`: hydrate `following_ids` once at page level; render `<FollowButton>` per `UserCard`.
+- [x] 3.5 Verify: `npm run lint && npm run build`.
 
 ## Phase 4: Like Toggle Rename — Backend (api-laravel, Strict TDD) — PR2, ships only with Phase 5
 

@@ -96,7 +96,7 @@ None blocking. One pre-existing unrelated dirty file was observed in the working
 
 ## Remaining Tasks (out of scope for this batch, tracked in tasks.md)
 
-- [ ] Phase 3: Follow UI (web3-next) — PR1b
+- [x] Phase 3: Follow UI (web3-next) — PR1b — completed in the PR1b batch below
 - [ ] Phase 4: Like Toggle Rename — Backend — PR2
 - [ ] Phase 5: Like Toggle Rename — Frontend — PR2
 - [ ] Phase 6: Docs — PR2
@@ -108,6 +108,78 @@ None blocking. One pre-existing unrelated dirty file was observed in the working
 - Boundary: starts from the tracker branch `feat/feed-comunidad-real` (currently on `feat/feed-comunidad-real-01-follow-backend`); ends with Phase 1 + Phase 2 complete, full `composer test` green, no web3-next/web2-nuxt/Phase 3-6 changes
 - Estimated review budget impact: ~419 lines forecast for PR1a per tasks.md's Review Workload Forecast (High risk overall for the whole change, mitigated by this chained slice)
 
-## Status
+## Status (as of PR1a batch)
 
 215/215 tests passing (full suite). Phase 1 (12/12 tasks) and Phase 2 (4/4 tasks) complete. Ready for verify (this PR1a slice) / ready for the next apply batch (PR1b, Phase 3, on a new branch based on this one).
+
+---
+
+# PR1b batch — Follow UI (web3-next)
+
+## Scope of this batch
+
+Phase 3 (tasks 3.1-3.5) from `tasks.md`: Follow UI on `web3-next` only.
+Branch `feat/feed-comunidad-real-02-follow-ui`, based on
+`feat/feed-comunidad-real-01-follow-backend` (PR1a, merged in). Did not
+touch `api-laravel` or `web2-nuxt`. Did not touch Phase 4/5/6
+(kudos→like rename + docs) — that ships in a separate later PR (PR2) on
+this chain.
+
+## Mode
+
+Standard (no TDD). Confirmed via `openspec/config.yaml`:
+`testing.web3-next.ready: false` (no vitest/jest installed) — Strict TDD
+does not apply here per the skill's mode-resolution rule ("IF strict_tdd:
+true AND test runner exists" is false for web3-next even though the
+global `strict_tdd: true` marker is set). Verified with `npm run lint`
+and `npm run build` instead, per the design's Testing Strategy row for
+web3-next.
+
+## Completed Tasks
+
+### Phase 3 — Follow UI (web3-next)
+- [x] 3.1 `lib/api.ts` — added `follows(token)` → `GET /api/follows`, `followUser(token, id)` → `POST /api/users/{id}/follow`, `unfollowUser(token, id)` → `DELETE /api/users/{id}/follow`. Signatures match the design's `Next.js <-> Laravel contract` section exactly.
+- [x] 3.2 Created `components/FollowButton.tsx` — client component, props `{ userId: string; initialFollowing: boolean }`. Local `following`/`pending`/`error` state; `onClick` sets `pending=true`, calls `api.followUser`/`unfollowUser` based on current `following`, sets `following` from the server response, clears `pending`; on throw, `following` is left untouched and a local error string is set (no optimistic flip, per D9). Renders `Button` from `components/ui` (`variant="primary"`/label `Seguir` when not following, `variant="secondary"`/label `Siguiendo` when following, `disabled={pending || !token}`); error rendered as `<p className="text-xs text-danger">`, matching `FeedList.tsx`'s existing error-line convention.
+- [x] 3.3 `perfil/[id]/page.tsx` — added `useAuth()` for `token` + `currentUser`; added a second `useApiData(() => api.follows(token!), [token], { enabled: !!token })` alongside the existing `userProfile` call; renders `<FollowButton userId={id} initialFollowing={followingIds.includes(id)} />` inside the profile `Card`, directly below the streak row; hidden via `{!isSelf && ...}` where `isSelf = currentUser?.id === id`, making the self-follow 422 path unreachable from the UI as specified.
+- [x] 3.4 `buscar/page.tsx` — added one page-level `useApiData(() => api.follows(token!), [token], { enabled: !!token })` (single request for the whole result list, not per card); `UserCard` now takes `isFollowing`/`isSelf` props and renders `<FollowButton userId={user.id} initialFollowing={isFollowing} />` next to the existing "Ver perfil" `Button`, guarded by `!isSelf` (`currentUser?.id === user.id`) per card.
+- [x] 3.5 Verify — `npm run lint`: 0 errors, 5 pre-existing `@next/next/no-img-element` warnings on files/lines untouched by this batch (`perfil/[id]/page.tsx:53` and `buscar/page.tsx:35` are pre-existing `<img>` tags this batch did not modify). `npm run build`: compiled successfully, TypeScript check passed, all 47 routes generated including `/app/comunidad/buscar` (static) and `/app/comunidad/perfil/[id]` (dynamic).
+
+## Files Changed
+
+| File | Action | What Was Done |
+|------|--------|----------------|
+| `projects/web/web3-next/lib/api.ts` | Modified | Added `follows()`, `followUser()`, `unfollowUser()` methods to the `api` object |
+| `projects/web/web3-next/components/FollowButton.tsx` | Created | Presentational + action follow/unfollow button, pending state, inline error, no optimistic UI |
+| `projects/web/web3-next/app/app/comunidad/perfil/[id]/page.tsx` | Modified | Hydrates `following_ids`, renders `<FollowButton>`, self-view guard via `useAuth()` |
+| `projects/web/web3-next/app/app/comunidad/buscar/page.tsx` | Modified | Page-level `following_ids` hydration, `UserCard` renders `<FollowButton>` per result with self-view guard |
+| `openspec/changes/2026-08-29-feed-comunidad-real/tasks.md` | Modified | Marked 3.1-3.5 as `[x]` |
+
+## Work Unit Evidence
+
+| Evidence | Value |
+|---|---|
+| Focused test command and exact result | N/A — no test runner installed for web3-next (`testing.web3-next.ready: false`), per design's Testing Strategy row and tasks.md's Unit 2 row ("N/A — no runner") |
+| Runtime harness command/scenario and exact result | `npm run lint` → 0 errors (5 pre-existing unrelated warnings); `npm run build` → "Compiled successfully", TypeScript check passed, static/dynamic route generation succeeded for all 47 routes incl. the two touched pages |
+| Rollback boundary | Remove `components/FollowButton.tsx`; revert the 3 added methods in `lib/api.ts`; revert `perfil/[id]/page.tsx` and `buscar/page.tsx` to their pre-batch versions (drop the `useAuth`/second `useApiData`/`FollowButton` additions and the `UserCard` prop changes). Backend (`api-laravel`) untouched; PR1a's follow endpoints remain available but simply unconsumed if reverted |
+
+## Deviations from Design
+
+None. Implementation matches the design's "Follow button integration (web3-next)" section verbatim: props, state machine, button variants/labels, disabled condition, error styling, hydration pattern (`useApiData` alongside existing calls, one page-level fetch for `buscar` rather than per-card), and the self-view guard on both pages.
+
+## Issues Found
+
+None blocking. The pre-existing `web2-nuxt/package-lock.json` dirty-file note from the PR1a batch is unrelated and still untouched by this batch.
+
+## Workload / PR Boundary (PR1b)
+
+- Mode: feature-branch-chain, PR1b slice
+- Current work unit: Unit 2 — "Follow UI: button + profile/search integration (web3-next, lint+build only)"
+- Boundary: starts from branch `feat/feed-comunidad-real-02-follow-ui` (base: `feat/feed-comunidad-real-01-follow-backend`); ends with Phase 3 complete, `npm run lint` and `npm run build` both green, no api-laravel/web2-nuxt/Phase 4-6 changes
+- Estimated review budget impact: ~95 lines forecast for PR1b per tasks.md's Review Workload Forecast (well under the 400-line budget)
+
+## Status (as of PR1b batch)
+
+Phase 1 (12/12), Phase 2 (4/4), Phase 3 (5/5) tasks complete — 21/25 total
+tasks in `tasks.md` done. `npm run lint` and `npm run build` both green
+for web3-next. Ready for verify (this PR1b slice) / ready for the next
+apply batch (PR2, Phase 4-6, on a new branch based on this one).
