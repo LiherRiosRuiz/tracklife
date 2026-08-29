@@ -195,7 +195,7 @@ export default function CalendarioPage() {
                     : "border-border bg-card hover:border-accent/40",
               ].join(" ")}
             >
-              <span className="text-[10px] font-semibold text-muted">{DAY_NAMES[idx]}</span>
+              <span className="text-xs font-semibold text-muted">{DAY_NAMES[idx]}</span>
               <span
                 className={[
                   "mt-1 flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold",

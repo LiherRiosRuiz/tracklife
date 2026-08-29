@@ -30,10 +30,10 @@ export default function SuenoPage() {
       <Card>
         <ResponsiveContainer width="100%" height={200}>
           <LineChart data={chartData}>
-            <XAxis dataKey="day" stroke="#94a3b8" />
-            <YAxis stroke="#94a3b8" domain={[0, 100]} />
+            <XAxis dataKey="day" stroke="var(--color-fg-muted)" />
+            <YAxis stroke="var(--color-fg-muted)" domain={[0, 100]} />
             <Tooltip />
-            <Line type="monotone" dataKey="value" stroke="#22c55e" strokeWidth={2} />
+            <Line type="monotone" dataKey="value" stroke="var(--color-accent)" strokeWidth={2} />
           </LineChart>
         </ResponsiveContainer>
       </Card>

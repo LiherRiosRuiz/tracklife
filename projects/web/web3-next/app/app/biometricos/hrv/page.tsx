@@ -30,10 +30,10 @@ export default function HrvPage() {
       <Card>
         <ResponsiveContainer width="100%" height={200}>
           <LineChart data={chartData}>
-            <XAxis dataKey="day" stroke="#94a3b8" />
-            <YAxis stroke="#94a3b8" />
+            <XAxis dataKey="day" stroke="var(--color-fg-muted)" />
+            <YAxis stroke="var(--color-fg-muted)" />
             <Tooltip />
-            <Line type="monotone" dataKey="value" stroke="#3b82f6" strokeWidth={2} />
+            <Line type="monotone" dataKey="value" stroke="var(--color-cyan)" strokeWidth={2} />
           </LineChart>
         </ResponsiveContainer>
       </Card>
