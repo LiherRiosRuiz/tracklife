@@ -1,6 +1,6 @@
 # Roadmap TrackLife
 
-Sprints futuros de TRACKLIFE. Actualizado: 2026-07-01.
+Sprints futuros de TRACKLIFE. Actualizado: 2026-08-29.
 
 ---
 
@@ -14,9 +14,15 @@ Sprints futuros de TRACKLIFE. Actualizado: 2026-07-01.
 | P3.2 — Server Components | [x] Completado 2026-06-25 | 79/79 |
 | P3.3 — Búsqueda usuarios real | [x] Completado 2026-06-25 | 79/79 |
 | P3.4 — Página perfil usuario | [x] Completado 2026-06-29 | 84/84 |
-| **UX — Overhaul "Bioluminiscencia"** | [x] Completado 2026-06-30/07-01 | 85/85 |
-| P4 — Funcionalidades reales | [ ] Pendiente | — |
+| **UX — Overhaul "Bioluminiscencia"** | [x] Completado 2026-06-30/07-01 (dev; ver nota de merge abajo) | 85/85 |
+| P4.1 — Plan nutricional real | [ ] Pendiente | — |
+| P4.2 — Favoritos persistentes | [x] Completado 2026-07-22 | — |
+| P4.3 — Feed de comunidad real | [x] Completado 2026-08-29 | 217/217 |
+| P4.4 — Coach IA básico | [ ] Pendiente | — |
+| P4.5 — Plan semanal del coach | [ ] Pendiente | — |
 | P5 — Producción y Play Store | [~] En curso (prep completa) | — |
+
+> **Nota de merge (2026-08-29)**: el overhaul UX y P4.3 viven en una cadena de 5 PRs apilados (#14→#18) todavía sin mergear a `master` — "completado" acá significa desarrollado y testeado, no necesariamente en producción.
 
 ---
 
@@ -111,18 +117,22 @@ Prep técnica **completa** (CORS por env, `.env.production.example`, `assetlinks
 - Form ya tiene Zod (`macroTargetsSchema`) — conectar al API real
 - Mostrar confirmación de guardado
 
-### P4.2 Favoritos persistentes
+### P4.2 Favoritos persistentes [x] COMPLETADO 2026-07-22
 
-- `nutricion/favoritos/page.tsx` usa localStorage actualmente
-- Crear endpoint `POST/DELETE /api/favorites` en Laravel
-- Migrar de localStorage a API
+**Resultado:**
+- `FavoriteController` — `POST/DELETE /api/favorites` (Laravel, MongoDB, índice único compuesto)
+- `nutricion/favoritos/page.tsx` migrado de localStorage a la API real
+- `FavoriteTest.php` — cobertura TDD completa
+- Change archivada: `openspec/changes/archive/2026-07-22-favoritos-nutricion-api/`
 
-### P4.3 Feed de comunidad real
+### P4.3 Feed de comunidad real [x] COMPLETADO 2026-08-29
 
-- `GET /api/feed` ya existe pero devuelve datos mock
-- Implementar lógica real: posts de usuarios que sigues o todos si es público
-- `POST /api/feed` para crear posts
-- Botón "Like" conectado: `POST /api/feed/{id}/like`
+**Resultado:**
+- `GET /api/feed`, `POST /api/feed`, `POST /api/feed/{id}/comments` — reales desde el inicio, respaldados por `SocialPost` (Mongo); nunca fueron mock
+- Grafo de follow real: `Follow` model + `GET /api/follows` + `POST/DELETE /api/users/{id}/follow`. La visibilidad `followers` ahora se resuelve contra este grafo (antes degradaba a solo-autor)
+- Botón "Like" conectado y toggleable: `POST /api/feed/{id}/like` (antes `kudos`, solo-suma sin poder quitar); cada lectura del feed incluye `likes_count` + `liked` por viewer
+- `FollowButton` integrado en `comunidad/perfil/[id]` y `comunidad/buscar` (web3-next)
+- `FollowTest.php` (10 tests) + `FeedTest.php` ampliado — 217/217 tests verdes
 
 ### P4.4 Coach IA básico
 
@@ -176,11 +186,10 @@ Prep técnica **completa** (CORS por env, `.env.production.example`, `assetlinks
 
 | Item | Archivo | Notas |
 |------|---------|-------|
-| Plan semanal estático | `coach/plan/page.tsx` L20-28 | TODO: endpoint /api/coach/plan |
-| Favoritos en localStorage | `nutricion/favoritos/page.tsx` | TODO: persistir en API (P4.2) |
-| Feed mock | `api-laravel/FeedController.php` | TODO: lógica real de following (P4.3) |
+| Plan semanal estático | `coach/plan/page.tsx` L20-28 | TODO: endpoint /api/coach/plan (P4.5) |
 | Coach insights mock | `api-laravel/CoachController.php` | TODO: basado en datos reales (P4.4) |
 | Deltas biométricos | `BiometricController::today()` | Gap documentado — decidir P3 vs P4 |
+| Feed público sin auth vacío | `web3-next/app/explorar/page.tsx` | `api.feed()` se llama sin token pero `GET /api/feed` requiere `auth:sanctum` → 401 silencioso, feed público siempre vacío. Descopeado a propósito en P4.3 (ver proposal), sigue pendiente como ticket separado |
 
 ---
 
@@ -190,16 +199,16 @@ Prep técnica **completa** (CORS por env, `.env.production.example`, `assetlinks
 2. Leer `docs/TRACKLIFE.md` — arquitectura y decisiones
 3. Leer `docs/Roadmap TrackLife.md` — este archivo
 4. Ejecutar `make ps` desde `/mnt/d/Compartida/LIHER` — ver qué está corriendo
-5. Ejecutar `wsl -d Ubuntu docker exec api-laravel php artisan test` — confirmar 44 tests verdes
+5. Ejecutar `docker exec api-laravel composer test` — confirmar 217 tests verdes
 6. Abrir `http://app.tracklife.test/` con `liher@tracklife.test / password123`
-7. Empezar por **P3.1 WorkoutTest** — es lo más bloqueante (cobertura de tests)
+7. Empezar por **P4.1 plan nutricional real** — es lo más chico que queda pendiente
 
 ---
 
 ## Prioridad recomendada para próxima sesión
 
 ```
-P3.1 (WorkoutTest + BiometricTest + ActivityTest) → P3.3 (búsqueda real) → P4.1 (plan nutricional real)
+P4.1 (plan nutricional real) → P4.4 (coach IA básico) → P4.5 (plan semanal del coach) → P5 (producción)
 ```
 
 ---

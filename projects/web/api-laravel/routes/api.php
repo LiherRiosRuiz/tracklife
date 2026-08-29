@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\ExerciseController;
 use App\Http\Controllers\Api\FavoriteController;
 use App\Http\Controllers\Api\FeedController;
+use App\Http\Controllers\Api\FollowController;
 use App\Http\Controllers\Api\FoodController;
 use App\Http\Controllers\Api\MacroController;
 use App\Http\Controllers\Api\MealController;
@@ -55,6 +56,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/users/{id}/profile', [UserProfileController::class, 'show']);
     Route::post('/products/scan', [ProductController::class, 'scan']);
 
+    // Follows: {id} is a Mongo ObjectId hex, safe as a path segment (matches
+    // the neighbouring /users/{id}/profile shape).
+    Route::get('/follows', [FollowController::class, 'index']);
+    Route::post('/users/{id}/follow', [FollowController::class, 'store']);
+    Route::delete('/users/{id}/follow', [FollowController::class, 'destroy']);
+
     Route::get('/macros/targets', [MacroController::class, 'targets']);
     Route::put('/macros/targets', [MacroController::class, 'updateTargets']);
     Route::get('/macros/progress', [MacroController::class, 'dailyProgress']);
@@ -64,7 +71,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/recipes/{id}', [RecipeController::class, 'show']);
 
     Route::post('/feed', [FeedController::class, 'store']);
-    Route::post('/feed/{id}/kudos', [FeedController::class, 'kudos']);
+    Route::post('/feed/{id}/like', [FeedController::class, 'like']);
     Route::post('/feed/{id}/comments', [FeedController::class, 'comment']);
 
     Route::post('/challenges/{id}/join', [ChallengeController::class, 'join']);

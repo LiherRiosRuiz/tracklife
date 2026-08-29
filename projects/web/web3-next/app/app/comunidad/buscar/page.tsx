@@ -7,6 +7,7 @@ import { Button, Card, PageHeader } from "@/components/ui";
 import { useApiData } from "@/hooks/use-api-data";
 import { SkeletonList } from "@/components/Skeleton";
 import { ErrorState } from "@/components/ErrorState";
+import { FollowButton } from "@/components/FollowButton";
 
 function getInitials(name: string): string {
   return name
@@ -17,7 +18,15 @@ function getInitials(name: string): string {
     .toUpperCase();
 }
 
-function UserCard({ user }: { user: SearchUser }) {
+function UserCard({
+  user,
+  isFollowing,
+  isSelf,
+}: {
+  user: SearchUser;
+  isFollowing: boolean;
+  isSelf: boolean;
+}) {
   const initials = getInitials(user.name);
 
   return (
@@ -37,9 +46,12 @@ function UserCard({ user }: { user: SearchUser }) {
         <p className="truncate font-semibold">{user.name}</p>
         <p className="truncate text-sm text-muted">@{user.username}</p>
       </div>
-      <Button href={`/app/comunidad/perfil/${user.id}`} variant="secondary" className="flex-shrink-0">
-        Ver perfil
-      </Button>
+      <div className="flex flex-shrink-0 items-center gap-2">
+        <Button href={`/app/comunidad/perfil/${user.id}`} variant="secondary">
+          Ver perfil
+        </Button>
+        {!isSelf && <FollowButton userId={user.id} initialFollowing={isFollowing} />}
+      </div>
     </Card>
   );
 }
@@ -63,7 +75,7 @@ function EmptyState({ query }: { query: string }) {
 }
 
 export default function BuscarPage() {
-  const { token } = useAuth();
+  const { token, user: currentUser } = useAuth();
   const [inputValue, setInputValue] = useState("");
   const [query, setQuery] = useState("");
 
@@ -78,7 +90,14 @@ export default function BuscarPage() {
     { enabled: query.length >= 2 && !!token },
   );
 
+  const { data: followsData } = useApiData(
+    () => api.follows(token!),
+    [token],
+    { enabled: !!token },
+  );
+
   const results: SearchUser[] = data?.users ?? [];
+  const followingIds = followsData?.following_ids ?? [];
 
   return (
     <div>
@@ -116,7 +135,12 @@ export default function BuscarPage() {
                   </p>
                   <div className="flex flex-col gap-3">
                     {results.map((user) => (
-                      <UserCard key={user.id} user={user} />
+                      <UserCard
+                        key={user.id}
+                        user={user}
+                        isFollowing={followingIds.includes(user.id)}
+                        isSelf={currentUser?.id === user.id}
+                      />
                     ))}
                   </div>
                 </>

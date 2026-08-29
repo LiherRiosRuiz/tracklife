@@ -21,7 +21,7 @@ export default function ExplorarPage() {
         </Link>
       </div>
       <h2 className="mb-4 text-lg font-semibold">Explora la comunidad</h2>
-      <FeedList posts={posts} showKudos={false} />
+      <FeedList posts={posts} showLikes={false} />
     </div>
   );
 }
