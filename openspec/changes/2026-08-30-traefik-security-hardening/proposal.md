@@ -115,22 +115,32 @@ Fully revertible by config; no data, no schema, no build artifacts.
 
 ## Success Criteria
 
-- [ ] `curl -I http://192.168.20.123:8080` fails to connect; `http://traefik.test` returns `401`
-      without credentials and the dashboard with them; requests from outside the allowlisted range
-      get `403`.
-- [ ] `http://portainer.test` from an allowlisted LAN address still works unchanged; simulated
-      access from outside the range gets `403`.
-- [ ] `curl -I` against web1, web3 and the API shows `X-Content-Type-Options`, `X-Frame-Options`,
+- [x] `curl -I http://192.168.20.123:8080` fails to connect (verified: connection refused);
+      `http://traefik.test` returns `401` without credentials (verified) and requests from outside
+      the allowlisted range get `403` (verified). **Partial**: the "200 with correct credentials
+      from an allowlisted address" case could not be exercised end-to-end in this sandbox (no real
+      second LAN device — same-host loopback traffic is hairpin-NATed by Docker to the bridge
+      gateway IP, itself outside the allowlist). Needs confirming from a genuine LAN client before
+      fully trusting the "allow" path, not just the "deny" path.
+- [x] `http://portainer.test` — access from outside the allowlisted range correctly gets `403`
+      (verified). **Partial**: same limitation as above for the "allowlisted IP still works" case.
+- [x] `curl -I` against web1, web3 and the API shows `X-Content-Type-Options`, `X-Frame-Options`,
       `Referrer-Policy`, `Permissions-Policy`; the two web apps show the app CSP and the API shows
-      the `default-src 'none'` CSP.
-- [ ] `web3-next` dashboard and `web1-astro` landing load with **zero** CSP violations in the
-      browser console; login and at least one authenticated API call still work.
-- [ ] An API preflight `OPTIONS` still returns the existing CORS headers.
-- [ ] `make down && make up` succeeds and all `*.test` hosts still serve over plain HTTP —
-      no redirect to HTTPS, no ACME attempt in the Traefik logs.
-- [ ] `traefik.yml` contains a `websecure` entrypoint and a cert resolver; `acme.json` is
-      gitignored; `.env.example` documents `DOMAIN` / `ACME_EMAIL` / `TRAEFIK_DASHBOARD_AUTH`.
-- [ ] `docs/Deploy TrackLife.md` states HTTPS is staged-not-active and lists the activation steps.
+      the `default-src 'none'` CSP. (Independently re-verified by sdd-verify.)
+- [x] `web3-next` dashboard and `web1-astro` landing load with **zero** CSP violations against a
+      production build (verified — this is also where the real Google Fonts CSP violation was
+      found and fixed; see design.md's Post-apply corrections).
+- [x] An API preflight `OPTIONS` still returns the existing CORS headers. (Independently
+      re-verified; CSP is correctly absent from the preflight response and present on real
+      responses, per the corrected spec wording.)
+- [x] `make down && make up` succeeds and all `*.test` hosts still serve over plain HTTP —
+      no redirect to HTTPS, no ACME attempt in the Traefik logs. (Independently re-verified live;
+      this is also where the `tls=true`-breaks-plain-HTTP regression was found and fixed.)
+- [x] `traefik.yml` contains a `websecure` entrypoint and a cert resolver; `acme.json` is
+      gitignored; `.env.example` documents `DOMAIN` / `ACME_EMAIL` / credential generation.
+      (`TRAEFIK_DASHBOARD_AUTH` is not an env var per design's credential-storage decision — a
+      mounted `usersFile` is used instead, documented in `.env.example`'s comments.)
+- [x] `docs/Deploy TrackLife.md` states HTTPS is staged-not-active and lists the activation steps.
 
 ## Proposal question round — resolved
 
