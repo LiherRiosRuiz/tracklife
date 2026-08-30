@@ -12,10 +12,12 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.portainer.rule=Host(`portainer.test`)"
       - "traefik.http.routers.portainer.entrypoints=web"
+      - "traefik.http.routers.portainer.middlewares=internal-only@file"
       - "traefik.http.services.portainer.loadbalancer.server.port=9000"
-    # Acceso directo sin Traefik: http://192.168.20.123:9100
+    # Bind loopback-only: the allowlist on the Traefik router would otherwise be
+    # bypassable by hitting this published port directly.
     ports:
-      - "9100:9000"
+      - "127.0.0.1:9100:9000"
 
 volumes:
   portainer_data:

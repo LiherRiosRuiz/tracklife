@@ -142,13 +142,23 @@ certificate resolver, so ACME MUST NOT fire locally.
 
 ### Requirement: CORS and API CSP Chained, Not Replaced
 
-`api-laravel` responses MUST carry both the existing CORS headers and the API
-CSP header simultaneously. The CSP middleware MUST be chained after the CORS
-middleware, not substituted for it.
+`api-laravel`'s `api-cors` middleware MUST remain in place and MUST NOT be
+replaced by the new `sec-csp-api` middleware — both MUST be attached to the
+API router simultaneously (`api-cors,sec-csp-api`, in that order). An
+`OPTIONS` preflight MUST still receive correct CORS headers, since `api-cors`
+short-circuits the preflight before `sec-csp-api` runs — the CSP header is
+therefore only guaranteed on non-preflight (content-bearing) responses, not
+on the preflight response itself, and MUST NOT be asserted there.
 
-#### Scenario: Preflight still returns CORS headers alongside CSP
+#### Scenario: Preflight still returns CORS headers
 
-- GIVEN `api.test` has both `api-cors` and `sec-csp-api` middlewares attached
+- GIVEN `api.test` has both `api-cors` and `sec-csp-api` middlewares attached, chained in that order
 - WHEN a client sends an `OPTIONS` preflight request
 - THEN the response includes the correct `Access-Control-*` headers
-- AND the response includes `Content-Security-Policy: default-src 'none'; frame-ancestors 'none'`
+
+#### Scenario: A real API response carries the API CSP
+
+- GIVEN `api.test` has both `api-cors` and `sec-csp-api` middlewares attached
+- WHEN a client makes a non-preflight request (e.g. `GET`) to any endpoint
+- THEN the response includes `Content-Security-Policy: default-src 'none'; frame-ancestors 'none'`
+- AND the response still includes the applicable CORS headers

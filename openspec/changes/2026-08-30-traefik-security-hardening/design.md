@@ -332,6 +332,34 @@ and `secrets/dashboard_users` **before** restarting Traefik — entrypoint-level
 means a missing or unparseable `security.yml` fails every request, not just one router. Rollback is
 the proposal's four-step plan unchanged.
 
+## Post-apply corrections (orchestrator, 2026-08-30)
+
+`sdd-apply` ran a real production build through the CSP and found three gaps the design missed:
+
+1. **Google Fonts CSP break** — `web1-astro` loads `fonts.googleapis.com`/`fonts.gstatic.com`,
+   which `sec-csp-app`'s original `'self'`-only policy blocked. Fixed: added
+   `https://fonts.googleapis.com` to `style-src` and `https://fonts.gstatic.com` to `font-src` in
+   `infra/traefik/dynamic/security.yml`. This is allowing an existing, already-in-use font source,
+   not a new third-party addition — consistent with the "third-party origins: none *new*" answer.
+2. **Missing per-router `tls` label** — an entrypoint-level `certResolver` (in
+   `traefik.prod.yml.example`) does not TLS-enable a router by itself; each router needs its own
+   `tls` config to actually terminate TLS on `websecure`. **Empirically discovered during apply
+   verification** that unconditionally setting `tls=true` (as first attempted) is actively harmful
+   in dev: a router with `tls=true` bound to *both* `web` and `websecure` entrypoints stops matching
+   **plain HTTP** requests on `web` entirely — Traefik logs it as a TLS/SNI route
+   (`Adding route for <host> with TLS options default`) and every `*.test` host 404s, a full local
+   dev outage (confirmed live: `www.tracklife.test`/`app.tracklife.test`/`api.tracklife.test` all
+   returned 404 with `tls=true` set, and all returned to 200/200/307 once reverted). Fixed:
+   env-gated exactly like `WEB_CSP_MIDDLEWARE` — `traefik.http.routers.{web1,tracklife}.tls=${WEB_TLS_ENABLED:-false}`
+   and `traefik.http.routers.api.tls=${API_TLS_ENABLED:-false}`, defaulting to `false` (plain HTTP
+   works exactly as before) and flipped to `true` only in each subproject's prod `.env`, alongside
+   `WEB_CSP_MIDDLEWARE=sec-csp-app@file`.
+3. **Spec/design conflict on CORS preflight** — `api-cors` short-circuits `OPTIONS` before
+   `sec-csp-api` runs (as this design's own Threat Matrix already predicted), so CSP can never
+   appear on a preflight response. The spec's original scenario wrongly asserted both headers on
+   the same preflight request; corrected to assert CORS-only on preflight and CSP on real
+   (non-preflight) responses, matching the mandated middleware order rather than reordering it.
+
 ## Open Questions — resolved by orchestrator (2026-08-30)
 
 - [x] **Portainer's `9100:9000` host port defeats Decision 1b.** Resolved: bind it to loopback only,

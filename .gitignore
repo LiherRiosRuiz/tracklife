@@ -27,3 +27,8 @@ Thumbs.db
 
 # Activity log (generado en runtime)
 .sdd/activity.log
+
+# Traefik runtime secrets / generated config
+infra/traefik/acme.json
+infra/traefik/secrets/
+infra/traefik/traefik.prod.yml

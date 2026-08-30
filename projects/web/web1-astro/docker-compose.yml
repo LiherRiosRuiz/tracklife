@@ -10,8 +10,10 @@ services:
       - traefik_net
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.web1.rule=Host(`www.tracklife.test`)"
-      - "traefik.http.routers.web1.entrypoints=web"
+      - "traefik.http.routers.web1.rule=Host(`www.${DOMAIN:-tracklife.test}`)"
+      - "traefik.http.routers.web1.entrypoints=web,websecure"
+      - "traefik.http.routers.web1.tls=${WEB_TLS_ENABLED:-false}"
+      - "traefik.http.routers.web1.middlewares=${WEB_CSP_MIDDLEWARE:-}"
       - "traefik.http.services.web1.loadbalancer.server.port=4321"
 
 volumes:
