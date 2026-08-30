@@ -26,6 +26,10 @@ status:
 infra-up:
 	@docker network create traefik_net 2>/dev/null || true
 	@docker network create backend_net 2>/dev/null || true
+	@docker network create admin_net 2>/dev/null || true
+	@test -f infra/traefik/acme.json || (touch infra/traefik/acme.json && chmod 600 infra/traefik/acme.json)
+	@mkdir -p infra/traefik/secrets
+	@test -f infra/traefik/secrets/dashboard_users || (echo "Falta infra/traefik/secrets/dashboard_users — corre bash setup.sh o generalo a mano (ver infra/traefik/.env.example)." && exit 1)
 	@cd infra/traefik   && docker compose up -d
 	@cd infra/mongodb   && docker compose up -d
 	@cd infra/portainer && docker compose up -d

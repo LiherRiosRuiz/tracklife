@@ -360,6 +360,53 @@ the proposal's four-step plan unchanged.
    the same preflight request; corrected to assert CORS-only on preflight and CSP on real
    (non-preflight) responses, matching the mandated middleware order rather than reordering it.
 
+## Post-review corrections (orchestrator, 2026-08-30, PR #24 4R review)
+
+A fresh 4-lens adversarial review of the merge-ready diff (base=master) found 3 real,
+independently-corroborated issues (2 of them found by 3 out of 4 lenses separately) that this
+change's own local verification couldn't have caught, since our test machine already had the
+files/topology from manual setup:
+
+1. **CRITICAL, found by review-resilience/readability/reliability independently: fresh-clone
+   bootstrap gap.** `acme.json` and `secrets/dashboard_users` are bind-mounted as files but are
+   gitignored and never created by any script. On a genuine fresh clone, Docker auto-creates a
+   *directory* at a missing bind-mount source path — Traefik then fails to use `acme.json` for
+   ACME storage and fails to load `dashboard_users` for basicauth, breaking Traefik startup
+   entirely (not just the dashboard) on first run. This change's own live verification never hit
+   it because these files had already been created manually during `sdd-apply`. **Fixed**:
+   `setup.sh` now creates `acme.json` (touch + `chmod 600`) and generates a random
+   `secrets/dashboard_users` credential (via `htpasswd` in a throwaway container) on first run,
+   printing the generated password once; `make infra-up` now guards with an explicit `test -f`
+   check and a clear error message pointing at `setup.sh` if the file is missing, instead of
+   silently letting Docker substitute a directory.
+
+2. **WARNING (review-risk): Portainer reachable, unrestricted, by any container on `traefik_net`.**
+   The `internal-only` IPAllowList only guards the path *through* Traefik — any of `web1-astro`,
+   `web3-next`, or `api-laravel` (all on the same `traefik_net` bridge) could reach
+   `http://portainer-linux:9000` directly, bypassing the allowlist entirely if any of those
+   containers were ever compromised. This is the same class of bug as the already-fixed host-port
+   bypass, one network layer deeper. **Fixed**: Portainer moved off `traefik_net` onto a new,
+   isolated `admin_net` (external, created by `setup.sh`/`make infra-up`), shared only with
+   Traefik (which joins both networks to keep routing to it). Verified live: `api-laravel` can no
+   longer resolve/reach `portainer-linux:9000` at all (connection failure), while Traefik→Portainer
+   routing through `portainer.test` still works unchanged.
+
+3. **WARNING (review-risk), acknowledged, not fixed: dashboard basicauth travels over plain HTTP
+   today.** Since HTTPS is deliberately staged-inactive (no domain yet), basicauth credentials for
+   `traefik.test` are base64-encoded, not encrypted, in transit. This is the direct, already-known
+   cost of the "ship staged HTTPS, not a redesign" approach documented throughout this change —
+   exposure is scoped to LAN-allowlisted traffic only, and resolves itself the moment
+   `WEB_TLS_ENABLED`/prod HTTPS activates. Not fixed now because fixing it would mean either
+   forcing HTTPS before a domain exists (impossible) or dropping basicauth for a weaker interim
+   scheme (worse). Recorded explicitly here so it isn't mistaken for an overlooked gap.
+
+4. **Refuted with direct evidence (review-readability): empty `WEB_CSP_MIDDLEWARE` router label.**
+   Flagged as a plausible risk that a blank `middlewares=` label might error instead of no-op.
+   Refuted by the orchestrator's own live testing during apply/verify: `www.tracklife.test`
+   repeatedly returned `200` with baseline headers present and no error, with
+   `WEB_CSP_MIDDLEWARE` unset — an empty Traefik label list is confirmed to behave as "no
+   middlewares", not a parse error.
+
 ## Open Questions — resolved by orchestrator (2026-08-30)
 
 - [x] **Portainer's `9100:9000` host port defeats Decision 1b.** Resolved: bind it to loopback only,
