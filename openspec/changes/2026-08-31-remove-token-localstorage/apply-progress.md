@@ -104,9 +104,113 @@ None blocking. Recorded for awareness of the next batch (Phase 2):
   to this batch — not investigated further as out of Phase 1 scope; flagged for the
   user/maintainer to triage separately if desired).
 
+## Batch 2
+
+**Scope**: Phase 2 only — the closed-by-construction proxy route (`app/api/proxy/[...path]/route.ts`)
+and its RED-first test file (`__tests__/app/api/proxy-route.test.ts`). The route is created but
+**unused** by the rest of the app in this batch (`lib/api.ts` still targets `NEXT_PUBLIC_API_URL`
+directly) — that is expected; PR3 (Phase 3) retargets it.
+**Chain**: PR 2 of 5 (feature-branch-chain, targets PR1's branch `feat/remove-token-localstorage-01-test-tooling`
+per the orchestrator's branch naming for this batch: `feat/remove-token-localstorage-02-proxy-route`).
+**Mode**: Strict TDD. RED written first for all 16 threat-matrix/forwarding-contract cases,
+confirmed failing (module did not exist), then GREEN implementation, tests re-run to confirm pass.
+
+### Vitest 4 API-compatibility check (per orchestrator's instruction)
+
+`vi.mock("next/headers", () => ({ cookies: vi.fn() }))` (factory form, as already used in
+design §1's Next-specific setup notes, not the bare `vi.mock("next/headers")` form quoted in
+design §6's test-plan prose) works **identically** under vitest 4.1.11 to the documented vitest 3
+behavior: hoisting, mock-call ordering, and `vi.mocked(cookies).mockResolvedValue(...)` all
+behaved as expected on the first run — RED failed for the correct reason (missing module, not a
+mocking API error), and GREEN passed 16/16 on the first execution after the route was written, so
+no vitest-4-specific test syntax rewrite was needed. `vi.stubGlobal("fetch", vi.fn())` /
+`vi.unstubAllGlobals()` also behaved identically to v3. **No deviation required** — the design's
+mocking approach ported to vitest 4 without changes.
+
+## Phase 2: Proxy Route — RED first
+
+- [x] 2.1 RED `__tests__/app/api/proxy-route.test.ts`: cases R1-R8 (empty/traversal/`.`/encoded-slash/encoded-backslash/scheme-authority/double-slash/segment-flood → 400, `fetch` never called) per design §6 threat matrix. Confirm all fail (no route yet).
+- [x] 2.2 RED same file: cases G1-G8 (query+cookie forwarding, no-cookie public passthrough, inbound `Authorization` dropped, DELETE-with-body forwarded, upstream status/body verbatim, `Set-Cookie` not relayed, upstream timeout→504, no `PATCH` export).
+- [x] 2.3 GREEN: create `app/api/proxy/[...path]/route.ts` per design §2 (`safeUpstreamPath` allow-list, headers built not copied, 10s timeout, response headers allow-listed, `GET`/`POST`/`PUT`/`DELETE` only).
+- [x] 2.4 Run `npm test` — all R1-R8, G1-G8 green.
+
+### TDD Cycle Evidence
+
+| Task | Test File | Layer | Safety Net | RED | GREEN | TRIANGULATE | REFACTOR |
+|---|---|---|---|---|---|---|---|
+| 2.1-2.4 | `__tests__/app/api/proxy-route.test.ts` | Unit (node env, mocked `next/headers` + global `fetch`) | N/A (new file, new route — nothing pre-existing to protect) | ✅ Written first; ran `npx vitest run __tests__/app/api/proxy-route.test.ts` before `route.ts` existed → `Error: Cannot find package '@/app/api/proxy/[...path]/route'`, 0 tests collected — failed for the right reason (missing production module, not a typo/assertion bug) | ✅ After writing `route.ts` per design §2 verbatim: `16 passed (16)` on first execution, zero iteration needed | ✅ 16 cases total: 8 rejection cases (R1-R8, each a distinct adversarial input from the threat matrix) + 8 forwarding-contract cases (G1-G8: cookie-present/absent, inbound-Authorization-drop, DELETE-body, verbatim-passthrough, Set-Cookie-strip, timeout→504, no-PATCH) — every spec scenario in design §6 has its own test, no shared Fake-It path | ➖ None needed — production code was written once directly matching the design's verbatim reference implementation (this is one of the explicit "design gives full code block" sections); no post-GREEN structural change was made or needed |
+
+### Test Summary
+
+- **Total tests written**: 16 (`R1`-`R8`, `G1`-`G8`)
+- **Total tests passing**: 16/16
+- **Layers used**: Unit (16) — Next.js Route Handlers exercised directly as plain async functions with real `Request`/`Response` objects (no HTTP server, no supertest); `next/headers` mocked (required outside request scope), `fetch` stubbed globally
+- **Approval tests** (refactoring): None — no refactoring tasks, `route.ts` is a new file
+- **Pure functions created**: 1 (`safeUpstreamPath(segments)` — deterministic, no side effects, covered directly by R1-R8 via the exported route handlers)
+
+### Assertion quality notes (self-check against strict-tdd.md banned patterns)
+
+Every R-case asserts `res.status === 400` **and** `fetchMock` was never called — not a status-only
+check, so a regression that accidentally still forwarded a rejected path would fail the test even
+if it also (wrongly) returned 400 for an unrelated reason. Every G-case asserts a specific header/
+body/status value read from the real `fetchMock.mock.calls[0]` arguments or the real `NextResponse`
+returned by the handler — no `toBeDefined()`/tautology assertions. G6 (Set-Cookie strip) and G3
+(inbound Authorization drop) are the two closest to "trivial pass by omission" risk in this suite;
+both are guarded by a companion case that proves the header/cookie **was** present in the mocked
+upstream response or inbound request, so the negative assertion is against a deliberately non-empty
+input, not an untested default.
+
+### Deviations from Design
+
+None. `route.ts` matches design §2's code block verbatim (same allow-list regex, same
+`MAX_SEGMENTS`, same 10s `AbortSignal.timeout`, same header allow-list on the response, same
+`GET`/`POST`/`PUT`/`DELETE` export set with `PATCH` deliberately omitted). The test file is new
+(design §6 only gave a table of cases, not full test code), written to satisfy every row of that
+table with real assertions per strict-tdd.md's Assertion Quality Rules. `vi.mock("next/headers")`
+used the factory form already shown in design §1 rather than the bare form quoted in design §6's
+prose — see the "Vitest 4 API-compatibility check" note above; this is the same form the design's
+own §1 setup notes specify, not a new deviation.
+
+### Runtime harness (beyond the required focused test command)
+
+tasks.md's Work Unit 2 row suggested "manual `curl` against `/api/proxy/users/me` on a running
+stack." A live stack was found already running for this repo (`api-laravel` container up 32h,
+plus a `next dev` process reachable through Traefik at `http://app.tracklife.test`, unrelated to
+and not started by this batch — Turbopack picked up the new route file via its existing file
+watcher). Verified against that real stack, real Laravel/MongoDB backend, zero mocks:
+
+| Request | Result |
+|---|---|
+| `curl -i http://app.tracklife.test/api/proxy/challenges` (no cookie, real public Laravel endpoint) | `200 OK`, real challenge JSON from MongoDB returned verbatim through the proxy — confirms G1/G2/G5-equivalent behavior live, not just under mocks |
+| `curl -i http://app.tracklife.test/api/proxy/users/me` (no cookie) | `404`, Laravel's own "route not found" JSON body forwarded verbatim (the actual route is `api/auth/me`, not `api/users/me` — confirms the proxy reaches Laravel and returns its exact response, does not swallow or alter it) |
+| `curl -i "http://app.tracklife.test/api/proxy/..%2Fadmin"` | `400 {"message":"Ruta de API inválida"}` — D1 rejection confirmed live, request never reached Laravel (no Laravel stack-trace body, unlike the 404 case above) |
+| `curl -i "http://app.tracklife.test/api/proxy/http://evil.test/x"` | Same `400` rejection — scheme/authority-injection confirmed live |
+
+No files were modified to run this check; it only reads responses from an already-running dev
+process. This is genuine additional evidence beyond the unit-test layer, not a substitute for it.
+
+## Files Changed (Batch 2)
+
+| File | Action | What Was Done |
+|---|---|---|
+| `projects/web/web3-next/app/api/proxy/[...path]/route.ts` | Created | Closed-by-construction proxy route per design §2 — `safeUpstreamPath` allow-list validation, headers built (never copied) so inbound `Authorization`/`Cookie` are dropped by construction, 10s upstream timeout → 504, response headers allow-listed (`Content-Type`, `Cache-Control` only — `Set-Cookie` never relayed), `GET`/`POST`/`PUT`/`DELETE` exported, `PATCH` deliberately not exported. **Currently unused** by the rest of the app (`lib/api.ts` retarget is Phase 3/PR3). |
+| `projects/web/web3-next/__tests__/app/api/proxy-route.test.ts` | Created | 16 tests (R1-R8 threat-matrix rejections, G1-G8 forwarding-contract cases) per design §6, `// @vitest-environment node`, `vi.mock("next/headers")` factory form, `vi.stubGlobal("fetch", ...)`. |
+
+## Work Unit Evidence (Unit 2 — Proxy route + RED/GREEN tests, design §2/§6)
+
+| Evidence | Value |
+|---|---|
+| Focused test command and exact result | `npx vitest run __tests__/app/api/proxy-route.test.ts` → `Test Files 1 passed (1)`, `Tests 16 passed (16)`. Full-suite `npx vitest run` (all test files in the project) also `1 passed (1)` / `16 passed (16)` — confirms this is still the only test file in the repo, zero regression to Phase 1's zero-test baseline. |
+| Runtime harness command/scenario and exact result | See "Runtime harness" table above — real `curl` against the live dev stack through Traefik, hitting the real `api-laravel` backend for both a public 200 endpoint and two D1-rejected paths. All four cases matched expected behavior. |
+| Rollback boundary | Delete `app/api/proxy/` and `__tests__/app/api/proxy-route.test.ts`. Nothing else references the new route yet (`rg -l "api/proxy"` in `projects/web/web3-next` outside these two paths returns nothing), so this batch is fully reversible with a 2-path deletion and no follow-on edits to revert. `git status --short -- projects/web/web3-next` shows only these two untracked paths for this batch. |
+
+## Issues Found (Batch 2)
+
+None. `npm run lint` after this batch reports the same pre-existing 5 `no-img-element` warnings,
+0 errors — unchanged from Batch 1's baseline, confirming zero regression from the new route file.
+
 ## Remaining Tasks
 
-- [ ] Phase 2: Proxy route — RED first (`__tests__/app/api/proxy-route.test.ts`, `app/api/proxy/[...path]/route.ts`)
 - [ ] Phase 3: `lib/api.ts` retarget — RED first
 - [ ] Phase 4: `lib/auth.tsx` bootstrap rewrite — RED first
 - [ ] Phase 5: Login/register response strip — RED first
@@ -115,5 +219,6 @@ None blocking. Recorded for awareness of the next batch (Phase 2):
 ## Status
 
 5/5 tasks complete in Phase 1 (Phase 1 fully complete).
-5/25 total tasks complete across the full change (Phases 2-6 remaining, 20 tasks).
-Ready for next batch (Phase 2).
+4/4 tasks complete in Phase 2 (Phase 2 fully complete).
+9/25 total tasks complete across the full change (Phases 3-6 remaining, 16 tasks).
+Ready for next batch (Phase 3 — `lib/api.ts` retarget, which will start actually using this proxy route).
