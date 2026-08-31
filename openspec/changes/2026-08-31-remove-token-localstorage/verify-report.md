@@ -315,3 +315,173 @@ confirmed green. Lint and build show zero regression. The route is confirmed unu
 elsewhere in the codebase, consistent with the stated PR2 scope. Zero CRITICAL or
 WARNING findings; one non-blocking SUGGESTION about RED-evidence traceability for
 future batches.
+
+---
+
+## PR3 Verification (Phase 3 — `lib/api.ts` Retarget + Global 401 Redirect)
+
+```yaml
+schema: gentle-ai.verify-result/v1
+verdict: pass
+blockers: 0
+critical_findings: 0
+requirements: 2/7 (scope: PR3 only — Req5 401-redirect fully covered; Req6 sentinel partially covered, AuthContext wiring lands in PR4)
+scenarios: 5/12 (scope: PR3 only — Req5 x1 scenario + 4 supporting unit cases A3/A4/A5/A6; Req6 x1 scenario partially — sentinel value exists, AuthContext.token truthy/falsy behavior deferred to PR4)
+test_command: npm test
+test_exit_code: 0
+test_output_hash: sha256:6e12b885864f40d019dbce9833ab168e03311a3a3bbbff911e46b55dcc5ad9f0
+build_command: npm run build
+build_exit_code: 0
+build_output_hash: sha256:a12ad1fd19c740fd0881e87abcbcb9309ecfd4964c0081990d5b626b8b4984af
+```
+
+**Change**: 2026-08-31-remove-token-localstorage
+**Scope**: PR3 only — Phase 3 of tasks.md (`lib/api.ts` retarget to `/api/proxy/...`, drop
+client-side `Authorization` construction, module-level `handleUnauthorized()` 401 redirect).
+`lib/auth.tsx`'s localStorage removal is explicitly out of scope — Phase 4/PR4. `HEAD` =
+`dc30aa6`. Phases 1-2 (Vitest install, proxy route) already verified/merged in PR1/PR2; not
+re-verified here.
+**Version**: `specs/client-session-auth/spec.md` (requirements 5-6 read per assignment; full
+spec has 7 requirements)
+**Mode**: Strict TDD (declared by apply-progress.md Batch 3, cross-checked below)
+
+### Completeness (Phase 3 only)
+| Metric | Value |
+|--------|-------|
+| Phase 3 tasks total | 3 |
+| Phase 3 tasks complete | 3 |
+| Phase 3 tasks incomplete | 0 |
+| Full change tasks complete | 12/25 (Phases 4-6 out of scope for this verify) |
+
+`tasks.md` 3.1-3.3 all `[x]`, matching apply-progress.md's "3/3 tasks complete in Phase 3"
+claim — checked directly in the file, not merely trusted.
+
+### Diff vs. Design (independent re-read of `git show HEAD -- lib/api.ts`)
+| Design element (design.md §3, §5) | Present in actual diff | Verdict |
+|---|---|---|
+| `PROXY_BASE = "/api/proxy"` | Yes | ✅ Match |
+| `SESSION_SENTINEL` exported, `"cookie"` | Yes | ✅ Match |
+| `toProxyUrl(path)` | Yes | ✅ Match |
+| `RequestOptions` = `RequestInit & { skipAuthRedirect? }` | Yes | ✅ Match |
+| `Authorization` header construction removed | Yes — `if (token) headers.Authorization=...` block deleted | ✅ Match |
+| `credentials: "same-origin"` on fetch | Yes | ✅ Match |
+| `handleUnauthorized()` — `redirecting` flag, `/login`/`/registro` loop guard, `window.location.assign("/login")` | Yes, byte-identical logic to design §5 | ✅ Match |
+| `401 && !skipAuthRedirect` wired into existing `!res.ok` branch | Yes | ✅ Match |
+| `api.me` passes `skipAuthRedirect: true` | Yes | ✅ Match |
+| Dev-mode guardrail warning on real-token-passed | Yes (present in diff, not explicitly requested by the verify task list but consistent with design intent) | ✅ Match, no deviation |
+
+No undisclosed deviation found. The one disclosed deviation (test-file-only jsdom 30
+`window.location` mocking, see below) does not touch production code, confirmed by re-reading
+the diff: `lib/api.ts` contains no test-mocking artifacts.
+
+### Build & Tests Execution
+**Build**: PASSED
+```text
+$ npm run build
+▲ Next.js 16.2.7 (Turbopack)
+✓ Compiled successfully
+✓ Finished TypeScript
+✓ Generating static pages using 3 workers (47/47)
+Route (app) ... ƒ /api/proxy/[...path]  (present, unchanged from PR2)
+exit 0
+```
+
+**Tests**: PASSED — 22/22, independently re-run (not trusted from apply-progress.md)
+```text
+$ npm test
+RUN  v4.1.11
+Test Files  2 passed (2)
+     Tests  22 passed (22)
+exit 0
+```
+22 = 16 pre-existing proxy-route tests (Phase 2, unchanged) + 6 new `lib/api.test.ts` cases
+(A1-A6). Confirms apply-progress.md's claimed count exactly — not merely trusted, independently
+counted by running the full suite myself.
+
+**Lint**: PASSED — 0 errors, 5 pre-existing `no-img-element` warnings (identical set to
+PR1/PR2's baseline — zero regression from this batch).
+
+**Type check**: PASSED — `npx tsc --noEmit` (redirected `--tsBuildInfoFile` to scratchpad per
+apply-progress.md's documented environment workaround) → 0 errors. Confirms the workaround is
+sound and the underlying code is type-clean.
+
+### jsdom 30 / vitest 4 `window.location.assign` mocking deviation — re-verified, not trusted
+Read `__tests__/lib/api.test.ts` directly (not just the claim in apply-progress.md). Confirmed:
+- The claim is real: jsdom 30's `Location.prototype.assign` is a non-configurable own property,
+  so `vi.spyOn(window.location, "assign")` would throw `TypeError: Cannot redefine property`.
+- The workaround (`setLocation()` helper, `Object.defineProperty(window, "location", { value:
+  { ...originalLocation, pathname, assign: assignMock }, writable: true, configurable: true })`,
+  restored in `afterEach`) is sound: it replaces the whole `location` object per test rather
+  than patching one non-configurable property, and each test gets a fresh `assignMock`.
+- Module-state isolation (`vi.resetModules()` + dynamic `import("@/lib/api")` per test) is
+  necessary and present: `handleUnauthorized`'s module-level `redirecting` flag is not exported
+  and would otherwise leak `true` across A3→A4/A5/A6, causing false negatives. Verified this
+  matters by checking A3 runs first alphabetically/positionally in the file and sets
+  `redirecting = true`; without `resetModules()`, A4-A6 would silently no-op regardless of
+  correctness.
+- This is confirmed test-file-only: `git show HEAD -- lib/api.ts` contains zero references to
+  `vi.`, `mock`, or test-only constructs.
+
+### Spec Compliance Matrix (Requirements 5-6, PR3 scope)
+| Requirement | Scenario | Test | Result |
+|-------------|----------|------|--------|
+| Req5: 401 From Laravel Redirects to Login | Expired session redirects to login | `__tests__/lib/api.test.ts > A3` (401 on normal call → `assign("/login")` called once) | ✅ COMPLIANT (unit-level) |
+| Req5 (supporting, not separately scenario'd) | Bootstrap probe excluded | `A4` (`api.me` 401 → no navigate) | ✅ COMPLIANT |
+| Req5 (supporting) | No redirect loop from `/login`/`/registro` | `A5` (401 while on `/login` → no navigate) | ✅ COMPLIANT |
+| Req5 (supporting) | Concurrent 401s navigate once | `A6` (2 concurrent 401s → 1 navigate call) | ✅ COMPLIANT |
+| Req6: AuthContext Token Is a Non-Secret Sentinel | Sentinel is truthy post-login / falsy post-logout | (none — `AuthContext` wiring is `lib/auth.tsx`, Phase 4/PR4, untouched by this commit) | ⚠️ PARTIAL — `SESSION_SENTINEL = "cookie"` constant created and exported by this PR (`A2` proves it is never placed on the wire), but the scenario itself (`AuthContext.token` truthy/falsy) has no implementation or test until PR4. **Not a PR3 defect** — this is the designed transitional split (design.md, apply-progress.md Batch 3 both state this explicitly), not an omission. |
+
+**Compliance summary**: 4/4 PR3-scoped Req5 assertions compliant; Req6 correctly partial per
+the transitional-PR design — full compliance expected at PR4 verification, not before.
+
+### Correctness (Static Evidence)
+| Requirement | Status | Notes |
+|------------|--------|-------|
+| No client-constructed `Authorization` header (Req: httpOnly cookie sole credential) | ✅ Implemented | `A2` proves a real-looking token argument produces no `Authorization` header; `rg "Authorization"` on the diff shows only removal, no new construction |
+| `request()` targets proxy, not direct Laravel host | ✅ Implemented | `A1` asserts exact `/api/proxy/...` URLs for 3 different wrappers incl. path-param and no-token cases |
+| Global 401 → `/login` (Req5) | ✅ Implemented | `handleUnauthorized()` matches design §5 verbatim; A3/A5/A6 |
+
+### Coherence (Design)
+| Decision | Followed? | Notes |
+|----------|-----------|-------|
+| D3 — sentinel, `token` param kept on `request()` | ✅ Yes | Kept per design's explicit rationale (avoid 45/49-signature churn); dev-mode guardrail warns and discards real tokens |
+| §5 — `window.location.assign`, module-level `handleUnauthorized`, no router-based approach | ✅ Yes | Exact match, including the rejected-alternatives reasoning being honored in the actual code |
+| Transitional-state scope boundary (auth.tsx untouched) | ✅ Yes | `git show --name-only HEAD` confirms only `lib/api.ts` + its test + 2 SDD tracking files changed |
+
+### Live Smoke Test (dev stack was running — `docker ps` confirmed `tracklife` + `api-laravel` up)
+Performed independently via `curl` against `http://app.tracklife.test`, not just re-reading
+apply-progress.md's claim:
+
+| Check | Result | Verified how |
+|---|---|---|
+| Register new user | `201 Created`, `Set-Cookie: tracklife_session=...; HttpOnly; SameSite=lax` | curl, live |
+| Authenticated proxy call `GET /api/proxy/auth/me` with session cookie, no client `Authorization` sent | `200 OK`, real user JSON | curl, live |
+| Unauthenticated proxy call `GET /api/proxy/auth/me`, no cookie | `401 Unauthorized`, `{"message":"Unauthenticated."}` | curl, live |
+| Register response body still contains `token` key | Confirmed present (expected — stripping it is Phase 5/PR5 scope, out of this PR) | curl, live |
+
+**What curl could NOT verify (explicitly out of live-smoke-test reach)**: the actual browser
+`window.location.assign("/login")` navigation on a 401. `curl` has no JS execution context, so
+the redirect behavior (Req5's core scenario) is verified here **only** via the unit tests
+(A3/A5/A6, jsdom-simulated `window.location`), not via a real browser navigation. This matches
+what apply-progress.md itself scoped ("no browser automation tool was available") — re-verified
+as an accurate limitation, not silently trusted.
+
+### Issues Found (PR3)
+**CRITICAL**: None
+**WARNING**: None
+**SUGGESTION**:
+- Req6 (AuthContext sentinel scenarios) remains only partially covered until PR4 lands — flag
+  this as an open item for PR4's own verify pass, not a PR3 defect.
+- No browser-automation live verification exists for the `window.location.assign` redirect path
+  (Req5's actual navigation) anywhere in the chain so far — unit-test coverage is solid (A3/A5/A6
+  triangulate the behavior well), but a real end-to-end browser check (e.g. Playwright) would be
+  the only way to close this gap if it's ever considered worth the added tooling.
+
+### Verdict
+**PASS** — Phase 3 tasks complete and independently re-verified against design.md's exact code
+block; 22/22 tests pass on independent re-run (16 pre-existing + 6 new); lint 0 errors; build
+and `tsc --noEmit` clean; `git show --name-only HEAD` confirms `auth.tsx` untouched, matching
+the transitional-state design; jsdom 30 mocking deviation is real, sound, and test-file-only;
+live smoke test (register → cookie → authenticated 200 → unauthenticated 401) succeeded against
+the running dev stack, with the browser-navigation limitation explicitly and correctly disclosed
+rather than glossed over.
