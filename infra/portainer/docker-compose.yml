@@ -6,20 +6,27 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - portainer_data:/data
+    # admin_net (not traefik_net): isolates Portainer at the Docker network layer
+    # from web1/web3/api-laravel, which all share traefik_net. Without this, any
+    # of those containers could reach Portainer's Docker-socket-backed API
+    # directly at http://portainer:9000, bypassing the internal-only LAN
+    # allowlist entirely (the allowlist only guards the path through Traefik).
     networks:
-      - traefik_net
+      - admin_net
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.portainer.rule=Host(`portainer.test`)"
       - "traefik.http.routers.portainer.entrypoints=web"
+      - "traefik.http.routers.portainer.middlewares=internal-only@file"
       - "traefik.http.services.portainer.loadbalancer.server.port=9000"
-    # Acceso directo sin Traefik: http://192.168.20.123:9100
+    # Bind loopback-only: the allowlist on the Traefik router would otherwise be
+    # bypassable by hitting this published port directly.
     ports:
-      - "9100:9000"
+      - "127.0.0.1:9100:9000"
 
 volumes:
   portainer_data:
 
 networks:
-  traefik_net:
+  admin_net:
     external: true

@@ -17,8 +17,10 @@ services:
       - traefik_net
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.tracklife.rule=Host(`app.tracklife.test`) || Host(`tracklife.test`)"
-      - "traefik.http.routers.tracklife.entrypoints=web"
+      - "traefik.http.routers.tracklife.rule=Host(`app.${DOMAIN:-tracklife.test}`) || Host(`${DOMAIN:-tracklife.test}`)"
+      - "traefik.http.routers.tracklife.entrypoints=web,websecure"
+      - "traefik.http.routers.tracklife.tls=${WEB_TLS_ENABLED:-false}"
+      - "traefik.http.routers.tracklife.middlewares=${WEB_CSP_MIDDLEWARE:-}"
       - "traefik.http.services.tracklife.loadbalancer.server.port=3000"
 
 volumes:

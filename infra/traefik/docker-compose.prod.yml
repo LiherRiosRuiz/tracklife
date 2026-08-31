@@ -1,0 +1,5 @@
+services:
+  traefik:
+    volumes:
+      - ./traefik.prod.yml:/traefik.prod.yml:ro
+    command: ["--configFile=/traefik.prod.yml"]

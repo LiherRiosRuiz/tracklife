@@ -17,6 +17,39 @@ Un deploy gratis da una URL pública con HTTPS (`*.vercel.app`, `*.onrender.com`
 
 El front (Vercel) habla con la API por `API_INTERNAL_URL` / `NEXT_PUBLIC_API_URL` → apuntar a la URL pública de la API.
 
+## Edge autoalojado (Traefik) — estado real
+
+Esto describe el edge de `192.168.20.123` (LAN), **no** el deploy Vercel/Railway de arriba —
+son dos rutas de publicación independientes.
+
+- **`*.test` se sirve hoy solo por HTTP.** El entrypoint `websecure:443` y el resolver ACME
+  (`certificatesResolvers.letsencrypt`) existen en `traefik.yml` y están **listos pero
+  inactivos**: usan la CA de staging de Let's Encrypt, y ningún router ni entrypoint local pide
+  certificado, así que ACME nunca se dispara. `acme.json` está vacío (gitignored, modo 600).
+- **Dashboard (`traefik.test`) y Portainer (`portainer.test`) son solo-LAN.** Ambos exigen IP
+  dentro de `192.168.20.0/24` (o `127.0.0.1`); el dashboard además exige basicauth. Ninguno
+  publica un puerto de host alcanzable directamente (el viejo `8080:8080` se eliminó; Portainer
+  quedó en `127.0.0.1:9100:9000`).
+- **Headers de seguridad** (`X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`,
+  `Permissions-Policy`) están activos en todo el tráfico vía el entrypoint. La CSP de las apps
+  (`sec-csp-app`) solo se activa en producción (`docker-compose.prod.yml`), nunca en local, para
+  no romper HMR/`eval` de los dev servers. La API lleva su CSP (`default-src 'none'`) en dev y
+  producción por igual.
+
+**Checklist de activación (cuando haya dominio real):**
+
+1. Comprar el dominio → configurar DNS (o DDNS si la IP pública es dinámica).
+2. `cp infra/traefik/traefik.prod.yml.example infra/traefik/traefik.prod.yml` y pegar el
+   `ACME_EMAIL` real en el archivo copiado.
+3. Agregar el origen real de la API a `connect-src` en `sec-csp-app`
+   (`infra/traefik/dynamic/security.yml`) — hoy apunta a `http://api.tracklife.test`.
+4. Cambiar `caServer` a la CA de producción de Let's Encrypt en `traefik.prod.yml`.
+5. `docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d` (desde
+   `infra/traefik/`).
+6. Verificar que el certificado se emitió (sin errores ACME en los logs de Traefik).
+7. Solo entonces evaluar activar `stsPreload` en `sec-hsts` — requiere HTTPS estable en
+   producción durante un tiempo antes de enviar el dominio a la preload list del navegador.
+
 ## Pasos del usuario (gratis, ~15 min en total, requieren tu login/tarjeta-no)
 
 1. **MongoDB Atlas**: crear cluster free M0, usuario DB, copiar la connection string.

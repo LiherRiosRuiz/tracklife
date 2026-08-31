@@ -6,11 +6,17 @@ entryPoints:
   web:
     address: ":80"
     http:
-      middlewares: ["sec-baseline@file"]
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+          permanent: true
   websecure:
     address: ":443"
     http:
       middlewares: ["sec-baseline@file", "sec-hsts@file"]
+      tls:
+        certResolver: letsencrypt
 
 providers:
   docker:
@@ -21,11 +27,10 @@ providers:
     directory: /etc/traefik/dynamic
     watch: true
 
-# Inert in dev: no router and no entrypoint requests a certificate, so ACME never runs.
 certificatesResolvers:
   letsencrypt:
     acme:
-      email: "change-me@example.invalid"
+      email: "REPLACE_WITH_ACME_EMAIL"   # value of ACME_EMAIL from .env
       storage: /acme.json
       caServer: "https://acme-staging-v02.api.letsencrypt.org/directory"
       httpChallenge:

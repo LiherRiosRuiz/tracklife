@@ -26,6 +26,12 @@ status:
 infra-up:
 	@docker network create traefik_net 2>/dev/null || true
 	@docker network create backend_net 2>/dev/null || true
+	@docker network create admin_net 2>/dev/null || true
+	@if [ -e infra/traefik/acme.json ] && [ ! -f infra/traefik/acme.json ]; then echo "infra/traefik/acme.json existe pero no es un archivo regular (borralo y corre bash setup.sh)." && exit 1; fi
+	@test -f infra/traefik/acme.json || (touch infra/traefik/acme.json && chmod 600 infra/traefik/acme.json)
+	@mkdir -p infra/traefik/secrets
+	@if [ -e infra/traefik/secrets/dashboard_users ] && { [ ! -f infra/traefik/secrets/dashboard_users ] || [ ! -s infra/traefik/secrets/dashboard_users ]; }; then echo "infra/traefik/secrets/dashboard_users existe pero está vacío o no es un archivo regular (borralo y corre bash setup.sh)." && exit 1; fi
+	@test -f infra/traefik/secrets/dashboard_users || (echo "Falta infra/traefik/secrets/dashboard_users — corre bash setup.sh o generalo a mano (ver infra/traefik/.env.example)." && exit 1)
 	@cd infra/traefik   && docker compose up -d
 	@cd infra/mongodb   && docker compose up -d
 	@cd infra/portainer && docker compose up -d
@@ -132,7 +138,7 @@ logs-mongo:
 	@cd infra/mongodb     && docker compose logs -f
 
 clean: down
-	@docker network rm traefik_net backend_net 2>/dev/null || true
+	@docker network rm traefik_net backend_net admin_net 2>/dev/null || true
 	@docker system prune -f
 
 # ── Help ─────────────────────────────────────────────────────────────────────
