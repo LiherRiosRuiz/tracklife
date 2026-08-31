@@ -32,15 +32,29 @@ fi
 echo ""
 echo -e "${YELLOW}[2/4] Preparando secretos de Traefik...${NC}"
 TRAEFIK_DIR="$ROOT/infra/traefik"
+if [ -e "$TRAEFIK_DIR/acme.json" ] && [ ! -f "$TRAEFIK_DIR/acme.json" ]; then
+    echo -e "  ${YELLOW}ERROR: $TRAEFIK_DIR/acme.json existe pero no es un archivo regular"
+    echo -e "  (probablemente Docker lo creó como directorio antes de este fix).${NC}"
+    echo "  Borralo a mano (rmdir/rm -r) y volvé a correr setup.sh."
+    exit 1
+fi
 if [ ! -f "$TRAEFIK_DIR/acme.json" ]; then
     touch "$TRAEFIK_DIR/acme.json"
     chmod 600 "$TRAEFIK_DIR/acme.json"
     echo "  acme.json creado (vacío, inactivo hasta que se active HTTPS)"
 fi
 mkdir -p "$TRAEFIK_DIR/secrets"
+if [ -e "$TRAEFIK_DIR/secrets/dashboard_users" ] && { [ ! -f "$TRAEFIK_DIR/secrets/dashboard_users" ] || [ ! -s "$TRAEFIK_DIR/secrets/dashboard_users" ]; }; then
+    echo -e "  ${YELLOW}ERROR: $TRAEFIK_DIR/secrets/dashboard_users existe pero está vacío o no es un archivo regular"
+    echo -e "  (probablemente una corrida anterior de setup.sh falló a mitad de camino).${NC}"
+    echo "  Borralo (rm) y volvé a correr setup.sh para regenerar la credencial."
+    exit 1
+fi
 if [ ! -f "$TRAEFIK_DIR/secrets/dashboard_users" ]; then
     DASHBOARD_PASSWORD="$(openssl rand -base64 18 | tr -d '/+=' | head -c 24)"
-    docker run --rm httpd:alpine htpasswd -nbB admin "$DASHBOARD_PASSWORD" > "$TRAEFIK_DIR/secrets/dashboard_users"
+    DASHBOARD_USERS_TMP="$(mktemp)"
+    docker run --rm httpd:alpine htpasswd -nbB admin "$DASHBOARD_PASSWORD" > "$DASHBOARD_USERS_TMP"
+    mv "$DASHBOARD_USERS_TMP" "$TRAEFIK_DIR/secrets/dashboard_users"
     chmod 600 "$TRAEFIK_DIR/secrets/dashboard_users"
     echo -e "  ${YELLOW}Credencial del dashboard generada — usuario: admin / contraseña: $DASHBOARD_PASSWORD${NC}"
     echo -e "  ${YELLOW}Guardala ahora, no se vuelve a mostrar. Podés rotarla regenerando este archivo.${NC}"
