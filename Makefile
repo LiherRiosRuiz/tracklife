@@ -138,7 +138,7 @@ logs-mongo:
 	@cd infra/mongodb     && docker compose logs -f
 
 clean: down
-	@docker network rm traefik_net backend_net 2>/dev/null || true
+	@docker network rm traefik_net backend_net admin_net 2>/dev/null || true
 	@docker system prune -f
 
 # ── Help ─────────────────────────────────────────────────────────────────────
