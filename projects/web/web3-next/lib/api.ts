@@ -1,4 +1,27 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://api.tracklife.test";
+// Client traffic is same-origin to the Next proxy, which attaches the Bearer server-side
+// from the httpOnly cookie. NEXT_PUBLIC_API_URL stays in the env (docker-compose, README)
+// so a revert is a pure code operation — see the proposal's rollback plan.
+const PROXY_BASE = "/api/proxy";
+
+/** D3: non-secret marker exposed as AuthContext.token. Never a credential, never sent. */
+export const SESSION_SENTINEL = "cookie";
+
+type RequestOptions = RequestInit & { skipAuthRedirect?: boolean };
+
+/** api.* paths all start with "/api/"; the proxy re-adds that fixed prefix upstream. */
+function toProxyUrl(path: string): string {
+  return `${PROXY_BASE}${path.startsWith("/api/") ? path.slice(4) : path}`;
+}
+
+let redirecting = false;
+
+function handleUnauthorized() {
+  if (typeof window === "undefined" || redirecting) return;
+  const { pathname } = window.location;
+  if (pathname === "/login" || pathname === "/registro") return; // no loop
+  redirecting = true; // concurrent 401s → one nav
+  window.location.assign("/login");
+}
 
 export type User = {
   id: string;
@@ -49,27 +72,34 @@ export type SearchUser = {
 
 async function request<T>(
   path: string,
-  options: RequestInit = {},
+  options: RequestOptions = {},
+  // D3: kept so all 45 api.* wrappers and 43 call sites stay untouched. It is a sentinel,
+  // never a credential, and is deliberately never placed on the wire.
   token?: string | null,
 ): Promise<T> {
+  const { skipAuthRedirect = false, ...init } = options;
+
+  // Guardrail for the "sentinel misread as a real credential later" risk: if a real token
+  // ever reaches this function again, it is still not sent — and dev gets told.
+  if (process.env.NODE_ENV !== "production" && token && token !== SESSION_SENTINEL) {
+    console.warn("[api] Se pasó una credencial real a request(); se ignora y nunca se envía.");
+  }
+
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     Accept: "application/json",
-    ...(options.headers as Record<string, string>),
+    ...(init.headers as Record<string, string>),
   };
-
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-  }
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 10_000);
 
   let res: Response;
   try {
-    res = await fetch(`${API_URL}${path}`, {
-      ...options,
+    res = await fetch(toProxyUrl(path), {
+      ...init,
       headers,
+      credentials: "same-origin",
       signal: controller.signal,
     });
   } catch (e: unknown) {
@@ -83,6 +113,7 @@ async function request<T>(
   clearTimeout(timeoutId);
 
   if (!res.ok) {
+    if (res.status === 401 && !skipAuthRedirect) handleUnauthorized();
     const err = await res.json().catch(() => ({ message: res.statusText }));
     const error = new Error(err.message ?? "Error de API") as Error & { status?: number };
     error.status = res.status;
@@ -105,8 +136,9 @@ export const api = {
       body: JSON.stringify(data),
     }),
 
+  // Bootstrap probe: a 401 here means "not logged in", not "session expired mid-use".
   me: (token: string) =>
-    request<{ user: User }>("/api/auth/me", {}, token),
+    request<{ user: User }>("/api/auth/me", { skipAuthRedirect: true }, token),
 
   logout: (token: string) =>
     request<{ message: string }>("/api/auth/logout", { method: "POST" }, token),

@@ -216,9 +216,171 @@ None. `npm run lint` after this batch reports the same pre-existing 5 `no-img-el
 - [ ] Phase 5: Login/register response strip — RED first
 - [ ] Phase 6: Config + final verification
 
+## Batch 3
+
+**Scope**: Phase 3 only — `lib/api.ts` retarget to the proxy (`PROXY_BASE`, `toProxyUrl`,
+`SESSION_SENTINEL` export, dropped `Authorization` construction) and the global 401 →
+`/login` redirect (`handleUnauthorized`, design §5). `lib/auth.tsx`'s `localStorage` removal
+is explicitly **not** touched — that is Phase 4/PR4. The `token` parameter on `request()` is
+kept per Decision D3, so `auth.tsx`'s existing localStorage-based `api.me(saved)` call keeps
+compiling and working unchanged during this transitional PR.
+**Chain**: PR 3 of 5 (feature-branch-chain, targets PR2's branch
+`feat/remove-token-localstorage-02-proxy-route` per the orchestrator's branch naming for this
+batch: `feat/remove-token-localstorage-03-api-retarget`).
+**Mode**: Strict TDD. RED written first for all 6 cases (A1-A6) per design §3/§5/§6, confirmed
+failing for the right reason (missing proxy retarget / missing 401 redirect — not an
+infrastructure error, see the vitest-4 mocking deviation below), then GREEN implementation,
+full suite re-run to confirm no regression to Phase 2's 16 proxy-route tests.
+
+### Transitional-state verification (per orchestrator's explicit instruction)
+
+Verified against the actual code, not assumed:
+
+- `auth.tsx`'s `login`/`register` call `fetch("/api/auth/login" | "/api/auth/register", ...)`
+  directly (`lib/auth.tsx:70-89`) — these hit `app/api/auth/login/route.ts` and
+  `app/api/auth/register/route.ts` directly, which call Laravel via `API_INTERNAL_URL` (not
+  through `lib/api.ts::request()` at all, not through the new proxy). Confirmed by reading
+  `app/api/auth/login/route.ts:10` (`fetch(`${API_INTERNAL_URL}/api/auth/login`, ...)`) — this
+  code path is completely untouched by this batch and needs no reasoning about the sentinel.
+- `auth.tsx`'s mount-bootstrap still calls `api.me(saved)` with a **real** localStorage token
+  (`lib/auth.tsx:40`, unchanged — Phase 4 scope). Since `request()` still accepts (and now
+  silently discards) a `token` argument, this compiles and runs unchanged. The real token is
+  never placed on the wire any more (dev-mode `console.warn` guardrail fires instead) — verified
+  live: the running dev container's logs show exactly this warning firing from a real browser
+  session mid-session (`[browser] [api] Se pasó una credencial real a request(); se ignora y
+  nunca se envía. (lib/api.ts:85:13)`), immediately followed by `GET /api/proxy/auth/me 200` —
+  i.e. the stale localStorage token was discarded and the request still succeeded because the
+  httpOnly cookie carried the session through the proxy. This is exactly the reasoning the
+  orchestrator asked to be verified, confirmed live, not assumed.
+- All other pages call `request()` through `api.*` wrappers, which now hit `/api/proxy/...`
+  same-origin, `credentials: "same-origin"`, cookie-authenticated by the proxy server-side — so
+  authenticated calls keep working through this transitional state as long as the login-set
+  httpOnly cookie exists, independent of whether `token` is real, stale, or the sentinel.
+
+### Vitest 4 / jsdom window-mocking deviation (per orchestrator's instruction to verify)
+
+The design's test-plan prose implies a `vi.spyOn`-style approach for `window.location.assign`.
+Under **vitest 4.1.11 + jsdom 30.0.1** (this repo's actually-resolved versions, one major ahead
+of the design's vitest-3 assumption per Batch 1's note), `vi.spyOn(window.location, "assign")`
+throws `TypeError: Cannot redefine property: assign` — jsdom 30's `Location.prototype.assign`
+is a non-configurable own property on the location instance, so `spyOn` (which redefines the
+property in place) cannot touch it. **Fix**: redefine `window.location` wholesale per test —
+`Object.defineProperty(window, "location", { value: { ...originalLocation, pathname, assign:
+assignMock }, writable: true, configurable: true })` — restoring the original `window.location`
+in `afterEach`. Probed in isolation first (a throwaway test file, deleted after confirming the
+pattern) before writing it into the real RED test, to avoid guessing under TDD pressure. This
+is a **test-file-only** deviation — no production code shape changed because of it. Also used
+`vi.resetModules()` + dynamic `await import("@/lib/api")` per test to get a fresh module
+instance, since `handleUnauthorized`'s module-level `redirecting` flag (design §5) is not
+exported and must not leak state across A3/A4/A5/A6.
+
+## Phase 3: `lib/api.ts` Retarget — RED first
+
+- [x] 3.1 RED `__tests__/lib/api.test.ts`: A1 (all calls hit `/api/proxy/...`), A2 (no `Authorization` header ever), A3 (401 → `location.assign("/login")`), A4 (`api.me` 401 does not navigate), A5 (already on `/login` does not navigate), A6 (two concurrent 401s navigate once) per design §3, §5.
+- [x] 3.2 GREEN: modify `lib/api.ts` per design §3 diff — `PROXY_BASE`, exported `SESSION_SENTINEL`, `toProxyUrl`, drop `Authorization` construction, add `skipAuthRedirect` + `handleUnauthorized` (design §5), `api.me` passes `skipAuthRedirect: true`.
+- [x] 3.3 Run `npm test` — A1-A6 green; confirm all 45 `api.*` signatures unchanged.
+
+### TDD Cycle Evidence
+
+| Task | Test File | Layer | Safety Net | RED | GREEN | TRIANGULATE | REFACTOR |
+|---|---|---|---|---|---|---|---|
+| 3.1-3.3 | `__tests__/lib/api.test.ts` | Unit (jsdom env, mocked global `fetch` + `window.location`) | ✅ 16/16 (Phase 2's `proxy-route.test.ts`) run before touching `lib/api.ts` — confirmed pre-existing suite green first | ✅ Written first; ran `npx vitest run __tests__/lib/api.test.ts` before `lib/api.ts` was modified → 4/6 failed for the right reason (A1/A2: still hit `api.tracklife.test` with a real `Authorization` header; A3/A6: `assignMock` never called because no 401-redirect logic exists yet). A4/A5 passed vacuously at RED time (current code never navigates on any 401) — expected and consistent with a genuinely-not-yet-implemented feature, not a false green (both are re-verified as real behavioral passes at GREEN, see TRIANGULATE column) | ✅ After the design §3/§5 diff: `6 passed (6)` on first execution, zero iteration needed | ✅ 6 cases covering every design §6 A-scenario: A1 (3 different `api.*` wrappers, one with no token arg, each URL asserted exactly), A2 (real-looking token arg still produces no `Authorization` header + `credentials: "same-origin"` asserted), A3 (401 on a normal call → exactly 1 navigate call with the exact `"/login"` argument), A4 (`api.me`'s `skipAuthRedirect: true` proven — 401 + zero navigate calls, re-verified post-GREEN so it's not the RED-time vacuous pass), A5 (pathname `/login` guard — 401 + zero navigate calls, same re-verification), A6 (`Promise.allSettled` on two concurrent 401 calls → exactly 1 navigate call, proving the `redirecting` flag serializes concurrent 401s) | ➖ None needed — `lib/api.ts` changes matched design §3's code block directly; no post-GREEN structural change was made or needed |
+
+### Test Summary
+
+- **Total tests written**: 6 (`A1`-`A6`)
+- **Total tests passing**: 6/6 (22/22 full suite, including Phase 2's 16 proxy-route tests — zero regression)
+- **Layers used**: Unit (6) — `lib/api.ts::request()`/`api.*` exercised directly against a stubbed global `fetch` and a wholesale-redefined `window.location`, no real network, no rendered component
+- **Approval tests** (refactoring): None — `request()`'s external contract (all 49 `api.*` wrapper signatures) is unchanged, so no approval-test pass was needed to protect existing behavior beyond the Phase 2 safety net already covering the proxy side
+- **Pure functions created**: 1 (`toProxyUrl(path)` — deterministic string transform, covered indirectly by A1's exact-URL assertions)
+
+### Assertion quality notes (self-check against strict-tdd.md banned patterns)
+
+A1 asserts the **exact** proxied URL per call (`/api/proxy/dashboard`, `/api/proxy/workouts`,
+`/api/proxy/users/user-123/profile`), not just a `startsWith` check alone — a regression that
+proxied to the wrong upstream segment would fail this test even though it also "starts with
+`/api/proxy/`". A2 asserts `headers.Authorization` is `undefined` **and** a real-looking token
+string was actually passed as the argument — proving the omission is a deliberate drop, not an
+accident of never having a token to begin with. A3/A6 assert both `toHaveBeenCalledTimes` and
+(A3) the exact `"/login"` argument — not just "was called". A4/A5's negative assertions
+(`not.toHaveBeenCalled()`) are guarded by A3's companion positive case in the same file proving
+`assignMock` **does** fire under the equivalent-but-different setup (normal call, default
+pathname), so the negative assertions are not testing an untested default.
+
+### Deviations from Design
+
+1. **Vitest 4 / jsdom 30 `window.location` mocking syntax** — see the dedicated section above.
+   Test-file-only; the `handleUnauthorized`/`request()` production code matches design §3/§5
+   verbatim.
+2. **45 vs. actual 49 `api.*` wrapper count** — the design's own text (§3, "all 45 `api.*`
+   methods") undercounts; a direct AST-adjacent count of top-level keys in the `api = {...}`
+   object gives **49**. This is a pre-existing inaccuracy in the design document, not introduced
+   by this batch — flagged for awareness, not corrected in the design (out of apply-phase scope
+   to edit design.md). Verified via `git diff` that every one of the 49 wrapper signatures is
+   byte-for-byte unchanged; only `request()`'s internals and the `me` wrapper's *call site*
+   (not its own exported signature) changed.
+3. No other deviations. `lib/api.ts` matches design §3's code block diff verbatim (`PROXY_BASE`,
+   `SESSION_SENTINEL`, `RequestOptions`, `toProxyUrl`, the dev-mode guardrail, `credentials:
+   "same-origin"`, the `401 && !skipAuthRedirect` branch, `api.me`'s `skipAuthRedirect: true`).
+   `handleUnauthorized` in `lib/api.ts` matches design §5's code block verbatim (`redirecting`
+   flag, `/login`/`/registro` loop guard, `window.location.assign("/login")`).
+
+### Runtime harness (beyond the required focused test command)
+
+tasks.md's Work Unit 3 row suggested "Browser DevTools Network tab, real login flow." No browser
+automation tool was available in this environment, so the equivalent real-stack verification was
+done via `curl` against the same running dev stack used in Batch 2 (`api-laravel` + `tracklife`
+Next dev container, both up, Turbopack picked up the `lib/api.ts` edit via its file watcher —
+confirmed by `⚠ Fast Refresh had to perform a full reload when ./lib/api.ts changed` in
+`docker logs tracklife`), plus real dev-container log evidence from an already-open browser tab
+(not started by this batch):
+
+| Check | Result |
+|---|---|
+| `POST http://app.tracklife.test/api/auth/register` (real new user, real Laravel/MongoDB) | `201 Created`, `Set-Cookie: tracklife_session=...; HttpOnly; SameSite=lax`, body still contains `token` (unchanged — stripping the body token is Phase 5, out of this batch's scope) |
+| `GET http://app.tracklife.test/api/proxy/auth/me` with the session cookie, **no** `Authorization` header sent by the client | `200 OK`, real user JSON — proves the exact URL shape `api.me()`/`request()` now produces (`toProxyUrl("/api/auth/me")` → `/api/proxy/auth/me`) works end-to-end against the live proxy + Laravel |
+| `GET http://app.tracklife.test/api/proxy/dashboard` with the same cookie | `200 OK`, real dashboard JSON (macros, weekly calories, feed preview) — proves the exact URL `api.dashboard()` now produces works live, matching A1's assertion `/api/proxy/dashboard` |
+| `GET http://app.tracklife.test/api/proxy/auth/me` with **no** cookie | `401 Unauthorized` — the trigger condition `handleUnauthorized()` reacts to, confirmed live from the real proxy+Laravel stack, not a mock |
+| Live dev-container log evidence (pre-existing open browser session, unrelated to this batch's curl calls) | `[browser] [api] Se pasó una credencial real a request(); se ignora y nunca se envía.` immediately followed by `GET /api/proxy/auth/me 200` — real-world confirmation that `auth.tsx`'s still-unmodified stale-localStorage-token bootstrap call keeps working through the retarget, exactly per the transitional-state reasoning above |
+
+No component/page was modified to run this check — only `lib/api.ts` per the assigned scope.
+The smoke-test user (`smoketest-pr3-<timestamp>@example.com`) was left in the dev database;
+no cleanup mechanism exists for ad hoc dev registrations and none was requested.
+
+## Files Changed (Batch 3)
+
+| File | Action | What Was Done |
+|---|---|---|
+| `projects/web/web3-next/lib/api.ts` | Modified | Retargeted `request()` to `/api/proxy/...` (`PROXY_BASE` + `toProxyUrl`), added `credentials: "same-origin"`, dropped `Authorization` header construction entirely, exported `SESSION_SENTINEL`, added `RequestOptions`/`skipAuthRedirect`, added module-level `handleUnauthorized()` (design §5) wired into the existing `!res.ok` branch, `api.me` now passes `skipAuthRedirect: true`. `NEXT_PUBLIC_API_URL`/`API_URL` constant removed (superseded by `PROXY_BASE`) — all 49 `api.*` wrapper signatures unchanged. |
+| `projects/web/web3-next/__tests__/lib/api.test.ts` | Created | 6 tests (A1-A6) per design §3/§6/§5, jsdom environment (default), `vi.stubGlobal("fetch", ...)`, wholesale `window.location` redefinition per test (vitest-4/jsdom-30 deviation, documented above), `vi.resetModules()` + dynamic import per test for `redirecting`-flag isolation. |
+
+## Work Unit Evidence (Unit 3 — `lib/api.ts` retarget + 401 redirect, design §3/§5)
+
+| Evidence | Value |
+|---|---|
+| Focused test command and exact result | `npx vitest run __tests__/lib/api.test.ts` → `Test Files 1 passed (1)`, `Tests 6 passed (6)`. Full-suite `npx vitest run` → `Test Files 2 passed (2)`, `Tests 22 passed (22)` — confirms zero regression to Phase 2's 16 proxy-route tests. `npx tsc --noEmit` (redirected `--tsBuildInfoFile` to the scratchpad to avoid a pre-existing permission issue on the repo's `tsconfig.tsbuildinfo`) reported zero type errors. `npm run lint` reports the same pre-existing 5 `no-img-element` warnings, 0 errors — unchanged baseline. |
+| Runtime harness command/scenario and exact result | See "Runtime harness" table above — real `curl` register → cookie → `/api/proxy/auth/me` (200) → `/api/proxy/dashboard` (200) → no-cookie `/api/proxy/auth/me` (401), against the live `api-laravel` + `tracklife` dev containers, plus live dev-log confirmation of the transitional stale-token-discard behavior from an independent browser session. |
+| Rollback boundary | Revert `lib/api.ts` to restore direct browser→Laravel calls via `NEXT_PUBLIC_API_URL`/`API_URL` and delete `__tests__/lib/api.test.ts`. `lib/auth.tsx`, `lib/auth-constants.ts`, and the `app/api/auth/*` route handlers are untouched by this batch (`git status --short -- projects/web/web3-next` shows only `lib/api.ts` (M) and `__tests__/lib/api.test.ts` (??) for this batch), so this is a 1-file-revert + 1-file-delete rollback with no follow-on edits. |
+
+## Issues Found (Batch 3)
+
+None blocking. `npx tsc --noEmit` hit a pre-existing environment permission error writing
+`tsconfig.tsbuildinfo` to the repo root (unrelated to this batch's code — worked around by
+redirecting `--tsBuildInfoFile` to the scratchpad; flagged for the user/maintainer if `tsc`
+is expected to run cleanly in CI without a workaround).
+
+## Remaining Tasks
+
+- [ ] Phase 4: `lib/auth.tsx` bootstrap rewrite — RED first
+- [ ] Phase 5: Login/register response strip — RED first
+- [ ] Phase 6: Config + final verification
+
 ## Status
 
 5/5 tasks complete in Phase 1 (Phase 1 fully complete).
 4/4 tasks complete in Phase 2 (Phase 2 fully complete).
-9/25 total tasks complete across the full change (Phases 3-6 remaining, 16 tasks).
-Ready for next batch (Phase 3 — `lib/api.ts` retarget, which will start actually using this proxy route).
+3/3 tasks complete in Phase 3 (Phase 3 fully complete).
+12/25 total tasks complete across the full change (Phases 4-6 remaining, 13 tasks).
+Ready for next batch (Phase 4 — `lib/auth.tsx` bootstrap rewrite, which will remove the last
+3 `localStorage` sites and start actually relying on the cookie-only bootstrap this batch made
+possible).
