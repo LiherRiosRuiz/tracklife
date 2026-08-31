@@ -21,7 +21,8 @@ export async function POST(request: Request) {
   }
 
   // Igual que login: un usuario recién registrado debe quedar con la cookie puesta,
-  // o el Server Component del dashboard lo rebotaría a /login en bucle.
+  // o el Server Component del dashboard lo rebotaría a /login en bucle. El token
+  // va solo a la cookie httpOnly; nunca al body, o seguiría siendo legible por JS.
   const cookieStore = await cookies();
   cookieStore.set(SESSION_COOKIE, data.token, {
     httpOnly: true,
@@ -31,5 +32,6 @@ export async function POST(request: Request) {
     maxAge: SESSION_MAX_AGE,
   });
 
-  return NextResponse.json(data, { status: 201 });
+  const { token: _token, ...safe } = data;
+  return NextResponse.json(safe, { status: 201 });
 }

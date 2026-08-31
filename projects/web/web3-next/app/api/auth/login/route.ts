@@ -20,8 +20,8 @@ export async function POST(request: Request) {
     return NextResponse.json(data, { status: res.status });
   }
 
-  // data = { user, token } — el token se setea en cookie httpOnly y también se
-  // devuelve en el body para que el AuthContext mantenga el dual-write en localStorage.
+  // data = { user, token }. El token va solo a la cookie httpOnly; nunca al body,
+  // o seguiría siendo legible por JS vía res.json() aunque nada lo lea ya.
   const cookieStore = await cookies();
   cookieStore.set(SESSION_COOKIE, data.token, {
     httpOnly: true,
@@ -31,5 +31,6 @@ export async function POST(request: Request) {
     maxAge: SESSION_MAX_AGE,
   });
 
-  return NextResponse.json(data, { status: 200 });
+  const { token: _token, ...safe } = data;
+  return NextResponse.json(safe, { status: 200 });
 }

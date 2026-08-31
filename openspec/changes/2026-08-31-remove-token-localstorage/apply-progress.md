@@ -593,13 +593,216 @@ baselines as Batch 3.
 - [ ] Phase 5: Login/register response strip — RED first
 - [ ] Phase 6: Config + final verification
 
+## Batch 5 (this batch, final)
+
+**Scope**: Phase 5 (login/register response body strip, design §4 scope delta) AND Phase 6
+(config.yaml `testing.web3-next` + 3 companion edits, design §7) — the last two phases. This
+closes the last gap: Laravel's `token` was still round-tripping through
+`app/api/auth/login/route.ts` and `register/route.ts` response bodies even though `auth.tsx`
+stopped reading it after Batch 4. Success criterion #2 ("DevTools shows no bearer token") is
+only genuinely met once the body itself carries no token, not just once nothing reads it.
+**Chain**: PR 5 of 5 (feature-branch-chain, targets PR4's branch
+`feat/remove-token-localstorage-04-auth-bootstrap` per the orchestrator's branch naming for this
+batch: `feat/remove-token-localstorage-05-token-strip-config`). This is the final PR in the
+chain — the tracker PR aggregates all 5 to `main`.
+**Mode**: Strict TDD for Phase 5 (RED written first, GREEN implementation, full suite re-run).
+Phase 6 is a config-only change (no application code, no test-worthy logic — YAML string edits),
+same category as prior batches' non-code phases.
+
+### Phase 5: Login/Register Response Strip
+
+RED test file `__tests__/app/api/auth-routes.test.ts`, `// @vitest-environment node`,
+`vi.mock("next/headers", () => ({ cookies: vi.fn() }))` (same pattern as Batch 2's proxy-route
+test, proven vitest-4-compatible there), `vi.stubGlobal("fetch", ...)`. Two cases: **C1** login
+200, response body deep-equals `{ user: {...} }` with no `token` key, `cookieStore.set` called
+with the real token and `httpOnly: true`; **C2** same shape for register 201. Both cases use a
+real-looking `token` field in the mocked upstream response (`"real-sanctum-token"` /
+`"real-sanctum-token-2"`) so the "no token in body" assertion is proven against a deliberately
+non-empty precondition, not an untested default — consistent with strict-tdd.md's Empty
+Collection Rule and Batch 4's B4/B6 reasoning for the same shape of check.
+
+**RED** (ran before touching `route.ts`): `npx vitest run __tests__/app/api/auth-routes.test.ts`
+→ `2 failed (2)`. Both failed for the exact right reason —
+`AssertionError: expected { user: {...}, token: "real-sanctum-token" } to deeply equal { user: {...} }`
+(the `+ "token": "real-sanctum-token"` diff line in the actual vitest output) — not an
+infrastructure error, not a typo in the test, a genuine "production code doesn't do this yet"
+failure.
+
+**GREEN**: modified both route files per design §4's exact 1-line diff —
+```ts
+const { token: _token, ...safe } = data;
+return NextResponse.json(safe, { status: 200 }); // 201 for register
+```
+placed after the existing `cookieStore.set(SESSION_COOKIE, data.token, {...})` call, so the
+cookie set still reads the real `token` off `data` before the destructure discards it from the
+response body — order matters and was verified correct by C1/C2's cookie assertions passing.
+Re-ran: `npx vitest run __tests__/app/api/auth-routes.test.ts` → `2 passed (2)`, zero iteration
+needed (design's diff applied verbatim).
+
+### TDD Cycle Evidence
+
+| Task | Test File | Layer | Safety Net | RED | GREEN | TRIANGULATE | REFACTOR |
+|---|---|---|---|---|---|---|---|
+| 5.1-5.3 | `__tests__/app/api/auth-routes.test.ts` | Unit (node env, mocked `next/headers` + global `fetch`) | ✅ 28/28 (Phases 2-4's full suite) run before touching the route files — confirmed pre-existing suite green first | ✅ Written first; ran `npx vitest run __tests__/app/api/auth-routes.test.ts` before the route files were modified → `2 failed (2)`, both failing on the exact `token` key still present in the deep-equal diff — the right reason, not an infra error | ✅ After the design §4 1-line diff applied to both route files: `2 passed (2)` on first execution, zero iteration needed | ✅ 2 cases: C1 (login, 200, one user shape, one token value) + C2 (register, 201, a *different* user shape and a *different* token value) — different status code and different data prove the strip logic is not a hardcoded Fake It tied to one specific body shape | ➖ None needed — the destructure-and-spread diff was written once directly matching design §4's verbatim reference; no post-GREEN structural change was made or needed |
+
+### Test Summary
+
+- **Total tests written**: 2 (`C1`, `C2`)
+- **Total tests passing**: 2/2 (30/30 full suite, including Phases 2-4's 28 tests — zero regression)
+- **Layers used**: Unit (2) — Route Handlers exercised directly as plain async functions with
+  real `Request`/`Response` objects, `next/headers` mocked (required outside request scope),
+  `fetch` stubbed globally to return a fixed upstream body
+- **Approval tests** (refactoring): None — no refactoring tasks, both route files' HTTP contract
+  (method, status codes, cookie name/attributes) is otherwise unchanged
+- **Pure functions created**: 0 — the change is a destructure-and-spread inline in an existing
+  async Route Handler; no new pure function to extract for a 1-line body transform
+
+### Assertion quality notes (self-check against strict-tdd.md banned patterns)
+
+Both C1 and C2 use `toEqual` against the **exact** expected object (not `not.toHaveProperty`
+alone), plus a companion `"token" in body === false` check, plus a real cookie-set assertion
+with `toHaveBeenCalledWith` (specific cookie name, specific real token value, specific
+`httpOnly: true` option) — proving the cookie set still happens correctly, not just that the
+body strip didn't accidentally also break the cookie. Neither assertion is a bare
+`toBeDefined()`/tautology; both would fail if the strip logic regressed (token reappears in
+body) or if it over-reached (cookie set also got dropped).
+
+### Deviations from Design
+
+None in the production code — `app/api/auth/login/route.ts` and
+`app/api/auth/register/route.ts` match design §4's scope-delta diff verbatim (`const { token:
+_token, ...safe } = data;` / `NextResponse.json(safe, { status: ... })`). The test file is new
+(design §6 only listed C1/C2 as a two-row table, not full test code), written to satisfy both
+rows with real assertions per strict-tdd.md's Assertion Quality Rules.
+
+One **known, accepted** side effect: the `_token` destructure produces an
+`@typescript-eslint/no-unused-vars` **warning** (not an error) in both files —
+`'_token' is assigned a value but never used`. This is an inherent property of design §4's own
+code shape (`const { token: _token, ...safe } = data`), not something introduced by a different
+implementation choice; the underscore prefix is the standard "intentionally unused" convention
+but this repo's eslint config does not have `argsIgnorePattern`/`varsIgnorePattern` configured to
+suppress it for destructured (non-argument) bindings. `npm run lint` still exits `0` (0 errors,
+7 warnings total — 5 pre-existing `no-img-element` + these 2 new ones), so this does not block
+CI or the apply-phase gate. Not silently fixed by picking a different destructure shape, since
+design §4 gives this exact code block as the deliverable; flagged here for the
+user/maintainer's awareness, not corrected outside apply-phase scope.
+
+### Runtime harness (beyond the required focused test command) — full-chain live smoke test
+
+Per the orchestrator's explicit instruction, verified the *actual* HTTP wire behavior against the
+live `api-laravel` + `tracklife` dev containers (both already running, unrelated to this batch),
+not just that `auth.tsx` doesn't read the field:
+
+| Step | Request | Result |
+|---|---|---|
+| 1. Register (fresh user, real Laravel/MongoDB, cookie jar captured) | `POST http://app.tracklife.test/api/auth/register` | `201 Created`. `Set-Cookie: tracklife_session=...; Path=/; HttpOnly; SameSite=lax` present. Body: `{"user":{"id":"6a95d79e...","name":"Smoke Test PR5",...}}` — **genuinely no `token` key anywhere in the real response**, not a mocked assertion |
+| 2. Authenticated follow-up call, cookie only | `GET http://app.tracklife.test/api/proxy/auth/me` with the cookie jar from step 1, zero client-side token of any kind | `200 OK`, real user JSON returned — proves the session set in step 1 (from a body that never exposed the token) still authenticates a subsequent request purely via the httpOnly cookie |
+| 3. Login (second fresh user, register then login) | `POST http://app.tracklife.test/api/auth/login` | `200 OK`. `Set-Cookie: tracklife_session=...; HttpOnly; SameSite=lax` present. Body: `{"user":{...}}` — same "no token key" result for the login path as step 1 was for register |
+
+This is the exact scenario the task instructed: a real HTTP client (curl, not `auth.tsx`'s
+fetch-based logic) confirms the response body has no `token` key while `Set-Cookie` is present,
+and the session works for a follow-up authenticated call — closing success criterion #2
+("DevTools shows no bearer token") end-to-end, not just at the client-code-doesn't-read-it level
+that Batch 4 left it at. Combined with `rg -n "localStorage" projects/web/web3-next -i | rg -i
+"token"` returning only a test assertion and a doc comment (zero application-code hits), success
+criterion #1 is also independently re-confirmed at the end of this batch.
+
+No cleanup mechanism exists for the three ad hoc dev registrations
+(`smoketest-pr5-<timestamp>@example.com`, two more with different timestamps) left in the dev
+database; none was requested.
+
+## Phase 5: Login/Register Response Strip (scope delta) — RED first
+
+- [x] 5.1 RED `__tests__/app/api/auth-routes.test.ts`: C1 (login 200, body has no `token` key, cookie still set), C2 (register 201, same) per design §4 scope delta.
+- [x] 5.2 GREEN: modify `app/api/auth/login/route.ts` and `app/api/auth/register/route.ts` — destructure `token` out, return `safe` body only.
+- [x] 5.3 Run `npm test` — C1-C2 green; confirm `auth.tsx` never read `data.token` (no regression).
+
+## Files Changed (Batch 5, Phase 5)
+
+| File | Action | What Was Done |
+|---|---|---|
+| `projects/web/web3-next/app/api/auth/login/route.ts` | Modified | Added `const { token: _token, ...safe } = data;` after the cookie-set call; response body now `safe` (no `token` key), status unchanged (200) |
+| `projects/web/web3-next/app/api/auth/register/route.ts` | Modified | Same pattern; response body now `safe`, status unchanged (201) |
+| `projects/web/web3-next/__tests__/app/api/auth-routes.test.ts` | Created | 2 tests (C1, C2) per design §4/§6, `// @vitest-environment node`, `vi.mock("next/headers")` factory form, `vi.stubGlobal("fetch", ...)` |
+
+## Work Unit Evidence (Unit 5 — Login/register body strip, design §4 delta)
+
+| Evidence | Value |
+|---|---|
+| Focused test command and exact result | `npx vitest run __tests__/app/api/auth-routes.test.ts` → `Test Files 1 passed (1)`, `Tests 2 passed (2)`. Full-suite `npm test` → `Test Files 4 passed (4)`, `Tests 30 passed (30)` — confirms zero regression to Phases 2-4's 28 tests. `npm run lint` → 0 errors, 7 warnings (5 pre-existing + 2 new `_token` unused-var warnings, documented above as an accepted design-shape side effect), exit code `0`. `npm run build` → succeeded, all 47 routes compiled including `/api/auth/login`, `/api/auth/register`, `/api/proxy/[...path]` all listed as `ƒ` (dynamic, server-rendered). |
+| Runtime harness command/scenario and exact result | See "Runtime harness — full-chain live smoke test" table above — real `curl` register (201, no `token` in body, `Set-Cookie` present) → authenticated follow-up `/api/proxy/auth/me` (200, cookie-only) → real `curl` login (200, no `token` in body, `Set-Cookie` present), against the live `api-laravel` + `tracklife` dev containers. This is the exact end-to-end verification requested: a real HTTP client, not just unit-test mocks or reading `auth.tsx`'s source. |
+| Rollback boundary | Revert the two route files (each a 2-line diff: 1 destructure line + 1 changed `NextResponse.json` call) and delete `__tests__/app/api/auth-routes.test.ts`. `lib/api.ts`, `lib/auth.tsx`, `lib/auth-constants.ts`, and `app/api/proxy/[...path]/route.ts` are untouched by this batch's Phase 5 work (`git status --short -- projects/web/web3-next` shows only `app/api/auth/login/route.ts` (M), `app/api/auth/register/route.ts` (M), and `__tests__/app/api/auth-routes.test.ts` (??) for Phase 5), so this is a 2-file-revert + 1-file-delete rollback with no follow-on edits. |
+
+## Phase 6: Config + Final Verification
+
+- [x] 6.1 Modify `openspec/config.yaml` `testing.web3-next`: `ready: true`, `runner`, `existing_tests`, `lint`, `build`, `notes` per design §7.
+- [x] 6.2 Modify `openspec/config.yaml` `context:` line — drop "no test runner installed" note.
+- [x] 6.3 Modify `openspec/config.yaml` `rules.apply.guidelines` — replace vitest-not-installed flag with TDD-ready line.
+- [x] 6.4 Modify `openspec/config.yaml` `rules.apply.test_command` and `rules.verify.test_command` — replace with `web3-next: npm test`.
+- [x] 6.5 Run `npm test`, `npm run lint`, `npm run build` in web3-next — all pass.
+- [x] 6.6 Manual check against proposal success criteria: `rg "localStorage" projects/web/web3-next` zero auth-token hits; DevTools shows no bearer token; login/reload/logout E2E; expired session → `/login`.
+
+### Deviations from Design (Phase 6, with rationale)
+
+1. **`runner` field text differs from design §7's literal `"Vitest 3 + @testing-library/react
+   (jsdom) via \`npm test\`"`** — written as `"Vitest 4 + @testing-library/react (jsdom) via
+   \`npm test\` (resolved 4.1.11, see Batch 1 apply-progress deviation)"` instead. The design's
+   own text was an unverified placeholder (design.md explicitly could not reach the npm registry
+   during the design phase); Batch 1's actual `npm install` resolved Vitest to `4.1.11`, one
+   major ahead, and every subsequent batch (2-4) ran real tests against that actual version.
+   Writing "Vitest 3" into `config.yaml` — a file whose entire purpose is to tell future agents
+   what testing capability actually exists — would be a **known-false** statement contradicted
+   by this repo's own `package.json` (`"vitest": "^4.1.11"`) and every prior batch's evidence.
+   Correcting it to the real major version is more faithful to the design's *intent* (accurately
+   describe the ready-to-use test runner) than reproducing its literal placeholder text would be.
+2. No other deviations. `testing.web3-next.existing_tests` lists all 4 real test file paths
+   verbatim as design §7 specified (`fd . __tests__ --type f` confirms these are exactly the 4
+   files that exist, no more, no fewer). The `context:`, `rules.apply.guidelines`, and
+   `rules.apply/verify.test_command` edits match design §7's three companion-edit instructions
+   verbatim (same replacement text, same target lines).
+3. `rules.verify.test_command` in the original file only had `"api-laravel: composer test"` (no
+   `web3-next` entry existed there at all, unlike `rules.apply.test_command` which had a
+   `web3-next: npm run lint (no test runner yet)` placeholder). Design §7's third companion edit
+   says to replace *both* `rules.apply.test_command` **and** `rules.verify.test_command` with a
+   `web3-next: npm test` entry — read as "ensure this field states `npm test` for web3-next",
+   satisfied by appending `| web3-next: npm test` to `rules.verify.test_command`'s existing
+   `api-laravel: composer test` value, consistent with the existing `"api-laravel: X | web3-next:
+   Y"` pipe-separated convention already used in `rules.apply.test_command`.
+
+## Files Changed (Batch 5, Phase 6)
+
+| File | Action | What Was Done |
+|---|---|---|
+| `openspec/config.yaml` | Modified | `testing.web3-next` block: `ready: false → true`, added `runner`, `existing_tests`, `notes` fields (kept `lint`/`build`, unchanged text); `context:` line: dropped "no test runner installed" note, states Vitest+Testing Library installed 2026-08-31; `rules.apply.guidelines`: replaced the vitest-not-installed flag line with "For web3-next, write Vitest tests first (TDD ready)"; `rules.apply.test_command`: `web3-next: npm run lint (no test runner yet)` → `web3-next: npm test`; `rules.verify.test_command`: `api-laravel: composer test` → `api-laravel: composer test \| web3-next: npm test` (new web3-next entry added, per the deviation note above) |
+
+## Work Unit Evidence (Unit 6 — Config + final verification, design §7)
+
+| Evidence | Value |
+|---|---|
+| Focused test command and exact result | N/A for Phase 6 itself (YAML config edit, no test-worthy logic) — covered by Unit 5's full-suite run above, which is the same `npm test` command 6.5 requires. Re-confirmed after the config edit: `npm test` → `Test Files 4 passed (4)`, `Tests 30 passed (30)` (config.yaml changes do not affect the actual test run, only the SDD pipeline's self-description of it) |
+| Runtime harness command/scenario and exact result | 6.6's manual success-criteria check: `rg -n "localStorage" projects/web/web3-next -i \| rg -i "token"` → 2 hits, both a test assertion (`__tests__/lib/auth.test.tsx:136`) and a doc comment (`lib/auth-constants.ts:2`), zero application-code reads/writes of an auth token via localStorage. Combined with Unit 5's live curl smoke test (register/login → no `token` in body, `Set-Cookie` present, cookie-only follow-up call succeeds) and Batch 4's live curl login/reload/logout sequence, all four of the proposal's success criteria are now verified against real running infrastructure, not just unit-test mocks: (1) zero localStorage token hits — `rg` above; (2) DevTools shows no bearer token — Unit 5's curl bodies have no `token` key and no request in this change ever sets a client-constructed `Authorization` header (`lib/api.ts`'s `Authorization` construction was removed in Batch 3); (3) login/reload/logout E2E — Batch 4's curl sequence; (4) expired/no session → `/login` — Batch 3's A3/A6 unit tests plus `handleUnauthorized()`'s `window.location.assign("/login")` wired into `!res.ok` (401 branch) since Batch 3, confirmed via the live no-cookie `/api/proxy/auth/me` → `401` result in Batches 2-3's runtime harnesses (the redirect itself requires a real browser to observe `window.location.assign` firing, which this environment cannot drive — the 401 trigger condition it reacts to is confirmed live, and A3/A6 unit-test the redirect logic directly against a real DOM) |
+| Rollback boundary | Revert `openspec/config.yaml` to its pre-batch state (`git diff openspec/config.yaml` is a single, self-contained diff — 4 fields in `testing.web3-next` plus 3 one-line replacements elsewhere in the same file). No application code is touched by Phase 6, so this is a 1-file revert with no follow-on edits. |
+
+## Issues Found (Batch 5)
+
+None blocking. The `_token` unused-var lint warnings (2 new, non-blocking, documented above) are
+the only new lint output; `npm run lint` still exits `0`. `npm run build` succeeded with all 47
+routes compiled, including the two modified auth routes and the (already-existing since Batch 2)
+proxy route.
+
 ## Status
 
 5/5 tasks complete in Phase 1 (Phase 1 fully complete).
 4/4 tasks complete in Phase 2 (Phase 2 fully complete).
 3/3 tasks complete in Phase 3 (Phase 3 fully complete).
 4/4 tasks complete in Phase 4 (Phase 4 fully complete).
-16/25 total tasks complete across the full change (Phases 5-6 remaining, 9 tasks).
-Ready for next batch (Phase 5 — login/register response body strip, which closes the last gap:
-Laravel's `token` currently still round-trips through `app/api/auth/login/route.ts` and
-`register/route.ts` response bodies even though nothing reads it anymore after this batch).
+3/3 tasks complete in Phase 5 (Phase 5 fully complete).
+6/6 tasks complete in Phase 6 (Phase 6 fully complete).
+25/25 total tasks complete across the full change. **The change is fully implemented.**
+All 4 proposal success criteria verified live against the running dev stack (not just unit-test
+mocks): (1) zero `localStorage` auth-token hits in application code, (2) DevTools/curl shows no
+bearer token in any response body or client-constructed header, (3) login/reload/logout works
+end-to-end via the httpOnly cookie alone, (4) an unauthenticated/expired-session request receives
+401 and the client-side redirect-to-`/login` logic is wired and unit-tested against that trigger.
+Full suite: 30/30 tests passing (4 test files), `npm run lint` 0 errors, `npm run build` succeeds.
+Ready for sdd-verify.
