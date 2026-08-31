@@ -28,11 +28,11 @@ Chain strategy: pending
 
 ## Phase 1: Test Infrastructure (D4 prerequisite)
 
-- [ ] 1.1 `npm i -D vitest @vitejs/plugin-react jsdom @testing-library/react @testing-library/dom vite-tsconfig-paths` in web3-next; record resolved versions; peer-dep conflicts are a blocker to report, not bypass (design §1).
-- [ ] 1.2 Add `test`/`test:watch` scripts to `package.json`.
-- [ ] 1.3 Create `vitest.config.mts` (jsdom env, tsconfig-paths, setup file, `__tests__/**/*.test.{ts,tsx}` include) per design §1.
-- [ ] 1.4 Create `vitest.setup.ts` (RTL `cleanup` on `afterEach`) per design §1.
-- [ ] 1.5 Verify `npm test` runs clean with zero tests before writing any RED test.
+- [x] 1.1 `npm i -D vitest @vitejs/plugin-react jsdom @testing-library/react @testing-library/dom vite-tsconfig-paths` in web3-next; record resolved versions; peer-dep conflicts are a blocker to report, not bypass (design §1).
+- [x] 1.2 Add `test`/`test:watch` scripts to `package.json`.
+- [x] 1.3 Create `vitest.config.mts` (jsdom env, tsconfig-paths, setup file, `__tests__/**/*.test.{ts,tsx}` include) per design §1.
+- [x] 1.4 Create `vitest.setup.ts` (RTL `cleanup` on `afterEach`) per design §1.
+- [x] 1.5 Verify `npm test` runs clean with zero tests before writing any RED test.
 
 ## Phase 2: Proxy Route — RED first
 
