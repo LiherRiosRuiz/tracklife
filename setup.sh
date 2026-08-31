@@ -15,7 +15,7 @@ echo -e "${GREEN}=== Servidor Stack — Setup inicial ===${NC}"
 echo ""
 
 # 1. Redes Docker
-echo -e "${YELLOW}[1/3] Creando redes Docker...${NC}"
+echo -e "${YELLOW}[1/4] Creando redes Docker...${NC}"
 docker network create traefik_net  2>/dev/null && echo "  traefik_net  creada" || echo "  traefik_net  ya existe"
 docker network create backend_net  2>/dev/null && echo "  backend_net  creada" || echo "  backend_net  ya existe"
 docker network create admin_net    2>/dev/null && echo "  admin_net    creada" || echo "  admin_net    ya existe"
