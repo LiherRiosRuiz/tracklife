@@ -56,15 +56,15 @@ Chain strategy: pending
 
 ## Phase 5: Login/Register Response Strip (scope delta) — RED first
 
-- [ ] 5.1 RED `__tests__/app/api/auth-routes.test.ts`: C1 (login 200, body has no `token` key, cookie still set), C2 (register 201, same) per design §4 scope delta.
-- [ ] 5.2 GREEN: modify `app/api/auth/login/route.ts` and `app/api/auth/register/route.ts` — destructure `token` out, return `safe` body only.
-- [ ] 5.3 Run `npm test` — C1-C2 green; confirm `auth.tsx` never read `data.token` (no regression).
+- [x] 5.1 RED `__tests__/app/api/auth-routes.test.ts`: C1 (login 200, body has no `token` key, cookie still set), C2 (register 201, same) per design §4 scope delta.
+- [x] 5.2 GREEN: modify `app/api/auth/login/route.ts` and `app/api/auth/register/route.ts` — destructure `token` out, return `safe` body only.
+- [x] 5.3 Run `npm test` — C1-C2 green; confirm `auth.tsx` never read `data.token` (no regression).
 
 ## Phase 6: Config + Final Verification
 
-- [ ] 6.1 Modify `openspec/config.yaml` `testing.web3-next`: `ready: true`, `runner`, `existing_tests`, `lint`, `build`, `notes` per design §7.
-- [ ] 6.2 Modify `openspec/config.yaml` `context:` line — drop "no test runner installed" note.
-- [ ] 6.3 Modify `openspec/config.yaml` `rules.apply.guidelines` — replace vitest-not-installed flag with TDD-ready line.
-- [ ] 6.4 Modify `openspec/config.yaml` `rules.apply.test_command` and `rules.verify.test_command` — replace with `web3-next: npm test`.
-- [ ] 6.5 Run `npm test`, `npm run lint`, `npm run build` in web3-next — all pass.
-- [ ] 6.6 Manual check against proposal success criteria: `rg "localStorage" projects/web/web3-next` zero auth-token hits; DevTools shows no bearer token; login/reload/logout E2E; expired session → `/login`.
+- [x] 6.1 Modify `openspec/config.yaml` `testing.web3-next`: `ready: true`, `runner`, `existing_tests`, `lint`, `build`, `notes` per design §7.
+- [x] 6.2 Modify `openspec/config.yaml` `context:` line — drop "no test runner installed" note.
+- [x] 6.3 Modify `openspec/config.yaml` `rules.apply.guidelines` — replace vitest-not-installed flag with TDD-ready line.
+- [x] 6.4 Modify `openspec/config.yaml` `rules.apply.test_command` and `rules.verify.test_command` — replace with `web3-next: npm test`.
+- [x] 6.5 Run `npm test`, `npm run lint`, `npm run build` in web3-next — all pass.
+- [x] 6.6 Manual check against proposal success criteria: `rg "localStorage" projects/web/web3-next` zero auth-token hits; DevTools shows no bearer token; login/reload/logout E2E; expired session → `/login`.
