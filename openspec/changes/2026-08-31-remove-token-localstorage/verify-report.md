@@ -138,3 +138,180 @@ build/lint/test suite is green, and the one documented design deviation
 unexplained departure. Two WARNINGs are recorded for visibility (TDD-evidence
 structural exception, pre-existing npm audit advisories) but neither blocks
 this batch or its intended follow-on (Phase 2).
+
+---
+
+## PR2 Verification (Phase 2 — Proxy Route)
+
+```yaml
+schema: gentle-ai.verify-result/v1
+verdict: pass
+blockers: 0
+critical_findings: 0
+requirements: 3/7 (scope: PR2 only — proxy route in isolation; Req1/5/6/7 land in later PRs)
+scenarios: 5/12 (scope: PR2 only — Req2 x1, Req3 x3, Req4 x1)
+test_command: npm test
+test_exit_code: 0
+test_output_hash: sha256:13edf694f5d9fcfb96d367618b9893c2be6113123c82d64ee5c78a2ddca882c3
+build_command: npm run build
+build_exit_code: 0
+build_output_hash: sha256:2c58229ea10b8c9d271d5dc830eb4b03ef12b74d37aa3848bb32c45a19755922
+```
+
+**Change**: 2026-08-31-remove-token-localstorage
+**Scope**: PR2 only — Phase 2 of tasks.md (`app/api/proxy/[...path]/route.ts` and its
+16-case test suite). Route is created but genuinely unused elsewhere yet — `lib/api.ts`
+retarget is Phase 3/PR3. Phase 1 (Vitest install) already verified/merged; not re-verified.
+**Version**: `specs/client-session-auth/spec.md` (requirements 1-4 read; only 2-4 testable
+at this scope)
+**Mode**: Strict TDD (declared by apply-progress.md Batch 2, cross-checked below)
+
+### Completeness (Phase 2 only)
+| Metric | Value |
+|--------|-------|
+| Phase 2 tasks total | 4 |
+| Phase 2 tasks complete | 4 |
+| Phase 2 tasks incomplete | 0 |
+| Full change tasks complete | 9/25 (Phases 3-6 out of scope for this verify) |
+
+`tasks.md` 2.1-2.4 all `[x]`, matching apply-progress.md's "4/4 tasks complete in
+Phase 2" claim — checked directly in the file, not merely trusted.
+
+### Build & Tests Execution
+**Build**: PASSED
+```text
+$ npm run build
+▲ Next.js 16.2.7 (Turbopack)
+✓ Compiled successfully in 5.3s
+✓ Finished TypeScript in 4.3s
+✓ Generating static pages using 3 workers (47/47) in 382ms
+Route (app) ... ƒ /api/proxy/[...path]  (new, dynamic)
+exit 0
+```
+
+**Tests**: PASSED — 16/16, independently re-run (not trusted from apply-progress.md)
+```text
+$ npm test
+RUN  v4.1.11
+Test Files  1 passed (1)
+     Tests  16 passed (16)
+exit 0
+```
+
+**Lint**: PASSED — 0 errors, 5 pre-existing `no-img-element` warnings (identical set
+to PR1's baseline — zero regression from the new route file).
+
+**Coverage**: Not available — no coverage tool configured in this project (informational
+only per strict-tdd-verify.md; not a blocker).
+
+### Independent Verification Checklist (5 requested checks)
+| # | Check | Result |
+|---|-------|--------|
+| 1 | `route.ts` matches design.md §2 code exactly | ✅ Confirmed byte-for-byte: `SEGMENT_RE`, `MAX_SEGMENTS = 8`, `UPSTREAM_TIMEOUT_MS = 10_000`, header-building (not copying), `redirect: "manual"`, response header allow-list (`Content-Type`, `Cache-Control` only), `GET`/`POST`/`PUT`/`DELETE` exported and `PATCH` omitted — no deviation found |
+| 2 | `npm test` re-run independently → 16/16 | ✅ Confirmed twice (`sha256:13edf69...` for the captured run); apply-progress's reported count matches actual execution, not just narrative |
+| 3 | D1 rejection tests (R1-R8) genuinely exercise `safeUpstreamPath()`, not tautological | ✅ Confirmed by reading assertions against the actual regex/logic (see "D1 Rejection Spot-Check" below) — every R-case fails for the specific reason it claims to test, and every R-case additionally asserts `fetchMock` was never called, so a broken implementation that still 400'd for the wrong reason would still be caught if fetch were wrongly invoked |
+| 4 | Route genuinely unused elsewhere (`rg "api/proxy"` outside route/test) | ✅ Confirmed — only hits are inside `app/api/proxy/[...path]/route.ts` itself and `__tests__/app/api/proxy-route.test.ts`. `lib/api.ts` still targets `NEXT_PUBLIC_API_URL` directly (verified by the Phase 3 task list, not yet touched) |
+| 5 | `npm run lint` / `npm run build` — no regression | ✅ Both exit 0; lint warnings identical to PR1's baseline (5, all pre-existing `no-img-element`); build adds exactly one new route `ƒ /api/proxy/[...path]` to the manifest, 47 total routes unchanged elsewhere |
+
+### D1 Rejection Spot-Check (against actual `safeUpstreamPath()` logic)
+
+`SEGMENT_RE = /^[A-Za-z0-9._~-]+$/` (allow-list) is checked first, then an explicit
+`seg === "." || seg === ".."` check runs *after* the regex. This ordering matters:
+
+| Case | Why it's rejected (traced against the real code) | Tautological? |
+|---|---|---|
+| R1 `[]` | `segments.length === 0` → the first guard clause, before any per-segment check | No — different code path than R2-R8 |
+| R2 `[".."]`/`["."]` | **Passes** `SEGMENT_RE` (`.` and `-`/`~` chars are in the allow-list, so `".."` matches the regex!) — rejection comes from the *second*, explicit `seg === ".."` check, not the regex. Confirms the test genuinely exercises the second guard, not a regex fluke | No |
+| R3 `["a/b"]` | `/` is outside `[A-Za-z0-9._~-]` → regex fails | No |
+| R4 `["a\\b"]` | `\` is outside the charset → regex fails | No |
+| R5 `["http:", ...]` / `["evil.com:8000"]` | `:` is outside the charset → regex fails | No |
+| R6 `["http://evil.com"]` | `:` and `/` both outside charset → regex fails | No |
+| R7 `[""]` | Empty string fails `+` (one-or-more) in the regex | No |
+| R8 (9 segments) | `segments.length > MAX_SEGMENTS (8)` → first guard clause | No |
+
+Each rejection reason is distinct and traceable to a specific line in `safeUpstreamPath`.
+R2 in particular is worth flagging positively: a naive reviewer might assume the allow-list
+regex alone blocks `".."`, but it doesn't (all its characters are allowed) — the test's
+passing status genuinely depends on the second explicit check existing, which is exactly
+the kind of case a tautological/incomplete test would miss.
+
+### Correctness (Static + Runtime Evidence)
+| Requirement | Status | Notes |
+|------------|--------|-------|
+| Req: Proxy Forwards Authenticated Requests Server-Side | ✅ Implemented | G1 (Bearer attached from cookie), G5 (status/body verbatim) |
+| Req: Proxy Closed by Construction | ✅ Implemented | R1-R8 (rejection), G1 (URL targets only `API_INTERNAL_URL`) |
+| Req: Inbound Authorization Header Is Dropped | ✅ Implemented | G3 — inbound `Authorization: Bearer attacker-token` proven absent, replaced by server-attached value |
+| Req: 401 Redirect / Sentinel / End-to-end (Req 1, 5, 6, 7) | ➖ Out of scope | Not implemented yet by design — Phases 3-5; correctly deferred, not a gap in PR2 |
+
+### Coherence (Design)
+| Decision | Followed? | Notes |
+|----------|-----------|-------|
+| Design §2 route.ts code block | ✅ Yes | Verbatim match, confirmed by direct read, not summary |
+| Design §6 test plan (R1-R8, G1-G8) | ✅ Yes | All 16 cases present, each with a real behavioral assertion |
+| D1 (closed by construction) | ✅ Yes | Headers built not copied; fixed `API_INTERNAL_URL` + `UPSTREAM_PREFIX`; no caller-supplied host path exists |
+| Threat matrix → RED test mapping (design §6/§Threat Matrix) | ✅ Yes | Every threat-matrix row has a corresponding R-case |
+
+### TDD Compliance (Strict TDD Mode active — strict-tdd-verify.md applied)
+| Check | Result | Details |
+|-------|--------|---------|
+| TDD Evidence reported | ✅ | "TDD Cycle Evidence" table present in apply-progress.md Batch 2 |
+| All tasks have tests | ✅ | 2.1-2.4 all map to `__tests__/app/api/proxy-route.test.ts` |
+| RED confirmed (tests exist) | ✅ | Test file exists, read directly, contains all 16 named cases |
+| GREEN confirmed (tests pass now) | ✅ | Re-run independently: 16/16 pass |
+| Triangulation adequate | ✅ | 16 distinct cases for 3 spec requirements + threat matrix; no shared fake-it path |
+| Safety Net for modified files | ➖ N/A | New file, nothing pre-existing to protect (correctly reported as N/A, not skipped) |
+
+**Note on RED evidence**: `route.ts` and its test file landed in the same commit
+(`137972f`), so the "test failed before the route existed" claim cannot be re-derived
+from git history alone — this is a structural limitation of squashed-commit review, not
+a red flag. The claim is internally consistent (a route file that doesn't exist yet
+cannot import successfully) and GREEN is independently confirmed by actual re-execution,
+which is the stronger of the two guarantees.
+
+**TDD Compliance**: 5/5 applicable checks passed (1 correctly N/A)
+
+### Test Layer Distribution
+| Layer | Tests | Files | Tools |
+|-------|-------|-------|-------|
+| Unit | 16 | 1 | Vitest 4.1.11, node environment, mocked `next/headers` + global `fetch` |
+| Integration | 0 | 0 | — |
+| E2E | 0 | 0 | Manual `curl` against a live dev stack, documented in apply-progress.md as supplementary evidence, not a substitute |
+| **Total** | **16** | **1** | |
+
+### Assertion Quality
+No banned patterns found. Every R-case asserts both `res.status` **and**
+`fetchMock` non-invocation (not a single tautological status check). Every G-case
+asserts a specific value read from real `fetchMock.mock.calls[0]` arguments or the
+real returned `NextResponse` — no `toBeDefined()`-only assertions, no ghost loops, no
+CSS/implementation-detail coupling. Mock/assertion ratio: 2 mocked dependencies
+(`cookies`, `fetch`) against ~30 `expect()` calls across 16 tests — not mock-heavy.
+
+**Assertion quality**: ✅ All assertions verify real behavior
+
+### Quality Metrics
+**Linter**: ✅ No errors (5 pre-existing unrelated warnings)
+**Type Checker**: ✅ No errors (`npm run build`'s TypeScript pass, 4.3s, clean)
+
+### Issues Found
+**CRITICAL**: None
+
+**WARNING**: None
+
+**SUGGESTION**:
+1. RED evidence (test failing before `route.ts` existed) cannot be independently
+   re-derived from git history since both files landed in a single commit. Not
+   blocking — GREEN is the stronger, independently-reproduced guarantee, and the
+   claim is internally consistent. For future batches, consider an intermediate
+   commit or PR description snippet capturing the RED failure output verbatim, so
+   verify does not have to rely on narrative for that half of the cycle.
+
+### Verdict
+**PASS**
+Phase 2 (proxy route) is complete, matches design.md §2 verbatim, and is verified
+independently against 5 concrete checks plus a line-by-line spot-check of the D1
+rejection logic — all passed, with the R2 case confirmed to genuinely depend on the
+explicit `.`/`..` guard rather than the allow-list regex. 16/16 tests re-run and
+confirmed green. Lint and build show zero regression. The route is confirmed unused
+elsewhere in the codebase, consistent with the stated PR2 scope. Zero CRITICAL or
+WARNING findings; one non-blocking SUGGESTION about RED-evidence traceability for
+future batches.
