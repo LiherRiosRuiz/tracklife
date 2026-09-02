@@ -6,16 +6,18 @@ context: |
   landing only), web2-nuxt (unrelated Nuxt scaffold — do NOT touch for TrackLife
   work). Docker/Traefik infra at repo root, no shared root package manager.
   Strict TDD Mode: enabled (global user marker). See testing capabilities below
-  per subproject — web3-next currently has no test runner installed.
+  per subproject — web3-next runs Vitest + Testing Library (installed 2026-08-31).
 
 strict_tdd: true
 
 testing:
   web3-next:
-    ready: false
-    reason: "No vitest/jest installed, no test directories. Install vitest + @testing-library/react before TDD work here."
+    ready: true
+    runner: "Vitest 4 + @testing-library/react (jsdom) via `npm test` (resolved 4.1.11, see Batch 1 apply-progress deviation)"
+    existing_tests: "__tests__/app/api/proxy-route.test.ts, __tests__/app/api/auth-routes.test.ts, __tests__/lib/api.test.ts, __tests__/lib/auth.test.tsx"
     lint: "npm run lint (eslint 9)"
     build: "npm run build"
+    notes: "Vitest cannot test async Server Components — app/app/page.tsx stays E2E/manual."
   api-laravel:
     ready: true
     runner: "PHPUnit 12 via `composer test` / `php artisan test`"
@@ -46,11 +48,11 @@ rules:
     guidelines:
       - Follow existing code patterns per subproject
       - For api-laravel, write PHPUnit feature tests first (TDD ready)
-      - For web3-next, flag that vitest is not installed before enabling strict TDD there
+      - For web3-next, write Vitest tests first (TDD ready)
     tdd: true
-    test_command: "api-laravel: composer test | web3-next: npm run lint (no test runner yet)"
+    test_command: "api-laravel: composer test | web3-next: npm test"
   verify:
-    test_command: "api-laravel: composer test"
+    test_command: "api-laravel: composer test | web3-next: npm test"
     build_command: "web3-next: npm run build"
     coverage_threshold: 0
   archive:
