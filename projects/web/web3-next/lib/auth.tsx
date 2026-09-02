@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { api, type User } from "./api";
+import { api, SESSION_SENTINEL, type User } from "./api";
 
 type AuthContextType = {
   user: User | null;
@@ -13,8 +13,6 @@ type AuthContextType = {
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
-
-const TOKEN_KEY = "tracklife_token";
 
 // Claves locales asociadas a un usuario concreto. Se limpian en logout() para
 // evitar que, en un dispositivo compartido, el siguiente usuario que inicie
@@ -33,39 +31,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function load() {
-      const saved = localStorage.getItem(TOKEN_KEY);
-      if (saved) {
-        try {
-          const { user } = await api.me(saved);
-          setToken(saved);
+    let cancelled = false;
+    // No hay token guardado que consultar: se le pregunta al servidor directamente.
+    // La cookie httpOnly viaja sola (same-origin), así que esta es la única forma
+    // de saber si hay sesión — ya no hay nada que leer en localStorage.
+    (async () => {
+      try {
+        const { user } = await api.me(SESSION_SENTINEL);
+        if (!cancelled) {
           setUser(user);
-        } catch (e: unknown) {
-          // Only a genuine 401 means the token is actually invalid/expired.
-          // Anything else (429 rate-limited, network hiccup, 5xx, timeout)
-          // is transient — keep the token and let the user retry, instead
-          // of silently logging them out of a perfectly valid session.
-          const status = e instanceof Error ? (e as Error & { status?: number }).status : undefined;
-          if (status === 401) {
-            localStorage.removeItem(TOKEN_KEY);
-          }
+          setToken(SESSION_SENTINEL);
         }
+      } catch {
+        // 401 = simplemente no hay sesión (el camino normal para un visitante).
+        // 5xx / timeout / red = también "sin sesión para este render"; la cookie
+        // httpOnly no se toca, así que un reload lo recupera. api.me() no dispara
+        // la redirección global de 401, así que esto nunca puede expulsar a un
+        // visitante no autenticado de una página pública — eso lo controla
+        // AuthGuard, no este efecto. Sin loop, sin flash.
+        if (!cancelled) {
+          setUser(null);
+          setToken(null);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-      setLoading(false);
-    }
-    load();
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  const persist = (newToken: string, newUser: User) => {
-    localStorage.setItem(TOKEN_KEY, newToken);
-    setToken(newToken);
+  const persist = (newUser: User) => {
+    setToken(SESSION_SENTINEL); // D3: solo un marcador; el token real nunca llega a JS
     setUser(newUser);
   };
 
-  // login/register pasan por los route handlers same-origin de Next (host app.*),
-  // que setean la cookie httpOnly y devuelven { user, token }. El token se sigue
-  // guardando en localStorage (dual-write) para compatibilidad con las páginas
-  // client que aún leen `token` del contexto. La retirada de localStorage es P5.1.
   const login = async (email: string, password: string) => {
     const res = await fetch("/api/auth/login", {
       method: "POST",
@@ -74,7 +75,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     const data = await res.json().catch(() => ({ message: "Error al iniciar sesión" }));
     if (!res.ok) throw new Error(data.message ?? "Error al iniciar sesión");
-    persist(data.token, data.user);
+    persist(data.user);
   };
 
   const register = async (name: string, email: string, password: string) => {
@@ -85,14 +86,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     const data = await res.json().catch(() => ({ message: "Error al registrarse" }));
     if (!res.ok) throw new Error(data.message ?? "Error al registrarse");
-    persist(data.token, data.user);
+    persist(data.user);
   };
 
   const logout = () => {
     // El route handler de Next revoca el token en Laravel y limpia la cookie httpOnly.
     // Se ignoran errores de red — el usuario cierra sesión de todas formas.
     fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
-    localStorage.removeItem(TOKEN_KEY);
     for (const key of LOCAL_STORAGE_USER_KEYS) localStorage.removeItem(key);
     for (const key of SESSION_STORAGE_USER_KEYS) sessionStorage.removeItem(key);
     setToken(null);

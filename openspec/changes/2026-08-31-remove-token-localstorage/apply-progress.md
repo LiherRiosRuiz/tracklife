@@ -375,12 +375,231 @@ is expected to run cleanly in CI without a workaround).
 - [ ] Phase 5: Login/register response strip — RED first
 - [ ] Phase 6: Config + final verification
 
+## Batch 4
+
+**Scope**: Phase 4 only — `lib/auth.tsx` bootstrap rewrite (design §4) and the
+`lib/auth-constants.ts` comment-only cleanup. Removes the last 3 `localStorage` read/write/
+remove sites for the auth token (`TOKEN_KEY` deleted entirely). `app/api/auth/login/route.ts`
+and `app/api/auth/register/route.ts` are explicitly **not** touched — they still return
+`{ user, token }` in the response body for one more PR (Phase 5/PR5 strips it). This is
+harmless now: `auth.tsx` no longer reads `data.token` from either response, so the still-present
+`token` field in the body is dead data as of this batch, not a functional dependency.
+**Chain**: PR 4 of 5 (feature-branch-chain, targets PR3's branch
+`feat/remove-token-localstorage-03-api-retarget` per the orchestrator's branch naming for this
+batch: `feat/remove-token-localstorage-04-auth-bootstrap`).
+**Mode**: Strict TDD. RED written first for all 6 cases (B1-B6) per design §4/§6, confirmed
+failing for the right reason, then GREEN implementation, full suite re-run to confirm no
+regression to Phases 2-3's 22 tests.
+
+### Vitest 4 / jsdom 30 / Node 26 `localStorage`-shadowing deviation (real environment bug, not test-syntax)
+
+This is a genuine three-way version interaction, not a syntax mismatch like Batch 3's
+`window.location` issue — root-caused with the actual `vitest`/`jsdom` source, not guessed:
+
+- **Symptom**: the very first RTL-rendering test file in this repo (`auth.test.tsx`) found
+  `window.localStorage` / `window.sessionStorage` both `undefined` inside jsdom-environment
+  tests, with Node printing `ExperimentalWarning: localStorage is not available because
+  --localstorage-file was not provided` — even though jsdom 30.0.1 fully implements
+  `window.localStorage` (confirmed by reading `node_modules/jsdom/lib/jsdom/browser/Window.js`
+  — a working getter, gated only on non-opaque origin, and the test origin
+  `http://localhost:3000` is not opaque).
+- **Root cause, traced through `node_modules/vitest/dist/chunks/index.DC7d2Pf8.js`**: Vitest's
+  jsdom environment copies only an explicit allow-list (`LIVING_KEYS` + `OTHER_KEYS`, ~280
+  names) from the real jsdom `window` onto the Vitest global — **`"localStorage"` and
+  `"sessionStorage"` are not in that list**. The copy function `getWindowKeys()` falls back to
+  including *any* jsdom-only own-property name not already present on the Node global — which is
+  how `localStorage` got through on older Node versions with no native `globalThis.localStorage`.
+  **Node 26.5.0** (this repo's installed Node, confirmed via `node --version`) ships a *native*,
+  non-functional-by-default `globalThis.localStorage` getter (Node's own experimental Web
+  Storage API, `--webstorage`/`--no-experimental-webstorage` flag, enabled by default). Because
+  `"localStorage" in global` is now `true` *before* jsdom's environment setup runs, Vitest's
+  filter (`if (k in global) return keysArray.includes(k)`) excludes it — leaving Node's inert
+  native getter in place, shadowing jsdom's real, working one. Confirmed step by step with
+  throwaway probe test files (`__tests__/tmp/probe.test.ts`, deleted after each check): (1)
+  `window.location.origin` is `http://localhost:3000`, not opaque; (2) `globalThis.jsdom.window
+  .localStorage` (Vitest's own internal reference to the raw jsdom window, exposed as
+  `dom.window.jsdom = dom`) is a real, working `object`; (3) the `localStorage` property
+  descriptor on the Vitest global is `configurable: true` (Node's own, not jsdom's); (4) running
+  with `NODE_OPTIONS=--no-experimental-webstorage` makes `window.localStorage` resolve correctly
+  with zero other changes.
+- **Fix applied**: `package.json`'s `test`/`test:watch` scripts now prefix
+  `NODE_OPTIONS=--no-experimental-webstorage` (`"test": "NODE_OPTIONS=--no-experimental-webstorage
+  vitest run"`, same for `test:watch`), so every contributor gets the fix automatically without
+  needing a shell env var or a custom Vitest environment. This is a plain `sh -c` env-var prefix
+  (already the pattern for scripts in this repo — no `cross-env` dependency exists or is needed,
+  and the project's Docker dev stack is Linux-only per the repo `CLAUDE.md`). No production code
+  is affected; this is test-infrastructure-only, same category as Batch 1's `passWithNoTests`
+  fix. Flagged for the user/maintainer: if CI or a future contributor's shell ever bypasses `npm
+  test` (e.g. calling `vitest` directly), this flag needs to be applied manually or CI's Node
+  version needs to be checked against the same Node 22+ webstorage-global behavior.
+- **Scope of the fix**: `package.json` only — no `vitest.config.mts` change, no `vitest.setup.ts`
+  change, no test-file workaround. This keeps the design's `vitest.config.mts`/`vitest.setup.ts`
+  snippets byte-for-byte as specified; the deviation is fully contained to the npm script layer.
+
+### `toHaveTextContent` unavailable — design's own `@testing-library/jest-dom` opt-out, re-confirmed live
+
+Design §1 explicitly decided against installing `@testing-library/jest-dom` ("not required by
+the planned assertions, and skipping it keeps the prerequisite surface minimal"). The first draft
+of `auth.test.tsx` used `toHaveTextContent()` (a jest-dom matcher) without noticing the
+dependency — RED run surfaced `Error: Invalid Chai property: toHaveTextContent` immediately, which
+is Vitest's own expect (no jest-dom matchers registered) refusing an unknown property. **Not
+treated as a reason to add jest-dom** (that would silently reverse the design's own explicit
+Open Question resolution outside apply-phase scope) — rewrote all text assertions to a local
+`expectText(el, text)` helper (`expect(el.textContent).toBe(text)`), which is a real, specific
+assertion (not `toBeDefined()`/tautology) and needs no extra dependency. This is a test-file-only
+adjustment; no production code or design-approved dependency list changed.
+
+### B6 regression-catch verification (per orchestrator's explicit instruction)
+
+Did **not** just trust B6 passes post-GREEN — actively verified it fails when the old
+dual-write anti-pattern is present. Procedure: temporarily edited `persist()` in the real
+(already-GREEN) `lib/auth.tsx` to add back `localStorage.setItem("tracklife_token",
+"MUTATION-TEST-PROBE")` (the exact shape of the original bug), ran `npm test -- __tests__/lib/
+auth.test.tsx -t B6` in isolation, confirmed it failed with `AssertionError: expected
+[ [ 'tracklife_token', … ] ] to have a length of +0 but got 1` — i.e., the invariant assertion
+caught the exact regression it exists to prevent, not a vacuous pass. Immediately reverted the
+mutation (removed the added `localStorage.setItem` line, restored the exact GREEN `persist()`
+body), re-ran `npm test` (full suite) to confirm 28/28 green again before proceeding. No
+mutation-probe code is present in the final `lib/auth.tsx`.
+
+### Transitional-state note (design's own documented scope delta, verified not a regression)
+
+`app/api/auth/login/route.ts:34` and `register/route.ts:34` still return `{ user, token }`
+verbatim (unchanged — Phase 5 scope). Confirmed live in the register `curl` below: the response
+body still contains a real `token` field. This is expected and explicitly documented in the
+design (§4, "Scope delta the proposal implies but does not list") — `auth.tsx` no longer reads
+`data.token` from either response (verified by reading the final `login`/`register` functions:
+both now call `persist(data.user)` only, `data.token` is never referenced), so the still-present
+body field is inert, not a functional risk. Success criterion #2 ("DevTools shows no bearer
+token") is **not yet fully met** until Phase 5 strips the body field — flagged, not silently
+absorbed, consistent with the design's own scope-delta note.
+
+## Phase 4: `lib/auth.tsx` Bootstrap Rewrite — RED first
+
+- [x] 4.1 RED `__tests__/lib/auth.test.tsx`: B1 (valid session on mount), B2 (401 on mount), B3 (network error on mount, no infinite spinner), B4 (`login()` clears `localStorage` token), B5 (`logout()` clears context + other keys), B6 (`Storage.prototype.setItem` spy never called with `tracklife_token`) per design §4.
+- [x] 4.2 GREEN: modify `lib/auth.tsx` — delete `TOKEN_KEY`, rewrite mount effect to call `api.me(SESSION_SENTINEL)` unconditionally with a `cancelled` guard, rewrite `persist(newUser)` using `SESSION_SENTINEL`, drop `localStorage.removeItem(TOKEN_KEY)` in `logout`.
+- [x] 4.3 Modify `lib/auth-constants.ts`: remove stale dual-write comment.
+- [x] 4.4 Run `npm test` — B1-B6 green.
+
+### TDD Cycle Evidence
+
+| Task | Test File | Layer | Safety Net | RED | GREEN | TRIANGULATE | REFACTOR |
+|---|---|---|---|---|---|---|---|
+| 4.1-4.4 | `__tests__/lib/auth.test.tsx` | Integration (jsdom + RTL `render`/`fireEvent`/`waitFor`, real `AuthProvider` + `useAuth()` tree, `@/lib/api` module mocked at the `api.me`/`SESSION_SENTINEL` boundary) | ✅ 22/22 (Phases 2-3's `proxy-route.test.ts` + `api.test.ts`) run before touching `lib/auth.tsx` — confirmed pre-existing suite green first | ✅ Written first; ran `npm test -- __tests__/lib/auth.test.tsx` before `lib/auth.tsx` was modified → 6/6 failed. B1/B4/B5/B6 failed for the right reason (old mount effect never calls `api.me` without a saved localStorage token, so it can't set an authenticated user from a mocked session; old `login()` still writes the real token into `token` context state instead of the sentinel). B2/B3 passed vacuously at RED time (old code's no-token mount path coincidentally also ends at `user: null, loading: false`) — expected and re-verified as real (non-vacuous) behavioral passes at GREEN, see TRIANGULATE column | ✅ After the design §4 diff: `6 passed (6)` on first execution, zero iteration needed | ✅ 6 cases covering every design §6 B-scenario: B1 (mount → `api.me("cookie")` called exactly once, user + sentinel token set), B2 (401 → null user/token, `loading` still resolves, no throw — re-verified at GREEN that this is now a *real* pass because `api.me` is actually invoked and its rejection is actually handled, not skipped), B3 (network `TypeError` on mount → identical outcome to B2, proving the `catch` is generic, not 401-specific — re-verified GREEN for the same non-vacuous reason as B2), B4 (`login()` → context populated via the sentinel, real fetch mock asserted, `localStorage.getItem("tracklife_token")` asserted `null` even though the mocked response body still contains a real-looking token — proves `auth.tsx` never reads or persists it), B5 (`logout()` → POST asserted, context cleared, `LOCAL_STORAGE_USER_KEYS`/`SESSION_STORAGE_USER_KEYS` cleared), B6 (full login→unmount/remount("reload")→logout cycle with a `Storage.prototype.setItem` spy, zero calls with the `tracklife_token` key across the whole flow — **actively mutation-tested**, see the dedicated section above: reintroducing the old dual-write makes this exact test fail with a length-1 assertion, confirmed then reverted) | ✅ None needed beyond the design's own diff — `lib/auth.tsx` matches design §4's code block verbatim (mount effect shape, `persist(newUser)` signature, `logout()` body); no post-GREEN structural change was made or needed |
+
+### Test Summary
+
+- **Total tests written**: 6 (`B1`-`B6`)
+- **Total tests passing**: 6/6 (28/28 full suite, including Phases 2-3's 22 tests — zero regression)
+- **Layers used**: Integration (6) — first RTL-rendering test file in this repo; real component tree (`AuthProvider` wrapping a `Probe` consumer of `useAuth()`), real React state/effect timing via `waitFor`, only the `@/lib/api` module boundary mocked (not `fetch` for `login`/`register`, which are asserted against a real `vi.stubGlobal("fetch", ...)` mock at the network boundary `auth.tsx` actually uses)
+- **Approval tests** (refactoring): None — `AuthContextType`'s external shape (`user`, `token`, `loading`, `login`, `register`, `logout`) is unchanged, so no approval-test pass was needed; the 43 `useAuth()` call sites outside this batch's scope are protected by that unchanged interface, not by a new approval test
+- **Pure functions created**: 0 — `lib/auth.tsx` is inherently effectful (React state, `fetch`, `localStorage`); per strict-tdd.md's own guidance, pure-function extraction was not forced where it doesn't fit
+
+### Assertion quality notes (self-check against strict-tdd.md banned patterns)
+
+Every `expectText()` call asserts a **specific** string derived from a specific mock/fixture
+(`"Ada Lovelace"`, `"cookie"`, `"Grace Hopper"`, `"null"`), never a bare `toBeDefined()`/tautology
+— and every one is paired with a companion case proving the *other* value is reachable (e.g. B1
+proves `"cookie"`/a real name is reachable, B2/B3 prove `"null"` is reachable, so neither is an
+untested default). B4's `localStorage.getItem(...)).toBeNull()` is guarded against being a trivial
+"never called `setItem` at all" false negative by embedding a real-looking `token` field in the
+mocked login response body first — if `auth.tsx` regressed and started writing it again, this
+assertion would catch it (and did, per the mutation-test section above, via B6's broader
+version of the same check). B6's `tokenWrites.toHaveLength(0)` is the one "empty collection"
+assertion in this suite; per strict-tdd.md's Empty Collection Rule it is valid here because (1)
+the precondition is a full login→reload→logout cycle that *does* call `Storage.prototype.setItem`
+for other reasons (the two `LOCAL_STORAGE_USER_KEYS`/`SESSION_STORAGE_USER_KEYS` clears go through
+`removeItem`, not `setItem`, so the spy legitimately sees zero `tracklife_token` writes from real
+code paths that do run), and (2) the mutation-test section is exactly the required companion proof
+that a non-empty result *is* reachable when the anti-pattern is present.
+
+### Deviations from Design (with rationale)
+
+1. **`NODE_OPTIONS=--no-experimental-webstorage` added to `package.json`'s `test`/`test:watch`
+   scripts** — not present in the design. Root-caused as a genuine Vitest 4.1.11 / jsdom 30.0.1 /
+   Node 26.5.0 three-way interaction (Node's native experimental `globalThis.localStorage`
+   shadows jsdom's real, working one inside Vitest's jsdom-environment global-copy allow-list —
+   full trace in the dedicated section above, verified against the actual installed package
+   source, not assumed). This is exactly the kind of jsdom/RTL version-specific issue the
+   orchestrator asked to be checked for; unlike Batch 3's `window.location` case (a pure
+   test-syntax fix), this one requires a real runtime flag because the bug is Node-global-level,
+   not test-file-level. Scope contained to `package.json`; zero production code, zero
+   `vitest.config.mts`/`vitest.setup.ts` changes.
+2. **No `@testing-library/jest-dom` used** — not a deviation from the design, but flagged
+   because the first draft of the test file briefly used a jest-dom matcher
+   (`toHaveTextContent`) before the RED run caught the missing dependency; corrected to a local
+   `.textContent` helper before the RED evidence in the table above, so it never shipped in the
+   committed state. Full rationale in the dedicated section above.
+3. No other deviations. `lib/auth.tsx`'s mount effect, `persist()`, `login()`/`register()`
+   call sites, and `logout()` match design §4's code block diff verbatim. `lib/auth-constants.ts`
+   is a comment-only change per the design's own one-line instruction.
+
+### Runtime harness (beyond the required focused test command) — spec requirement 7 (login/reload/logout end-to-end)
+
+tasks.md's Work Unit 4 row suggested "Manual login/reload/logout in browser." No browser
+automation tool was available in this environment. Per the orchestrator's explicit instruction
+to verify this is *genuinely* true and not just that unit tests pass, ran a real end-to-end
+sequence against the live `api-laravel` + `tracklife` dev containers (both already running,
+unrelated to this batch) using `curl` with a real cookie jar, simulating exactly what the
+browser's mount effect does after a reload — a same-origin `GET /api/proxy/auth/me` request
+carrying **only** the httpOnly cookie, zero `Authorization` header, zero client-side token of
+any kind:
+
+| Step | Request | Result |
+|---|---|---|
+| 1. Register (sets the session cookie) | `POST http://app.tracklife.test/api/auth/register` (real new user, real Laravel/MongoDB) | `201 Created`, `Set-Cookie: tracklife_session=...; HttpOnly; SameSite=lax`. Body still contains a real `token` field — expected, Phase 5 scope, not read by `auth.tsx` |
+| 2. "Reload" (cookie only, before logout) | `GET http://app.tracklife.test/api/proxy/auth/me` with **only** the cookie jar from step 1, no `Authorization` header | `200 OK` — this is the *exact* request `api.me(SESSION_SENTINEL)` makes from the new mount effect; proves a reload with zero localStorage/client token stays authenticated purely via the cookie |
+| 3. Logout | `POST http://app.tracklife.test/api/auth/logout` with the same cookie jar | `200 OK` |
+| 4. "Reload" (cookie only, after logout) | `GET http://app.tracklife.test/api/proxy/auth/me` with the (now-invalidated) cookie jar | `401 Unauthorized` — proves logout actually ends the session server-side, not just client-side context clearing |
+
+This is the complete spec requirement 7 scenario ("Session persists across reload without
+localStorage" + "Logout clears the session") verified live end-to-end, not simulated with mocks.
+Separately, `docker logs tracklife` showed a real, independent browser session (already open,
+unrelated to this batch's curl calls) pick up the `lib/auth.tsx` file change via Turbopack
+(`⚠ Fast Refresh had to perform a full reload when ./lib/auth.tsx changed`) and immediately issue
+`GET /api/proxy/auth/me 200` — real-world confirmation the new bootstrap works in an actual
+browser, not just curl.
+
+No component/page was modified to run this check — only `lib/auth.tsx` and
+`lib/auth-constants.ts` per the assigned scope. The two smoke-test users
+(`smoketest-pr4-<timestamp>@example.com`, `smoketest-pr4b-<timestamp>@example.com`) were left in
+the dev database; no cleanup mechanism exists for ad hoc dev registrations and none was requested.
+
+## Files Changed (Batch 4)
+
+| File | Action | What Was Done |
+|---|---|---|
+| `projects/web/web3-next/lib/auth.tsx` | Modified | Deleted `TOKEN_KEY`; mount `useEffect` now unconditionally calls `api.me(SESSION_SENTINEL)` with a `cancelled`-flag async IIFE (no more localStorage-gated skip); `persist(newUser)` now takes one argument and sets `token` to `SESSION_SENTINEL`; `login`/`register` call `persist(data.user)` (no longer read `data.token`); `logout()` no longer calls `localStorage.removeItem(TOKEN_KEY)` but still clears `LOCAL_STORAGE_USER_KEYS`/`SESSION_STORAGE_USER_KEYS`. All 3 `localStorage` auth-token sites removed. |
+| `projects/web/web3-next/lib/auth-constants.ts` | Modified | Comment-only: removed the stale "distinta de la clave localStorage `tracklife_token` (dual-write durante la transición)" note now that the cookie is the sole credential. |
+| `projects/web/web3-next/__tests__/lib/auth.test.tsx` | Created | 6 tests (B1-B6) per design §4/§6, jsdom + RTL (`render`/`fireEvent`/`waitFor`), `@/lib/api` mocked at the `api.me`/`SESSION_SENTINEL` boundary, `Storage.prototype.setItem` spy for B6, local `.textContent` assertion helper (no jest-dom). |
+| `projects/web/web3-next/package.json` | Modified | `test`/`test:watch` scripts prefixed with `NODE_OPTIONS=--no-experimental-webstorage` — Vitest-4/jsdom-30/Node-26 `localStorage`-shadowing fix, see deviation section above. |
+
+## Work Unit Evidence (Unit 4 — `lib/auth.tsx` bootstrap rewrite, design §4)
+
+| Evidence | Value |
+|---|---|
+| Focused test command and exact result | `npm test -- __tests__/lib/auth.test.tsx` → `Test Files 1 passed (1)`, `Tests 6 passed (6)`. Full-suite `npm test` → `Test Files 3 passed (3)`, `Tests 28 passed (28)` — confirms zero regression to Phases 2-3's 22 tests. `npx tsc --noEmit` (build info redirected to the scratchpad, same pre-existing repo-root permission workaround as Batch 3) reported zero type errors. `npm run lint` reports the same pre-existing 5 `no-img-element` warnings, 0 errors — unchanged baseline. |
+| Runtime harness command/scenario and exact result | See "Runtime harness" table above — real `curl`-driven register → cookie-only `/api/proxy/auth/me` (200) → logout → cookie-only `/api/proxy/auth/me` (401), against the live `api-laravel` + `tracklife` dev containers, the exact request shape the new mount effect makes, plus live dev-log confirmation from an independent already-open browser session. This directly exercises spec requirement 7 ("Login, Reload, and Logout Work End-to-End") end-to-end, not just via unit-test mocks. |
+| Rollback boundary | Revert `lib/auth.tsx` and `lib/auth-constants.ts` to restore the localStorage dual-write bootstrap; delete `__tests__/lib/auth.test.tsx`; revert the two `package.json` script lines. `lib/api.ts` and the `app/api/auth/*` route handlers are untouched by this batch (`git status --short -- projects/web/web3-next` shows only `lib/auth.tsx` (M), `lib/auth-constants.ts` (M), `package.json` (M), and `__tests__/lib/auth.test.tsx` (??) for this batch), so this is a 3-file-revert + 1-file-delete rollback with no follow-on edits. |
+
+## Issues Found (Batch 4)
+
+None blocking beyond the documented `NODE_OPTIONS` deviation above (which is itself the fix, not
+an open issue). `npm run lint` and `npx tsc --noEmit` both clean against the same pre-existing
+baselines as Batch 3.
+
+## Remaining Tasks
+
+- [ ] Phase 5: Login/register response strip — RED first
+- [ ] Phase 6: Config + final verification
+
 ## Status
 
 5/5 tasks complete in Phase 1 (Phase 1 fully complete).
 4/4 tasks complete in Phase 2 (Phase 2 fully complete).
 3/3 tasks complete in Phase 3 (Phase 3 fully complete).
-12/25 total tasks complete across the full change (Phases 4-6 remaining, 13 tasks).
-Ready for next batch (Phase 4 — `lib/auth.tsx` bootstrap rewrite, which will remove the last
-3 `localStorage` sites and start actually relying on the cookie-only bootstrap this batch made
-possible).
+4/4 tasks complete in Phase 4 (Phase 4 fully complete).
+16/25 total tasks complete across the full change (Phases 5-6 remaining, 9 tasks).
+Ready for next batch (Phase 5 — login/register response body strip, which closes the last gap:
+Laravel's `token` currently still round-trips through `app/api/auth/login/route.ts` and
+`register/route.ts` response bodies even though nothing reads it anymore after this batch).

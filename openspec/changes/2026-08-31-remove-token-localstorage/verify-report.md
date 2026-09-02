@@ -485,3 +485,61 @@ the transitional-state design; jsdom 30 mocking deviation is real, sound, and te
 live smoke test (register → cookie → authenticated 200 → unauthenticated 401) succeeded against
 the running dev stack, with the browser-navigation limitation explicitly and correctly disclosed
 rather than glossed over.
+
+---
+
+## PR4 Verification (Phase 4 — `lib/auth.tsx` Bootstrap Rewrite)
+
+**Scope**: Phase 4 only — `lib/auth.tsx` (mount bootstrap, `persist()`, `login`/`register`
+call sites, `logout()`) and `lib/auth-constants.ts` (comment-only). This is the core
+security-fix PR: it removes the last 3 `localStorage` auth-token sites (`TOKEN_KEY` deleted
+entirely). Phases 1-3 were verified in prior PR reports above; Phase 5 (login/register
+response-body token strip) and Phase 6 (config + final verification) remain out of scope for
+this PR and are correctly unchecked in `tasks.md`.
+
+### Completeness (Phase 4 only)
+
+| Task | Status | Evidence |
+|---|---|---|
+| 4.1 RED `__tests__/lib/auth.test.tsx` (B1-B6) | ✅ Complete | Test file exists, read in full — 6 real, behavioral test cases, no tautologies |
+| 4.2 GREEN `lib/auth.tsx` rewrite | ✅ Complete | `git diff` against PR3's branch confirms diff matches design §4's code block verbatim |
+| 4.3 `lib/auth-constants.ts` comment update | ✅ Complete | Stale dual-write comment removed, confirmed via diff |
+| 4.4 `npm test` — B1-B6 green | ✅ Complete | Re-run independently: 28/28 pass |
+
+### Independent Verification (7 requested checks — all performed directly, not trusted from the narrative)
+
+1. **localStorage token sites genuinely gone**: `rg -n "tracklife_token|TOKEN_KEY" -g '!node_modules' -g '!.next' .` across the whole `web3-next` app returns exactly **one file**: `__tests__/lib/auth.test.tsx`, where the string is used only as an assertion constant to *prove* the key is never written (`AUTH_TOKEN_KEY` used in `.toBeNull()` / spy-filter assertions). **Zero occurrences in any production file.** `git diff feat/remove-token-localstorage-03-api-retarget..HEAD -- lib/auth.tsx` independently confirms the prior version *did* read/write/remove `TOKEN_KEY` via `localStorage.getItem/setItem/removeItem`, and the new version has none of the three call sites — `TOKEN_KEY` constant itself is deleted.
+2. **`npm test`**: re-ran independently — `Test Files 3 passed (3)`, `Tests 28 passed (28)`.
+3. **B6 regression-catch — independently reproduced, not trusted**: read the full `B6` test body (login → unmount/remount("reload") → logout, with a `Storage.prototype.setItem` spy asserting zero calls with the `tracklife_token` key). Performed the same mutation experiment myself: added `localStorage.setItem("tracklife_token", "MUTATION-TEST-PROBE")` back into `persist()`, ran `npm test -- __tests__/lib/auth.test.tsx -t B6` in isolation → **failed** with `AssertionError: expected [ [ 'tracklife_token', … ] ] to have a length of +0 but got 1`, exactly as claimed. Reverted via `git checkout -- lib/auth.tsx`, re-ran full suite → 28/28 green again, working tree clean.
+4. **`NODE_OPTIONS=--no-experimental-webstorage` — independently verified necessary, not cargo-culted**: ran `npx vitest run __tests__/lib/auth.test.tsx` *without* the flag → **all 6 tests failed** with `TypeError: Cannot read properties of undefined (reading 'clear')` on `window.localStorage`, plus the exact `ExperimentalWarning: localStorage is not available because --localstorage-file was not provided` warning cited in `apply-progress.md`. Re-ran *with* `NODE_OPTIONS=--no-experimental-webstorage` explicitly set → 6/6 pass. The flag is real and required on this repo's installed Node 26.5.0 / Vitest 4.1.11 / jsdom 30 combination; `package.json`'s `test`/`test:watch` scripts do carry the prefix.
+5. **Live end-to-end — independently re-run, not trusted from the apply report's transcript**: `docker ps` confirmed `tracklife` and `api-laravel` up. Ran my own `curl` sequence with a fresh cookie jar and a new throwaway user: (1) `POST /api/auth/register` → `201`, `Set-Cookie: tracklife_session=...; HttpOnly; SameSite=lax`; (2) `GET /api/proxy/auth/me` with **only** the cookie jar (no client token of any kind) → `200 OK`; (3) `POST /api/auth/logout` → `200`, cookie expired; (4) `GET /api/proxy/auth/me` with the now-invalidated cookie → `401 Unauthorized`. This is the exact sequence the new `lib/auth.tsx` mount effect performs and confirms spec requirement 7 end-to-end against the real stack, not mocks.
+6. **`npm run lint` / `npm run build` / `tsc --noEmit`**: lint → 0 errors, 5 pre-existing `no-img-element` warnings (unchanged baseline, unrelated files). `npx tsc --noEmit` → 0 type errors (redirected `--tsBuildInfoFile` to scratchpad due to a pre-existing repo-root write-permission issue, same workaround noted in PR3's report — not a code defect). `npm run build` → succeeds, all 47 routes generated, `/api/proxy/[...path]` and the three `/api/auth/*` routes present as dynamic.
+7. **Spec requirement 7 "no flash of logged-out content" — read `components/AuthGuard.tsx` directly, not asserted**: `AuthGuard` renders a loading placeholder ("Cargando TRACKLIFE...") while `loading` is true, returns `null` (not children, not a redirect race) once `loading` is false and `user` is absent, and only renders `children` once a `user` is actually set. The redirect to `/login` fires from a `useEffect` keyed on `[loading, user, router]`, so it never fires while `loading` is true. Combined with the new bootstrap effect keeping `loading: true` until `api.me()` settles (verified in source), there is no code path that renders guarded content, or a login-required page's real content, before the session probe resolves. Genuinely handled, not just asserted.
+
+### Diff vs. Design (independent re-read)
+
+`git diff feat/remove-token-localstorage-03-api-retarget..HEAD -- lib/auth.tsx lib/auth-constants.ts package.json` matches design §4's code block essentially verbatim: `TOKEN_KEY` deleted, mount effect now an unconditional `api.me(SESSION_SENTINEL)` call with a `cancelled` guard, `persist(newUser)` single-argument form using `SESSION_SENTINEL`, `logout()` no longer calls `localStorage.removeItem(TOKEN_KEY)`. The only diff beyond design's own code block is the `package.json` `NODE_OPTIONS` addition, which is a documented, independently-verified-necessary test-infrastructure deviation (see check 4), not a design deviation with production impact.
+
+### Spec Compliance Matrix (Requirements 1, 6, 7 — PR4 scope)
+
+| Requirement | Scenario | Status | Evidence |
+|---|---|---|---|
+| Req 1 — httpOnly Cookie Is the Sole Client Credential | No token in storage after login | ✅ PASS | `rg` zero-hits in production code; B4/B6 tests pass; live curl shows cookie-only auth |
+| Req 1 | No client-constructible Authorization header | ✅ PASS | `lib/api.ts` has no `Authorization` header construction (confirmed PR3, unaffected by PR4); live curl step 2 sends only the cookie |
+| Req 6 — 401 From Laravel Redirects to Login | Expired session redirects to `/login` | ✅ PASS (existing wiring, correctly preserved) | `AuthGuard` redirect effect unaffected by PR4; `api.me()` uses `skipAuthRedirect: true` so bootstrap 401s correctly do *not* trigger the global redirect (would cause a redirect loop on every public page) — confirmed by reading `lib/api.ts:140-141` |
+| Req 7 — Login, Reload, Logout Work End-to-End | Session persists across reload without localStorage | ✅ PASS | B1/B6 unit tests + independent live curl (step 2, 200) |
+| Req 7 | Logout clears the session | ✅ PASS | B5/B6 unit tests + independent live curl (step 3-4, 401 after logout) |
+
+### Known, explicitly out-of-scope gap (not a PR4 defect)
+
+`app/api/auth/login/route.ts` and `register/route.ts` are untouched by PR4 (confirmed by reading both files) and still return `{ user, token }` verbatim in the response body — the token is visible in DevTools Network tab, so proposal success criterion #2 is not yet fully met. This is Phase 5 scope, explicitly flagged in both `design.md` §4 and `apply-progress.md`'s Batch 4 section, and `auth.tsx` no longer reads `data.token` from either response (confirmed by reading `login`/`register` in the current `lib/auth.tsx` — both call `persist(data.user)` only). Not a regression; tracked correctly as a follow-up PR.
+
+### Issues Found (PR4)
+
+None CRITICAL. None WARNING blocking. 
+
+**SUGGESTION**: the `token: string` parameter name on `api.me(token)` / `request()` (in `lib/api.ts`, PR3 scope, unaffected by this PR) is now a vestigial/misleading name post-sentinel — cosmetic only, no functional impact, not required by any spec requirement, safe to leave for a future cleanup pass.
+
+### Verdict
+
+**PASS.** Phase 4 tasks 4.1-4.4 all complete and match code state. All 7 independently-requested checks were performed directly (not trusted from the apply narrative) and confirmed: zero `localStorage` auth-token sites remain in production code, 28/28 tests pass, the B6 regression-catch is real (reproduced and reverted the mutation myself), the `NODE_OPTIONS` flag is real and necessary (reproduced the failure without it), the live end-to-end cookie-only auth flow works against the real dev stack, lint/build/tsc are clean, and `AuthGuard`'s loading state genuinely prevents any flash of logged-out or guarded content before the session probe resolves. This is the most security-critical PR in the chain and it holds up under adversarial re-verification.

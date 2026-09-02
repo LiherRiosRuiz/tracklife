@@ -49,10 +49,10 @@ Chain strategy: pending
 
 ## Phase 4: `lib/auth.tsx` Bootstrap Rewrite — RED first
 
-- [ ] 4.1 RED `__tests__/lib/auth.test.tsx`: B1 (valid session on mount), B2 (401 on mount), B3 (network error on mount, no infinite spinner), B4 (`login()` clears `localStorage` token), B5 (`logout()` clears context + other keys), B6 (`Storage.prototype.setItem` spy never called with `tracklife_token`) per design §4.
-- [ ] 4.2 GREEN: modify `lib/auth.tsx` — delete `TOKEN_KEY`, rewrite mount effect to call `api.me(SESSION_SENTINEL)` unconditionally with a `cancelled` guard, rewrite `persist(newUser)` using `SESSION_SENTINEL`, drop `localStorage.removeItem(TOKEN_KEY)` in `logout`.
-- [ ] 4.3 Modify `lib/auth-constants.ts`: remove stale dual-write comment.
-- [ ] 4.4 Run `npm test` — B1-B6 green.
+- [x] 4.1 RED `__tests__/lib/auth.test.tsx`: B1 (valid session on mount), B2 (401 on mount), B3 (network error on mount, no infinite spinner), B4 (`login()` clears `localStorage` token), B5 (`logout()` clears context + other keys), B6 (`Storage.prototype.setItem` spy never called with `tracklife_token`) per design §4.
+- [x] 4.2 GREEN: modify `lib/auth.tsx` — delete `TOKEN_KEY`, rewrite mount effect to call `api.me(SESSION_SENTINEL)` unconditionally with a `cancelled` guard, rewrite `persist(newUser)` using `SESSION_SENTINEL`, drop `localStorage.removeItem(TOKEN_KEY)` in `logout`.
+- [x] 4.3 Modify `lib/auth-constants.ts`: remove stale dual-write comment.
+- [x] 4.4 Run `npm test` — B1-B6 green.
 
 ## Phase 5: Login/Register Response Strip (scope delta) — RED first
 

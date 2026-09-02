@@ -1,5 +1,5 @@
 // Nombre de la cookie httpOnly de sesión servida por los route handlers de Next.
-// Distinta de la clave localStorage "tracklife_token" (dual-write durante la transición).
+// Es la única credencial del cliente: no hay ningún token duplicado en localStorage.
 export const SESSION_COOKIE = "tracklife_session";
 
 // Vida de la cookie de sesión. Los tokens Sanctum no caducan en el backend, así
