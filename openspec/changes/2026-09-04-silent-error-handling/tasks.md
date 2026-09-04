@@ -64,9 +64,9 @@ Chain strategy: pending
 
 ## Phase 5: `gym/activo/page.tsx` — D2 reassurance copy (T2 mandatory)
 
-- [ ] 5.1 RED `projects/web/web3-next/__tests__/app/entrenamiento/gym-activo.test.tsx`: G1 (failed save shows the exact fixed sentence AND `sessionStorage` still holds the workout with correct `completed`/`weight`, no navigation, no English leak), G2 (4xx API detail renders as secondary muted line, never replacing the fixed sentence), G3 (401 renders nothing, `sessionStorage` untouched), G4 (successful save clears `sessionStorage` and navigates, no reassurance shown) per design §3.3. Confirm all fail.
-- [ ] 5.2 GREEN: modify `projects/web/web3-next/app/app/entrenamiento/gym/activo/page.tsx` per design §2.4 — add `saveFailed`/`saveErrorDetail` state; in `finishWorkout()`'s catch call `toErrorMessage(e, "")` (empty fallback = detail channel, `null` = 401 skip); render the fixed D2 sentence as primary text with `saveErrorDetail` as secondary muted `<p>` only when non-empty. Keep both `sessionStorage.removeItem` calls inside `try`, after the `await`, unchanged.
-- [ ] 5.3 Run `npm test -- gym-activo` — G1-G4 green.
+- [x] 5.1 RED `projects/web/web3-next/__tests__/app/entrenamiento/gym-activo.test.tsx`: G1 (failed save shows the exact fixed sentence AND `sessionStorage` still holds the workout with correct `completed`/`weight`, no navigation, no English leak), G2 (4xx API detail renders as secondary muted line, never replacing the fixed sentence), G3 (401 renders nothing, `sessionStorage` untouched), G4 (successful save clears `sessionStorage` and navigates, no reassurance shown) per design §3.3. Confirm all fail.
+- [x] 5.2 GREEN: modify `projects/web/web3-next/app/app/entrenamiento/gym/activo/page.tsx` per design §2.4 — add `saveFailed`/`saveErrorDetail` state; in `finishWorkout()`'s catch call `toErrorMessage(e, "")` (empty fallback = detail channel, `null` = 401 skip); render the fixed D2 sentence as primary text with `saveErrorDetail` as secondary muted `<p>` only when non-empty. Keep both `sessionStorage.removeItem` calls inside `try`, after the `await`, unchanged.
+- [x] 5.3 Run `npm test -- gym-activo` — G1-G4 green.
 
 ## Phase 6: `favoritos/page.tsx` — toggle error (manual verification only, T4)
 
