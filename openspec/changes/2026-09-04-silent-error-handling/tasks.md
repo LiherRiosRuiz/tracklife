@@ -37,11 +37,11 @@ Chain strategy: pending
 
 ## Phase 1: `lib/api-error.ts` — RED first (T1, mandatory)
 
-- [ ] 1.1 RED `projects/web/web3-next/__tests__/lib/api-error.test.ts`: `toErrorMessage` cases E1-E11 (401→null; 4xx→API message; boundary 400/499; 5xx→fallback, no `statusText` leak; empty/whitespace 4xx message→fallback; timeout→its own message; network `TypeError`→fallback; arbitrary `Error`→fallback; non-`Error` value→fallback; 5xx matching timeout literal→NOT timeout branch; empty-fallback detail channel) per design §1, D5/D6. Confirm all fail (module doesn't exist).
-- [ ] 1.2 RED same file: `isNotFound` cases N1-N4 (404→true; 500/401/403→false; no-status error→false; non-`Error` value→false) per D4. Confirm fail.
-- [ ] 1.3 RED same file: contract tests C1 (stub global `fetch` to reject with a real `AbortError`, import the real `@/lib/api`, assert `toErrorMessage` recognizes `API_TIMEOUT_MESSAGE`) and C2 (stub `fetch` to resolve a 500 with a non-JSON body, assert no `statusText` leak) per design §1, A1. Confirm fail (module doesn't exist).
-- [ ] 1.4 GREEN: create `projects/web/web3-next/lib/api-error.ts` — `API_TIMEOUT_MESSAGE`, `asApiError`, `isTimeout`, `isNotFound`, `toErrorMessage` exactly per design §1 (A1 timeout discriminator, A2 empty-message guard, A3 401→null). `lib/api.ts` stays byte-identical.
-- [ ] 1.5 Run `npm test -- api-error` in web3-next — E1-E11, N1-N4, C1-C2 all green.
+- [x] 1.1 RED `projects/web/web3-next/__tests__/lib/api-error.test.ts`: `toErrorMessage` cases E1-E11 (401→null; 4xx→API message; boundary 400/499; 5xx→fallback, no `statusText` leak; empty/whitespace 4xx message→fallback; timeout→its own message; network `TypeError`→fallback; arbitrary `Error`→fallback; non-`Error` value→fallback; 5xx matching timeout literal→NOT timeout branch; empty-fallback detail channel) per design §1, D5/D6. Confirm all fail (module doesn't exist).
+- [x] 1.2 RED same file: `isNotFound` cases N1-N4 (404→true; 500/401/403→false; no-status error→false; non-`Error` value→false) per D4. Confirm fail.
+- [x] 1.3 RED same file: contract tests C1 (stub global `fetch` to reject with a real `AbortError`, import the real `@/lib/api`, assert `toErrorMessage` recognizes `API_TIMEOUT_MESSAGE`) and C2 (stub `fetch` to resolve a 500 with a non-JSON body, assert no `statusText` leak) per design §1, A1. Confirm fail (module doesn't exist).
+- [x] 1.4 GREEN: create `projects/web/web3-next/lib/api-error.ts` — `API_TIMEOUT_MESSAGE`, `asApiError`, `isTimeout`, `isNotFound`, `toErrorMessage` exactly per design §1 (A1 timeout discriminator, A2 empty-message guard, A3 401→null). `lib/api.ts` stays byte-identical.
+- [x] 1.5 Run `npm test -- api-error` in web3-next — E1-E11, N1-N4, C1-C2 all green.
 
 ## Phase 2: `planes/page.tsx` — load error + `deletePlan` fix (D3, A6; T3 best-effort)
 
