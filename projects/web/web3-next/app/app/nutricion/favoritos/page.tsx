@@ -6,6 +6,7 @@
 
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { api, type MealEntry, type Recipe, type FoodItem } from "@/lib/api";
+import { toErrorMessage } from "@/lib/api-error";
 import { useAuth } from "@/lib/auth";
 import { Button, Card, PageHeader } from "@/components/ui";
 import { useApiData } from "@/hooks/use-api-data";
@@ -54,6 +55,7 @@ export default function FavoritosPage() {
   const [mealTypeModal, setMealTypeModal] = useState<{ item: FoodItem | null; recipe: Recipe | null } | null>(null);
   const [selectedMealType, setSelectedMealType] = useState("lunch");
   const [addState, setAddState] = useState<AddToDiaryState>("idle");
+  const [toggleError, setToggleError] = useState("");
 
   const { data: mealsData, loading: loadingMeals, error: errorMeals, refetch: refetchMeals } = useApiData(
     () => api.meals(token!),
@@ -145,6 +147,7 @@ export default function FavoritosPage() {
     const key = favoriteKey(entry);
     const wasFav = favorites.has(key);
     const ref = entryRef(entry);
+    setToggleError("");
 
     setFavorites((prev) => {
       const next = new Set(prev);
@@ -163,6 +166,8 @@ export default function FavoritosPage() {
     request.catch((err) => {
       // revierte la mutacion optimista si la API falla
       console.error(`Fallo al ${wasFav ? "quitar" : "anadir"} favorito "${key}"`, err);
+      const msg = toErrorMessage(err, "Error al actualizar el favorito");
+      if (msg) setToggleError(msg);
       setFavorites((prev) => {
         const next = new Set(prev);
         if (wasFav) {
@@ -265,6 +270,7 @@ export default function FavoritosPage() {
 
       {loading && <SkeletonList />}
       {error && <ErrorState message={error} onRetry={refetch} />}
+      {toggleError && <p className="mb-3 text-sm text-danger">{toggleError}</p>}
 
       {!loading && !error && (
         <div className="space-y-6">
