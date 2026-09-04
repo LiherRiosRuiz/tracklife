@@ -52,8 +52,8 @@ Chain strategy: pending
 
 ## Phase 3: `planes/nuevo/page.tsx` — save error (manual verification only, T4)
 
-- [ ] 3.1 GREEN: modify `projects/web/web3-next/app/app/entrenamiento/planes/nuevo/page.tsx` per design §2.2 — add `saveError` state; replace `console.error(e)` in `save()`'s catch with `toErrorMessage(e, "Error al guardar el plan")` (skip render on `null`); render inline `<p className="text-sm text-danger">` above the save button.
-- [ ] 3.2 No automated test — manual verification only, per proposal Q4 (exercise-picker guard makes RTL coverage brittle relative to its value). Deferred to Phase 7.1.
+- [x] 3.1 GREEN: modify `projects/web/web3-next/app/app/entrenamiento/planes/nuevo/page.tsx` per design §2.2 — add `saveError` state; replace `console.error(e)` in `save()`'s catch with `toErrorMessage(e, "Error al guardar el plan")` (skip render on `null`); render inline `<p className="text-sm text-danger">` above the save button.
+- [x] 3.2 No automated test — manual verification only, per proposal Q4 (exercise-picker guard makes RTL coverage brittle relative to its value). Deferred to Phase 7.1 — completed early in this batch as a real headless-browser smoke test (see apply-progress.md PR3 section) instead of waiting for the final Phase 7 pass, since PR3 ships standalone.
 
 ## Phase 4: `planes/[id]/page.tsx` — 404-gated redirect + load/start error (D4, A4; T2 mandatory)
 
