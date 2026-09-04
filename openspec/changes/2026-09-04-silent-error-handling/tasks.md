@@ -57,10 +57,10 @@ Chain strategy: pending
 
 ## Phase 4: `planes/[id]/page.tsx` — 404-gated redirect + load/start error (D4, A4; T2 mandatory)
 
-- [ ] 4.1 RED `projects/web/web3-next/__tests__/app/entrenamiento/planes-detail.test.tsx`: P1 (404 redirects, no inline error), P2 (500 shows inline error, no redirect, no `statusText` leak), P3 (network `TypeError` also shows inline error, no redirect), P4 (401 renders nothing inline, no redirect via this page) per design §3.2. Mock `next/navigation`, `@/lib/auth`, `@/lib/api`. Confirm all fail (page doesn't branch on `isNotFound` yet).
-- [ ] 4.2 GREEN: modify `projects/web/web3-next/app/app/entrenamiento/planes/[id]/page.tsx` per design §2.3 — extract `loadPlan` into `useCallback`, add `loadError`/`startError` state; branch `isNotFound(e)` → `router.push` (only case that redirects), else `toErrorMessage(e, "Error al cargar el plan")` → `loadError`; render `<ErrorState message={loadError} onRetry={loadPlan} />` **between** the `loading` and `!plan` branches — branch order matters, do not let non-404 fall through to the blank-page `!plan` return.
-- [ ] 4.3 Same file: wrap `startWorkout()`'s catch with `toErrorMessage(e, "Error al iniciar el workout")` → `startError`; render inline `<p className="text-sm text-danger">` below the "Iniciar Workout" button.
-- [ ] 4.4 Run `npm test -- planes-detail` — P1-P4 green.
+- [x] 4.1 RED `projects/web/web3-next/__tests__/app/entrenamiento/planes-detail.test.tsx`: P1 (404 redirects, no inline error), P2 (500 shows inline error, no redirect, no `statusText` leak), P3 (network `TypeError` also shows inline error, no redirect), P4 (401 renders nothing inline, no redirect via this page) per design §3.2. Mock `next/navigation`, `@/lib/auth`, `@/lib/api`. Confirm all fail (page doesn't branch on `isNotFound` yet).
+- [x] 4.2 GREEN: modify `projects/web/web3-next/app/app/entrenamiento/planes/[id]/page.tsx` per design §2.3 — extract `loadPlan` into `useCallback`, add `loadError`/`startError` state; branch `isNotFound(e)` → `router.push` (only case that redirects), else `toErrorMessage(e, "Error al cargar el plan")` → `loadError`; render `<ErrorState message={loadError} onRetry={loadPlan} />` **between** the `loading` and `!plan` branches — branch order matters, do not let non-404 fall through to the blank-page `!plan` return.
+- [x] 4.3 Same file: wrap `startWorkout()`'s catch with `toErrorMessage(e, "Error al iniciar el workout")` → `startError`; render inline `<p className="text-sm text-danger">` below the "Iniciar Workout" button.
+- [x] 4.4 Run `npm test -- planes-detail` — P1-P4 green.
 
 ## Phase 5: `gym/activo/page.tsx` — D2 reassurance copy (T2 mandatory)
 
