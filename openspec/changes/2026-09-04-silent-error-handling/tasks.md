@@ -70,9 +70,9 @@ Chain strategy: pending
 
 ## Phase 6: `favoritos/page.tsx` — toggle error (manual verification only, T4)
 
-- [ ] 6.1 GREEN: modify `projects/web/web3-next/app/app/nutricion/favoritos/page.tsx` per design §2.5 — add `toggleError` state; set it on `toggle()`'s existing `.catch` via `toErrorMessage(err, "Error al actualizar el favorito")` (keep the existing `console.error` line); render inline `<p className="text-sm text-danger">` near the favorites list. Do not touch the migration block (lines 89-134, catches at 111-124).
-- [ ] 6.2 Diff `favoritos/page.tsx:111-124` against its pre-change version — confirm byte-identical (spec requirement).
-- [ ] 6.3 No automated test — manual verification only, per proposal Q4. Deferred to Phase 7.2.
+- [x] 6.1 GREEN: modify `projects/web/web3-next/app/app/nutricion/favoritos/page.tsx` per design §2.5 — add `toggleError` state; set it on `toggle()`'s existing `.catch` via `toErrorMessage(err, "Error al actualizar el favorito")` (keep the existing `console.error` line); render inline `<p className="text-sm text-danger">` near the favorites list. Do not touch the migration block (lines 89-134, catches at 111-124).
+- [x] 6.2 Diff `favoritos/page.tsx:111-124` against its pre-change version — confirm byte-identical (spec requirement).
+- [x] 6.3 No automated test — manual verification only, per proposal Q4. Deferred to Phase 7.2.
 
 ## Phase 7: Manual Verification + Final Full-Suite Pass
 
