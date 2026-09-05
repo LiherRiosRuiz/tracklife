@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ConnectWearableRequest;
 use App\Models\BiometricReading;
 use App\Models\WearableConnection;
 use Illuminate\Http\JsonResponse;
@@ -17,11 +18,9 @@ class WearableController extends Controller
         return response()->json(['connections' => $connections]);
     }
 
-    public function connect(Request $request): JsonResponse
+    public function connect(ConnectWearableRequest $request): JsonResponse
     {
-        $data = $request->validate([
-            'provider' => 'required|in:zepp,whoop,garmin,apple_health,strava',
-        ]);
+        $data = $request->validated();
 
         $connection = WearableConnection::updateOrCreate(
             [

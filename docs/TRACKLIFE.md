@@ -258,6 +258,12 @@ Sanctum token-based authentication.
   - Checklist exacto en [[Deploy TrackLife]]
   - Rama `master` lista para Vercel/Railway
 
+- **Fix Form Requests huérfanos (2026-09-05)**:
+  - Corrección del conteo de la línea "Sprint P2": eran 22 Form Requests, no 20; y 4 llamadas `$request->validate()` inline, no 0 — 3 de ellas (`ProductController::scan`, `FoodController::search`, `WearableController::connect`) tenían un Form Request ya escrito (mismas reglas, byte-idéntico) pero nunca conectado al controlador
+  - Wireado: los 3 controladores ahora usan `ScanProductRequest`/`SearchFoodRequest`/`ConnectWearableRequest` en vez de `$request->validate()` inline — cambio mecánico, cero cambio de comportamiento (reglas idénticas)
+  - `UserSearchController::search()` sigue con `$request->validate()` inline (sin Form Request equivalente ya escrito) — pendiente si se quiere unificar el patrón al 100%
+  - Auditoría de `authorize()`: los 22 Form Requests devuelven `true`; no hay Policies/Gates en la app. No es una vulnerabilidad activa hoy — todos los controladores re-verifican `user_id` manualmente en cada query de escritura/lectura de recursos propios — pero es deuda de "defensa en profundidad": nada estructural impide que un futuro endpoint olvide ese `where('user_id', ...)`
+
 **Pendiente:**
 - Onboarding post-registro (`/onboarding`) — enlazado pero no implementado aún
 - Migración SQLite → MongoDB (package instalado, config lista)
