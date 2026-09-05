@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { api, type WorkoutPlan } from "@/lib/api";
+import { isNotFound, toErrorMessage } from "@/lib/api-error";
 import { useAuth } from "@/lib/auth";
 import { Card, PageHeader, Button } from "@/components/ui";
+import { ErrorState } from "@/components/ErrorState";
 
 export default function PlanDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -13,18 +15,36 @@ export default function PlanDetailPage() {
   const [plan, setPlan] = useState<WorkoutPlan | null>(null);
   const [loading, setLoading] = useState(true);
   const [starting, setStarting] = useState(false);
+  const [loadError, setLoadError] = useState("");
+  const [startError, setStartError] = useState("");
 
-  useEffect(() => {
+  const loadPlan = useCallback(() => {
     if (!token || !id) return;
     api.workoutPlan(token, id)
-      .then((r) => setPlan(r.plan))
-      .catch(() => router.push("/app/entrenamiento/planes"))
+      .then((r) => {
+        setPlan(r.plan);
+        setLoadError("");
+      })
+      .catch((e) => {
+        // Solo un 404 real significa "este plan no existe": ahí sí se redirige.
+        if (isNotFound(e)) {
+          router.push("/app/entrenamiento/planes");
+          return;
+        }
+        const msg = toErrorMessage(e, "Error al cargar el plan");
+        if (msg) setLoadError(msg);
+      })
       .finally(() => setLoading(false));
   }, [token, id, router]);
+
+  useEffect(() => {
+    loadPlan();
+  }, [loadPlan]);
 
   const startWorkout = async () => {
     if (!token || !plan?.id) return;
     setStarting(true);
+    setStartError("");
     try {
       const { workout } = await api.workoutFromPlan(token, plan.id);
       // Store the draft workout in sessionStorage and navigate to active page
@@ -32,13 +52,15 @@ export default function PlanDetailPage() {
       sessionStorage.setItem("tracklife_workout_start", Date.now().toString());
       router.push("/app/entrenamiento/gym/activo");
     } catch (e) {
-      console.error(e);
+      const msg = toErrorMessage(e, "Error al iniciar el workout");
+      if (msg) setStartError(msg);
     } finally {
       setStarting(false);
     }
   };
 
   if (loading) return <p className="py-12 text-center text-muted">Cargando...</p>;
+  if (loadError) return <ErrorState message={loadError} onRetry={loadPlan} />;
   if (!plan) return null;
 
   const totalSets = plan.exercises.reduce((sum, ex) => sum + ex.sets.length, 0);
@@ -85,6 +107,7 @@ export default function PlanDetailPage() {
       <Button onClick={startWorkout} className="mt-4 w-full text-lg py-3" disabled={starting}>
         {starting ? "Preparando..." : "Iniciar Workout"}
       </Button>
+      {startError && <p className="mt-2 text-sm text-danger">{startError}</p>}
     </div>
   );
 }
