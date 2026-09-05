@@ -45,15 +45,15 @@ Chain strategy: pending
 
 ## Phase 2: `planes/page.tsx` — load error + `deletePlan` fix (D3, A6; T3 best-effort)
 
-- [ ] 2.1 (best-effort, do not block) RED `projects/web/web3-next/__tests__/app/entrenamiento/planes-list.test.tsx`: reject `api.workoutPlans`, assert "Error al cargar tus planes" and a "Reintentar" control render, per spec scenario "Planes list load failure shows visible error". If `next/link`/router-context errors surface, mock `next/link` per design §3.4 caveat only — do not exceed that scope.
-- [ ] 2.2 GREEN: modify `projects/web/web3-next/app/app/entrenamiento/planes/page.tsx` per design §2.1 — extract `loadPlans` into `useCallback`, add `loadError` state, render `<ErrorState message={loadError} onRetry={loadPlans} />` on non-401 load failure.
-- [ ] 2.3 Same file (A6): migrate `deletePlan`'s catch from raw `err.message` to `toErrorMessage(e, "Error al eliminar el plan")`, writing into the already-existing `deleteError` state — no new state, no new render site.
-- [ ] 2.4 Run `npm test -- planes-list` (if 2.1 completed); manually confirm delete-failure copy still renders via the existing `deleteError` UI.
+- [x] 2.1 (best-effort, do not block) RED `projects/web/web3-next/__tests__/app/entrenamiento/planes-list.test.tsx`: reject `api.workoutPlans`, assert "Error al cargar tus planes" and a "Reintentar" control render, per spec scenario "Planes list load failure shows visible error". If `next/link`/router-context errors surface, mock `next/link` per design §3.4 caveat only — do not exceed that scope.
+- [x] 2.2 GREEN: modify `projects/web/web3-next/app/app/entrenamiento/planes/page.tsx` per design §2.1 — extract `loadPlans` into `useCallback`, add `loadError` state, render `<ErrorState message={loadError} onRetry={loadPlans} />` on non-401 load failure.
+- [x] 2.3 Same file (A6): migrate `deletePlan`'s catch from raw `err.message` to `toErrorMessage(e, "Error al eliminar el plan")`, writing into the already-existing `deleteError` state — no new state, no new render site.
+- [x] 2.4 Run `npm test -- planes-list` (if 2.1 completed); manually confirm delete-failure copy still renders via the existing `deleteError` UI.
 
 ## Phase 3: `planes/nuevo/page.tsx` — save error (manual verification only, T4)
 
-- [ ] 3.1 GREEN: modify `projects/web/web3-next/app/app/entrenamiento/planes/nuevo/page.tsx` per design §2.2 — add `saveError` state; replace `console.error(e)` in `save()`'s catch with `toErrorMessage(e, "Error al guardar el plan")` (skip render on `null`); render inline `<p className="text-sm text-danger">` above the save button.
-- [ ] 3.2 No automated test — manual verification only, per proposal Q4 (exercise-picker guard makes RTL coverage brittle relative to its value). Deferred to Phase 7.1.
+- [x] 3.1 GREEN: modify `projects/web/web3-next/app/app/entrenamiento/planes/nuevo/page.tsx` per design §2.2 — add `saveError` state; replace `console.error(e)` in `save()`'s catch with `toErrorMessage(e, "Error al guardar el plan")` (skip render on `null`); render inline `<p className="text-sm text-danger">` above the save button.
+- [x] 3.2 No automated test — manual verification only, per proposal Q4 (exercise-picker guard makes RTL coverage brittle relative to its value). Deferred to Phase 7.1 — completed early in this batch as a real headless-browser smoke test (see apply-progress.md PR3 section) instead of waiting for the final Phase 7 pass, since PR3 ships standalone.
 
 ## Phase 4: `planes/[id]/page.tsx` — 404-gated redirect + load/start error (D4, A4; T2 mandatory)
 

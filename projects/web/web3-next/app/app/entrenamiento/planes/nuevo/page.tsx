@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { api, type Exercise, type PlanExercise, type PlanSet } from "@/lib/api";
+import { toErrorMessage } from "@/lib/api-error";
 import { useAuth } from "@/lib/auth";
 import { Card, PageHeader, Button } from "@/components/ui";
 import { ExercisePickerModal } from "@/components/ExercisePickerModal";
@@ -19,6 +20,7 @@ export default function NuevoPlanPage() {
   const [exercises, setExercises] = useState<PlanExercise[]>([]);
   const [showPicker, setShowPicker] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
 
   const addExercise = (ex: Exercise) => {
     setExercises([
@@ -61,11 +63,13 @@ export default function NuevoPlanPage() {
   const save = async () => {
     if (!token || !name || exercises.length === 0) return;
     setSaving(true);
+    setSaveError("");
     try {
       await api.createWorkoutPlan(token, { name, description: description || undefined, exercises });
       router.push("/app/entrenamiento/planes");
     } catch (e) {
-      console.error(e);
+      const msg = toErrorMessage(e, "Error al guardar el plan");
+      if (msg) setSaveError(msg);
     } finally {
       setSaving(false);
     }
@@ -161,6 +165,7 @@ export default function NuevoPlanPage() {
       </Button>
 
       {/* Save */}
+      {saveError && <p className="mb-2 text-sm text-danger">{saveError}</p>}
       <Button onClick={save} className="w-full" disabled={!name || exercises.length === 0 || saving}>
         {saving ? "Guardando..." : "Guardar plan"}
       </Button>
