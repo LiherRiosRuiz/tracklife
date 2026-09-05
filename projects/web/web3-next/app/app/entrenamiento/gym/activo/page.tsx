@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { api, type ActiveWorkoutSet } from "@/lib/api";
+import { toErrorMessage } from "@/lib/api-error";
 import { useAuth } from "@/lib/auth";
 import { Card, Button } from "@/components/ui";
 import { RestTimer } from "@/components/RestTimer";
@@ -27,6 +28,8 @@ export default function ActiveWorkoutPage() {
   });
   const [saving, setSaving] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [saveFailed, setSaveFailed] = useState(false);
+  const [saveErrorDetail, setSaveErrorDetail] = useState("");
 
   // Load workout from sessionStorage (one-time mount snapshot from external store)
   useEffect(() => {
@@ -128,6 +131,8 @@ export default function ActiveWorkoutPage() {
   const finishWorkout = async () => {
     if (!token) return;
     setSaving(true);
+    setSaveFailed(false);
+    setSaveErrorDetail("");
 
     const completedSetData = sets
       .filter((s) => s.completed)
@@ -154,7 +159,12 @@ export default function ActiveWorkoutPage() {
       sessionStorage.removeItem("tracklife_workout_start");
       router.push("/app/entrenamiento/progreso");
     } catch (e) {
-      console.error(e);
+      // "" => no hay detalle de API que merezca mostrarse; null => 401, api.ts ya redirige.
+      const detail = toErrorMessage(e, "");
+      if (detail !== null) {
+        setSaveFailed(true);
+        setSaveErrorDetail(detail);
+      }
     } finally {
       setSaving(false);
     }
@@ -257,13 +267,23 @@ export default function ActiveWorkoutPage() {
 
       {/* Bottom actions */}
       <div className="fixed bottom-0 left-0 right-0 border-t border-border bg-card p-4 md:ml-56">
-        <div className="mx-auto flex max-w-5xl gap-3">
-          <Button onClick={cancelWorkout} variant="ghost" className="flex-1">
-            Cancelar
-          </Button>
-          <Button onClick={finishWorkout} className="flex-1" disabled={completedSets === 0 || saving}>
-            {saving ? "Guardando..." : `Finalizar (${completedSets} series)`}
-          </Button>
+        <div className="mx-auto max-w-5xl">
+          {saveFailed && (
+            <div className="mb-3" role="alert">
+              <p className="text-sm text-danger">
+                No se pudo guardar el entrenamiento. Tus series siguen aquí — no cierres esta pestaña y vuelve a intentarlo.
+              </p>
+              {saveErrorDetail && <p className="mt-1 text-xs text-muted">{saveErrorDetail}</p>}
+            </div>
+          )}
+          <div className="flex gap-3">
+            <Button onClick={cancelWorkout} variant="ghost" className="flex-1">
+              Cancelar
+            </Button>
+            <Button onClick={finishWorkout} className="flex-1" disabled={completedSets === 0 || saving}>
+              {saving ? "Guardando..." : `Finalizar (${completedSets} series)`}
+            </Button>
+          </div>
         </div>
       </div>
     </div>
