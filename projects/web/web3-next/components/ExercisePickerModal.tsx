@@ -80,7 +80,7 @@ export function ExercisePickerModal({
               className="mb-2 flex w-full items-center gap-3 rounded-xl border border-border p-3 text-left hover:border-accent transition"
             >
               {ex.image_url && (
-                <img src={ex.image_url} alt="" className="h-12 w-12 rounded-lg bg-background object-contain" />
+                <img src={ex.image_url} alt={ex.name} className="h-12 w-12 rounded-lg bg-background object-contain" />
               )}
               <div>
                 <p className="text-sm font-medium">{ex.name}</p>
