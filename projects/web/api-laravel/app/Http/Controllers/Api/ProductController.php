@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ScanProductRequest;
 use App\Models\Product;
 use App\Services\FeedService;
 use App\Services\HealthScoreService;
 use App\Services\OpenFoodFactsService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
@@ -40,12 +40,9 @@ class ProductController extends Controller
         return response()->json(['product' => $product]);
     }
 
-    public function scan(Request $request): JsonResponse
+    public function scan(ScanProductRequest $request): JsonResponse
     {
-        $data = $request->validate([
-            'barcode' => 'required|string|max:50',
-            'share_to_feed' => 'nullable|boolean',
-        ]);
+        $data = $request->validated();
 
         $product = Product::where('barcode', $data['barcode'])->first();
 
