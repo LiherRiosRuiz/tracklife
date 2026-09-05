@@ -7,12 +7,15 @@ const push = vi.fn();
 const back = vi.fn();
 const workoutPlanMock = vi.fn();
 const workoutFromPlanMock = vi.fn();
+// Stable identity: a fresh object per useRouter() call would fail Object.is
+// comparisons in loadPlan's callback deps, causing an extra load per render.
+const routerStub = { push, back };
 
 // Las factorías se evalúan al importar; las flechas internas se evalúan al llamar,
 // que es cuando los `vi.fn()` de arriba ya están inicializados (patrón de auth.test.tsx).
 vi.mock("next/navigation", () => ({
   useParams: () => ({ id: "plan-1" }),
-  useRouter: () => ({ push, back }),
+  useRouter: () => routerStub,
 }));
 
 vi.mock("@/lib/auth", () => ({
