@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { api, type WorkoutPlan } from "@/lib/api";
+import { toErrorMessage } from "@/lib/api-error";
 import { useAuth } from "@/lib/auth";
 import { Card, PageHeader, Button } from "@/components/ui";
+import { ErrorState } from "@/components/ErrorState";
 import Link from "next/link";
 
 export default function PlanesPage() {
@@ -11,14 +13,28 @@ export default function PlanesPage() {
   const [plans, setPlans] = useState<WorkoutPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteError, setDeleteError] = useState("");
+  const [loadError, setLoadError] = useState("");
 
-  useEffect(() => {
+  const loadPlans = useCallback(() => {
     if (!token) return;
+    setLoadError("");
+    setLoading(true);
     api.workoutPlans(token)
       .then((r) => setPlans(r.plans))
-      .catch(console.error)
+      .catch((e) => {
+        const msg = toErrorMessage(e, "Error al cargar tus planes");
+        if (msg) setLoadError(msg);
+      })
       .finally(() => setLoading(false));
   }, [token]);
+
+  useEffect(() => {
+    // loadPlans resets loadError/loading synchronously so a retry doesn't flash the
+    // stale error before refetching (same accepted pattern as hooks/use-api-data.ts's
+    // execute(), which the react-hooks lint heuristic only flags for components).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadPlans();
+  }, [loadPlans]);
 
   const deletePlan = async (id: string) => {
     if (!token || !confirm("Eliminar este plan?")) return;
@@ -26,8 +42,9 @@ export default function PlanesPage() {
     try {
       await api.deleteWorkoutPlan(token, id);
       setPlans(plans.filter((p) => p.id !== id));
-    } catch (err) {
-      setDeleteError(err instanceof Error ? err.message : "Error al eliminar el plan");
+    } catch (e) {
+      const msg = toErrorMessage(e, "Error al eliminar el plan");
+      if (msg) setDeleteError(msg);
     }
   };
 
@@ -42,6 +59,8 @@ export default function PlanesPage() {
 
       {loading ? (
         <p className="text-center text-muted">Cargando...</p>
+      ) : loadError ? (
+        <ErrorState message={loadError} onRetry={loadPlans} />
       ) : plans.length === 0 ? (
         <Card className="text-center">
           <p className="text-muted">No tienes planes de entrenamiento.</p>

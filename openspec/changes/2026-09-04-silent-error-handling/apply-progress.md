@@ -134,6 +134,209 @@ own `sdd-verify` pass, per the stacked-PR chain strategy.
 
 ---
 
+
+## PR2 (planes/page.tsx) — Phase 2 (`planes/page.tsx` — load error + `deletePlan` fix, T3 best-effort)
+
+**Scope**: PR 2 of the stacked-to-main chain, branch `feat/silent-error-handling-02-planes-list`,
+based on `master` (which already has PR 1's `lib/api-error.ts` merged and available). Ran in an
+isolated worktree in parallel with PR 3/4/5/6 sibling batches on other branches — no file overlap.
+
+### Pre-implementation verification (mandatory re-check of design §2.1)
+
+Read the real `projects/web/web3-next/app/app/entrenamiento/planes/page.tsx` before writing any
+code. Confirmed against the design's diff assumptions:
+
+| Claim | Design assumes | Real code | Match? |
+|---|---|---|---|
+| Load `useEffect` body | `.catch(console.error)` silent swallow | Line 19, byte-identical | ✅ exact match |
+| `deletePlan` catch body | design's diff header shows raw `err.message` as the "before" state | Actual current code already has a defensive ternary: `err instanceof Error ? err.message : "Error al eliminar el plan"` (not bare `err.message`) — slightly more defensive than the design's literal "before" snippet, but the design's stated "after" (`toErrorMessage(e, "Error al eliminar el plan")`, same `deleteError` state) is unaffected either way | ⚠️ minor drift in the "before" snapshot only, not in the required "after" — noted, zero impact on implementation |
+| `lib/api-error.ts` availability | Created by PR 1, already merged to `master` | Present at `lib/api-error.ts`, confirmed via `fd` | ✅ present |
+| `components/ErrorState.tsx` availability | Existing component, `{ message, onRetry? }` props | Confirmed signature matches design's usage exactly | ✅ exact match |
+| `Button` (via `components/ui.tsx`) wraps `next/link` when `href` given | design §3.4 caveat: T3 may need a `next/link` mock | Confirmed: `Button` imports and renders `<Link href={href}>` whenever `href` is passed; the always-visible header `Button href="/app/entrenamiento/planes/nuevo"` renders regardless of load state, so `next/link` mounts even during the RED test's error-state render | ✅ caveat correctly anticipated the real risk |
+
+**Conclusion**: design's diff for `planes/page.tsx` was accurate. One trivial drift noted in the
+"before" comment of `deletePlan` (pre-existing code was already slightly more defensive than the
+design's literal old-code snippet) — no effect on the required change.
+
+### TDD Cycle Evidence
+
+| Task | Test File | Layer | Safety Net | RED | GREEN | TRIANGULATE | REFACTOR |
+|------|-----------|-------|------------|-----|-------|-------------|----------|
+| 2.1 | `__tests__/app/entrenamiento/planes-list.test.tsx` | Component (RTL + jsdom) | Full pre-existing suite (5 files/47 tests from PR 1) re-run as safety net | ✅ Written — asserts "Error al cargar tus planes" + "Reintentar" render on a rejected `api.workoutPlans` (500). Confirmed FAILS against the untouched page: it still swallows via `console.error` and falls through to the "0 planes" empty state, so `getByText("Error al cargar tus planes")` times out inside `waitFor` | ✅ Passed after 2.2/2.3 GREEN implementation — 1/1 | ➖ Single scenario per tasks.md's "best-effort" tier (T3); the mandatory branch matrix (401/4xx/5xx/timeout/network) is already covered exhaustively at the `toErrorMessage` unit level by PR 1's T1 suite — this component test only needs to prove the page wires the helper's output into `<ErrorState>` correctly, which one non-401 case demonstrates | ➖ None needed — implementation is a direct, minimal application of design §2.1's exact diff |
+| 2.2 | `app/app/entrenamiento/planes/page.tsx` | Component | N/A (modifies existing component with pre-existing render logic; no automated pre-change golden of the empty/loaded states beyond what 2.1's RED run itself captured before the fix) | (implementation task, driven by 2.1's RED) | ✅ 1/1 passing; full suite 48/48 | — | ➖ None beyond the lint-driven fix described below |
+| 2.3 | same file (`deletePlan`) | Component | Manual code-path verification only — no automated test written for `deleteError` per tasks 2.4/A6 scope (render site itself is untouched, only the message source changed) | N/A — not a RED-first task; folded-in fix per design A6, verified by static review (see below) | N/A | — | N/A |
+
+### RED evidence (verbatim command output)
+
+```
+$ NODE_OPTIONS=--no-experimental-webstorage npx vitest run planes-list
+...
+ ❯ Proxy.waitForWrapper .../node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ __tests__/app/entrenamiento/planes-list.test.tsx:48:11
+     46|     render(<PlanesPage />);
+     47|
+     48|     await waitFor(() => expect(screen.getByText("Error al cargar tus p…
+       |           ^
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+```
+
+Confirmed: the DOM dump inside the failure shows the page rendering the "0 planes" /
+"No tienes planes de entrenamiento." empty-state card instead of an error — proof the load
+failure was being silently swallowed by `console.error` before the fix. Guaranteed RED, no
+false-negative risk (the `next/link` mock resolved cleanly on the first attempt, no
+app-router-context throw was hit — the design's §3.4 caveat's fallback was needed and worked,
+nothing further was required).
+
+### GREEN evidence (verbatim command output)
+
+```
+$ NODE_OPTIONS=--no-experimental-webstorage npx vitest run planes-list
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+```
+
+### Full suite regression check (safety net for repo-wide state)
+
+```
+$ NODE_OPTIONS=--no-experimental-webstorage npx vitest run
+ Test Files  6 passed (6)
+      Tests  48 passed (48)
+```
+
+6 test files (`planes-list.test.tsx` new + 5 from PR 1's batch), 48 total tests (47 + 1 new),
+all green. No pre-existing suite was broken.
+
+### Deviation from design: one `eslint-disable` line added, not in design's diff
+
+Design §2.1's exact diff (`loadPlans` extracted to `useCallback`, called from a bare
+`useEffect(() => { loadPlans(); }, [loadPlans])`) triggers a real, currently-enforced lint
+error in this repo:
+
+```
+app/app/entrenamiento/planes/page.tsx
+  32:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+  react-hooks/set-state-in-effect
+```
+
+**Root cause**: `loadPlans` calls `setLoadError("")` and `setLoading(true)` synchronously
+(before the async `api.workoutPlans(token)` call), and it is invoked directly inside a
+`useEffect` body. ESLint's `react-hooks` plugin flags this specifically for **Component**
+functions (here, `PlanesPage`, PascalCase + returns JSX).
+
+**Verified NOT a design flaw, but a lint-heuristic gap**: the exact same shape —
+`useCallback`-wrapped `execute()` that synchronously calls `setLoading(true)` /
+`setError(null)` before an async fetch, invoked from `useEffect(() => execute(), [execute])` —
+already exists in this codebase at `hooks/use-api-data.ts` and lints clean. Confirmed by
+running `npx eslint hooks/use-api-data.ts` directly (zero output). The rule only fires inside
+files ESLint's heuristic classifies as a **Component** (PascalCase, returns JSX), not inside a
+**custom Hook** (name starts with `use`, no JSX) — `useApiData` is exempted by that heuristic
+even though it performs the identical synchronous-then-effect-invoked pattern.
+
+**Fix applied**: added a single `// eslint-disable-next-line react-hooks/set-state-in-effect`
+directly above the `loadPlans();` call, with an inline comment explaining the rationale and
+pointing at the `use-api-data.ts` precedent. This matches an already-established repo
+convention: `hooks/use-api-data.ts` itself carries an inline
+`// eslint-disable-next-line react-hooks/exhaustive-deps, react-hooks/use-memo` for a related
+purity-rule false positive in the same file.
+
+**Risk flagged for the orchestrator**: design §2.3 (`planes/[id]/page.tsx`, PR 4, a sibling
+in-flight batch) specifies the **identical** `useCallback` + bare-`useEffect` pattern for
+`loadPlan`. That PR will very likely hit this exact same `react-hooks/set-state-in-effect`
+lint error and will need the same one-line fix (or an equivalent). Flagging here so PR 4's
+apply batch — or `sdd-verify` — is not surprised by it and does not silently disable a broader
+scope than necessary.
+
+`npx tsc --noEmit` (scratch `--tsBuildInfoFile`, same pre-existing sandbox `EACCES` workaround
+noted in PR 1's progress) — clean, zero errors. `npx eslint app/app/entrenamiento/planes/page.tsx
+__tests__/app/entrenamiento/planes-list.test.tsx` — clean after the fix, zero errors/warnings.
+
+### Task 2.3 (A6 `deletePlan` fix) — manual/static verification
+
+No automated test was added for `deleteError` (tasks.md 2.4 only requires "manually confirm
+delete-failure copy still renders via the existing `deleteError` UI" — the render site
+`{deleteError && <p className="mb-3 text-sm text-danger">{deleteError}</p>}` at line 54 is
+**completely untouched** by this change; only the value assigned to `setDeleteError` changed,
+from `err instanceof Error ? err.message : "Error al eliminar el plan"` to
+`toErrorMessage(e, "Error al eliminar el plan")`. Static verification: `toErrorMessage`'s
+branch table (per PR 1's T1 suite, already exhaustively covering this exact function) guarantees
+non-empty 4xx API text or the Spanish fallback reaches `deleteError` — a strict improvement over
+the old code, which leaked raw English `err.message` text for any error type, not just 4xx.
+Full manual browser verification (forced delete failure) is deferred to Phase 7 per the
+`tasks.md`/design's own tiering — no Phase-7 task exists specifically for `deletePlan`, so this
+is covered implicitly by Phase 7.3's cross-site 401 sweep plus ordinary QA before merge; flagged
+here in case `sdd-verify` wants an explicit manual pass.
+
+### Work Unit Evidence
+
+| Evidence | Value |
+|---|---|
+| Focused test command and exact result | `npx vitest run planes-list` → 1 file, 1/1 test passed |
+| Runtime harness command/scenario and exact result | No live-browser harness available in this sandbox. Static/manual verification only: (a) code review confirms `deleteError`'s render site (line 54) is byte-unchanged, only its message source changed; (b) `loadError`'s `<ErrorState onRetry={loadPlans} />` reuses the exact same `loadPlans` callback for both initial mount and retry, so a manual browser pass (kill API, load `/app/entrenamiento/planes`, confirm `<ErrorState>` + "Reintentar", per tasks.md's suggested Unit 2 runtime harness) remains a recommended pre-merge manual step, not yet performed in this batch |
+| Rollback boundary | `git revert` this diff on `app/app/entrenamiento/planes/page.tsx` and delete `__tests__/app/entrenamiento/planes-list.test.tsx` — fully self-contained; no other file touched; `deletePlan` reverts to its prior raw-message behavior, `loadPlans`/`loadError`/`<ErrorState>` disappear entirely |
+
+### Files Changed
+
+| File | Action | What Was Done |
+|------|--------|----------------|
+| `projects/web/web3-next/app/app/entrenamiento/planes/page.tsx` | Modified | `loadPlans` extracted to `useCallback`, `loadError` state added, `<ErrorState message={loadError} onRetry={loadPlans} />` rendered between `loading` and the empty-state branch (design §2.1); `deletePlan`'s catch migrated from raw `err instanceof Error ? err.message : ...` to `toErrorMessage(e, "Error al eliminar el plan")` writing into the existing `deleteError` state, no new state/render site (design A6); one `eslint-disable-next-line react-hooks/set-state-in-effect` added with rationale comment (lint-heuristic gap, see Deviation section above) |
+| `projects/web/web3-next/__tests__/app/entrenamiento/planes-list.test.tsx` | Created | T3 best-effort test: rejects `api.workoutPlans` with a 500, asserts "Error al cargar tus planes" + "Reintentar" render, asserts no English `statusText` leak. Mocks `@/lib/auth`, `@/lib/api`, and `next/link` (per design §3.4 caveat, needed in practice because the header's `Button href=...` always renders) |
+| `openspec/changes/2026-09-04-silent-error-handling/tasks.md` | Modified | Phase 2 tasks 2.1-2.4 marked `[x]` |
+
+### Deviations from Design
+
+One necessary addition not present in design's literal diff: a single
+`eslint-disable-next-line react-hooks/set-state-in-effect` line (see "Deviation from design"
+section above for full root-cause analysis, precedent, and the flagged risk that PR 4
+(`planes/[id]/page.tsx`) will likely need the identical fix). No other deviation — `loadPlans`,
+`loadError`, `<ErrorState>` placement, and the `deletePlan`/A6 migration are byte-for-byte per
+design §2.1 otherwise.
+
+### Issues Found
+
+- The `react-hooks/set-state-in-effect` lint rule (see Deviation section) — resolved via inline
+  suppression matching an existing repo precedent, flagged as a likely recurrence risk for PR 4.
+- Environment: `node_modules` is not present in this isolated git worktree by default (only in
+  the shared checkout). Symlinked `projects/web/web3-next/node_modules` to the shared checkout's
+  `node_modules` to run `vitest`/`eslint`/`tsc` locally — the symlink is untracked and
+  `.gitignore`d (confirmed via `git status --porcelain`, no node_modules entry appears), so it
+  does not affect the diff or any future commit. Flagging so later batches in sibling worktrees
+  don't re-diagnose the same missing-`node_modules` issue from scratch.
+- Same pre-existing, unrelated `tsc --noEmit` / `tsconfig.tsbuildinfo` `EACCES` sandbox quirk
+  noted in PR 1's progress — worked around identically with a scratch `--tsBuildInfoFile`.
+
+### Remaining Tasks (Phases 3-7, out of this batch's scope)
+
+- [ ] 3.1-3.2 `planes/nuevo/page.tsx` save error (PR 3)
+- [ ] 4.1-4.4 `planes/[id]/page.tsx` 404-gated redirect + load/start error (PR 4) — **watch for
+      the same `react-hooks/set-state-in-effect` lint error on `loadPlan`, see Deviation note above**
+- [ ] 5.1-5.3 `gym/activo/page.tsx` D2 reassurance copy (PR 5)
+- [ ] 6.1-6.3 `favoritos/page.tsx` toggle error (PR 6)
+- [ ] 7.1-7.4 Manual verification + final full-suite pass
+
+### Workload / PR Boundary
+
+- Mode: chained (stacked-to-main), per tasks.md forecast (`400-line budget risk: High`,
+  `Chained PRs recommended: Yes`)
+- Current work unit: Unit 2 — `planes/page.tsx` load error + `deletePlan` fix + T3
+  (tasks.md forecast: ~84-104 lines; actual diff: ~38 lines source + ~55 lines test = ~93 lines,
+  within forecast)
+- Boundary: this batch starts from PR 1 (`lib/api-error.ts`, already merged to `master`) and ends
+  at Phase 2 complete; PR 2 in the stacked chain, branch
+  `feat/silent-error-handling-02-planes-list`. PRs 3-6 depend only on PR 1 landing, not on this
+  PR, per tasks.md's chain-strategy note.
+- Estimated review budget impact: ~93 lines (1 modified page + 1 new test file), comfortably
+  under the 400-line single-PR budget on its own.
+
+### Status
+
+9/25 tasks complete (Phase 1 + Phase 2 of 7 phases, cumulative across PR 1 + PR 2 batches).
+Ready for this PR's own `sdd-verify` pass, per the stacked-PR chain strategy. Phases 3-6 remain
+independent, parallel-safe work for their respective sibling batches (no dependency on this PR
+beyond PR 1).
+
+---
+
 ## PR3 (planes/nuevo/page.tsx) — Phase 3
 
 **Scope**: PR 3 of the stacked-to-main chain — `planes/nuevo/page.tsx` save() error state.
