@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { api, type Exercise } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useApiData } from "@/hooks/use-api-data";
@@ -80,7 +81,13 @@ export function ExercisePickerModal({
               className="mb-2 flex w-full items-center gap-3 rounded-xl border border-border p-3 text-left hover:border-accent transition"
             >
               {ex.image_url && (
-                <img src={ex.image_url} alt={ex.name} className="h-12 w-12 rounded-lg bg-background object-contain" />
+                <Image
+                  src={ex.image_url}
+                  alt={ex.name}
+                  width={48}
+                  height={48}
+                  className="h-12 w-12 rounded-lg bg-background object-contain"
+                />
               )}
               <div>
                 <p className="text-sm font-medium">{ex.name}</p>

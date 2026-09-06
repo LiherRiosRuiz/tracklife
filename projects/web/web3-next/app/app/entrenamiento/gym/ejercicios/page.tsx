@@ -9,6 +9,7 @@ import { SkeletonGrid } from "@/components/Skeleton";
 import { ErrorState } from "@/components/ErrorState";
 import { MUSCLE_GROUPS, EQUIPMENT_TYPES, muscleLabel, equipmentLabel } from "@/lib/muscles";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function EjerciciosPage() {
   const { token } = useAuth();
@@ -111,12 +112,9 @@ export default function EjerciciosPage() {
             <Link key={e.id ?? e.name} href={`/app/entrenamiento/gym/ejercicios/${e.id}`}>
               <Card className="cursor-pointer transition hover:border-accent">
                 {e.image_url && (
-                  <img
-                    src={e.image_url}
-                    alt={e.name}
-                    className="mb-3 h-40 w-full rounded-xl bg-background object-contain"
-                    loading="lazy"
-                  />
+                  <div className="relative mb-3 h-40 w-full overflow-hidden rounded-xl bg-background">
+                    <Image src={e.image_url} alt={e.name} fill className="object-contain" />
+                  </div>
                 )}
                 <h3 className="font-semibold">{e.name}</h3>
                 <div className="mt-1 flex gap-2 text-xs text-muted">

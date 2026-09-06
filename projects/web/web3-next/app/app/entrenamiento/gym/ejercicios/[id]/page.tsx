@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Image from "next/image";
 import { api, type Exercise } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useApiData } from "@/hooks/use-api-data";
@@ -39,10 +40,12 @@ export default function ExerciseDetailPage() {
       <PageHeader title={exercise.name} />
       {exercise.image_url && (
         <Card className="mb-4">
-          <img
+          <Image
             src={showSecondImage && secondImageUrl ? secondImageUrl : exercise.image_url}
             alt={exercise.name}
-            className="mx-auto h-64 rounded-xl object-contain"
+            width={384}
+            height={256}
+            className="mx-auto h-64 w-auto rounded-xl object-contain"
           />
           {secondImageUrl && (
             <button
