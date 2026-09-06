@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { api, type SearchUser } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { Button, Card, PageHeader } from "@/components/ui";
@@ -32,9 +33,11 @@ function UserCard({
   return (
     <Card className="flex items-center gap-4">
       {user.avatar_url ? (
-        <img
-          src={user.avatar_url}
+        <Image
+          src={`/api/avatar/${user.id}`}
           alt={user.name}
+          width={48}
+          height={48}
           className="h-12 w-12 flex-shrink-0 rounded-full object-cover"
         />
       ) : (

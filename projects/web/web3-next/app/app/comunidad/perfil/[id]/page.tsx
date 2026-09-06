@@ -2,6 +2,7 @@
 
 import { Flame } from "lucide-react";
 import { useParams } from "next/navigation";
+import Image from "next/image";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useApiData } from "@/hooks/use-api-data";
@@ -50,9 +51,11 @@ export default function PerfilPage() {
 
       <Card className="flex flex-col items-center gap-4 text-center">
         {user.avatar_url ? (
-          <img
-            src={user.avatar_url}
+          <Image
+            src={`/api/avatar/${id}`}
             alt={user.name}
+            width={96}
+            height={96}
             className="h-24 w-24 rounded-full object-cover"
           />
         ) : (
