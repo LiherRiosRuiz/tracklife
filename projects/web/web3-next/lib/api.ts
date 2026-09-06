@@ -20,6 +20,10 @@ function handleUnauthorized() {
   const { pathname } = window.location;
   if (pathname === "/login" || pathname === "/registro") return; // no loop
   redirecting = true; // concurrent 401s → one nav
+  // Plain module-level function, no React/router context available; a hard navigation is
+  // also the correct choice here, not just the only option — it discards any stale
+  // client-side state tied to the expired session.
+  // eslint-disable-next-line @next/next/no-location-assign-relative-destination
   window.location.assign("/login");
 }
 
