@@ -16,7 +16,7 @@ class UpdateProfileRequest extends FormRequest
         return [
             'name' => 'sometimes|string|max:120',
             'bio' => 'nullable|string|max:500',
-            'avatar_url' => 'nullable|string|max:2048',
+            'avatar_url' => 'nullable|url|max:2048',
             'transformation_goal' => 'nullable|array:target_weight,target_body_fat,deadline',
             'transformation_goal.target_weight' => 'nullable|numeric|min:20|max:500',
             'transformation_goal.target_body_fat' => 'nullable|numeric|min:0|max:100',
