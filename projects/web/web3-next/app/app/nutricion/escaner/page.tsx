@@ -5,12 +5,25 @@ import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { api, type Product } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { toMacros } from "@/lib/nutriments";
 import { Button, Card, PageHeader, ScoreBadge } from "@/components/ui";
 
 const BarcodeScanner = dynamic(
   () => import("@/components/BarcodeScanner").then((m) => m.BarcodeScanner),
   { ssr: false },
 );
+
+/** Carries the scanned product to the diary form; without this the scan is lost. */
+function toDiaryParams(product: Product): string {
+  const macros = toMacros(product.nutriments);
+  return new URLSearchParams({
+    name: product.name,
+    calories: String(macros.calories),
+    protein: String(macros.protein),
+    carbs: String(macros.carbs),
+    fat: String(macros.fat),
+  }).toString();
+}
 
 export default function EscanerPage() {
   const { token } = useAuth();
@@ -67,7 +80,7 @@ export default function EscanerPage() {
           )}
           <Button
             className="mt-4"
-            onClick={() => router.push(`/app/nutricion/registrar`)}
+            onClick={() => router.push(`/app/nutricion/registrar?${toDiaryParams(product)}`)}
           >
             Añadir al diario
           </Button>
