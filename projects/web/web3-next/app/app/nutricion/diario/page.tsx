@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
+import { EditMealModal } from "@/components/EditMealModal";
 import { api, type MealEntry } from "@/lib/api";
 import { toErrorMessage } from "@/lib/api-error";
 import { useAuth } from "@/lib/auth";
@@ -33,6 +34,7 @@ export default function DiarioPage() {
   const [meals, setMeals] = useState<MealEntry[]>([]);
   const [actionError, setActionError] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [editing, setEditing] = useState<MealEntry | null>(null);
 
   // Re-seeded during render rather than in an effect, matching the pattern already
   // used in nutricion/favoritos: a setState inside useEffect triggers the cascading
@@ -87,21 +89,45 @@ export default function DiarioPage() {
                   <span>
                     {meal.items.map((it) => it.name).join(", ")} — {Math.round(meal.totals?.calories ?? 0)} kcal
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => remove(meal)}
-                    disabled={deletingId === meal.id}
-                    aria-label={`Eliminar ${meal.items.map((it) => it.name).join(", ")}`}
-                    className="shrink-0 rounded-lg p-1.5 text-fg-subtle transition-colors hover:bg-surface-2 hover:text-danger disabled:opacity-50"
-                  >
-                    <Trash2 size={16} strokeWidth={1.75} />
-                  </button>
+                  <span className="flex shrink-0 items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setEditing(meal)}
+                      aria-label={`Editar ${meal.items.map((it) => it.name).join(", ")}`}
+                      className="rounded-lg p-1.5 text-fg-subtle transition-colors hover:bg-surface-2 hover:text-accent"
+                    >
+                      <Pencil size={16} strokeWidth={1.75} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => remove(meal)}
+                      disabled={deletingId === meal.id}
+                      aria-label={`Eliminar ${meal.items.map((it) => it.name).join(", ")}`}
+                      className="rounded-lg p-1.5 text-fg-subtle transition-colors hover:bg-surface-2 hover:text-danger disabled:opacity-50"
+                    >
+                      <Trash2 size={16} strokeWidth={1.75} />
+                    </button>
+                  </span>
                 </li>
               ))}
             </ul>
           )}
         </Card>
       ))}
+
+      {editing && token && (
+        <EditMealModal
+          meal={editing}
+          token={token}
+          onClose={() => setEditing(null)}
+          onSaved={(updated) => {
+            // Replace in place with the server's own version, so what the diary
+            // shows is what was actually stored (totals are recalculated server-side).
+            setMeals((prev) => prev.map((m) => (m.id === updated.id ? updated : m)));
+            setEditing(null);
+          }}
+        />
+      )}
     </div>
   );
 }
