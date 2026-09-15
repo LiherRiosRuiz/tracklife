@@ -2,10 +2,11 @@
 
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
-import { Button, Card, PageHeader } from "@/components/ui";
+import { Card, PageHeader } from "@/components/ui";
 import { useApiData } from "@/hooks/use-api-data";
 import { SkeletonCard } from "@/components/Skeleton";
 import { ErrorState } from "@/components/ErrorState";
+import { LogBiometricForm } from "@/components/LogBiometricForm";
 
 export default function CorazonPage() {
   const { token } = useAuth();
@@ -21,23 +22,23 @@ export default function CorazonPage() {
 
   const hr = data?.readings[0]?.value ?? null;
 
-  const log = async () => {
-    if (!token) return;
-    const value = prompt("FC reposo (bpm)", "60");
-    if (value) {
-      await api.createBiometric(token, { type: "resting_hr", value: Number(value), unit: "bpm" });
-      refetch();
-    }
-  };
-
   return (
     <div>
       <PageHeader title="Corazón" />
       <Card>
         <p className="text-sm text-muted">FC en reposo</p>
         <p className="mt-2 text-3xl font-bold">{hr ? `${hr} bpm` : "—"}</p>
-        <Button onClick={log} className="mt-4" variant="secondary">Registrar manualmente</Button>
       </Card>
+      {/* Was a prompt() with an unguarded await: a failed save did nothing at all
+          and said nothing. Same shared form as the other biometric pages now. */}
+      <LogBiometricForm
+        type="resting_hr"
+        label="FC en reposo (bpm)"
+        unit="bpm"
+        min={20}
+        max={220}
+        onSaved={refetch}
+      />
     </div>
   );
 }

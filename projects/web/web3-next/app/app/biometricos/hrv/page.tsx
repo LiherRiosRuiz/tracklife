@@ -7,6 +7,7 @@ import { Card, PageHeader } from "@/components/ui";
 import { useApiData } from "@/hooks/use-api-data";
 import { SkeletonCard } from "@/components/Skeleton";
 import { ErrorState } from "@/components/ErrorState";
+import { LogBiometricForm } from "@/components/LogBiometricForm";
 
 export default function HrvPage() {
   const { token } = useAuth();
@@ -37,6 +38,7 @@ export default function HrvPage() {
           </LineChart>
         </ResponsiveContainer>
       </Card>
+      <LogBiometricForm type="hrv" label="HRV (ms)" unit="ms" min={0} max={300} onSaved={refetch} />
     </div>
   );
 }

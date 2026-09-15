@@ -7,6 +7,7 @@ import { Card, PageHeader } from "@/components/ui";
 import { useApiData } from "@/hooks/use-api-data";
 import { SkeletonCard } from "@/components/Skeleton";
 import { ErrorState } from "@/components/ErrorState";
+import { LogBiometricForm } from "@/components/LogBiometricForm";
 
 export default function SuenoPage() {
   const { token } = useAuth();
@@ -37,6 +38,14 @@ export default function SuenoPage() {
           </LineChart>
         </ResponsiveContainer>
       </Card>
+      <LogBiometricForm
+        type="sleep_score"
+        label="Calidad del sueño (0-100)"
+        unit="%"
+        min={0}
+        max={100}
+        onSaved={refetch}
+      />
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { Card, PageHeader } from "@/components/ui";
 import { useApiData } from "@/hooks/use-api-data";
 import { SkeletonGrid } from "@/components/Skeleton";
 import { ErrorState } from "@/components/ErrorState";
+import { LogBiometricForm } from "@/components/LogBiometricForm";
 
 const LABELS: Record<string, string> = {
   recovery_score: "Recuperación",
@@ -46,6 +47,17 @@ export default function BiometricosHoyPage() {
           })}
         </div>
       )}
+      {/* recovery_score y strain no tienen página propia, así que su única vía de
+          registro está aquí. Antes las producía el sync falso de wearables. */}
+      <LogBiometricForm
+        type="recovery_score"
+        label="Recuperación (0-100)"
+        unit="%"
+        min={0}
+        max={100}
+        onSaved={refetch}
+      />
+      <LogBiometricForm type="strain" label="Strain (0-21)" unit="score" min={0} max={21} onSaved={refetch} />
     </div>
   );
 }
