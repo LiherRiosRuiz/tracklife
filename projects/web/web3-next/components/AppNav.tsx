@@ -9,6 +9,7 @@ import {
   Heart,
   Home,
   LogOut,
+  Settings,
   Users,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
@@ -40,6 +41,15 @@ export function AppNav() {
           </Link>
           <div className="flex items-center gap-3 text-sm text-fg-muted">
             <span className="hidden sm:inline">{user?.name}</span>
+            {/* Ajustes vive en la cabecera, no en la barra inferior: un séptimo
+                icono en móvil degradaría la navegación principal. */}
+            <Link
+              href="/app/ajustes"
+              className="rounded-lg p-2 transition-colors hover:bg-surface-2 hover:text-fg"
+              aria-label="Ajustes"
+            >
+              <Settings size={16} strokeWidth={1.75} />
+            </Link>
             <button
               onClick={logout}
               className="rounded-lg p-2 transition-colors hover:bg-surface-2 hover:text-fg"

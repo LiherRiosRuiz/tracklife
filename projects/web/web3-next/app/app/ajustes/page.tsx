@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { api, type User } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { Button, Card, PageHeader } from "@/components/ui";
@@ -197,6 +198,13 @@ function AjustesForm({ user, token, onLogout }: { user: User; token: string; onL
           <p className="mt-1 text-sm">{user.email}</p>
         </div>
 
+        <div className="mb-5">
+          <p className="text-sm text-muted">Objetivo de transformación</p>
+          <Link href="/app/objetivo" className="mt-1 inline-block text-sm text-accent hover:underline">
+            Editar mi objetivo
+          </Link>
+        </div>
+
         <Button
           variant="secondary"
           onClick={onLogout}
@@ -215,7 +223,7 @@ export default function AjustesPage() {
 
   function handleLogout() {
     logout();
-    router.push("/auth/login");
+    router.push("/login");
   }
 
   if (!user || !token) {

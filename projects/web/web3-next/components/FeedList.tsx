@@ -6,7 +6,7 @@ import { api, type FeedPost } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { Card } from "./ui";
 
-export function FeedList({ posts: initial, showLikes = true }: { posts: FeedPost[]; showLikes?: boolean }) {
+export function FeedList({ posts: initial }: { posts: FeedPost[] }) {
   const { token } = useAuth();
   const [posts, setPosts] = useState(initial);
   const [likeError, setLikeError] = useState("");
@@ -38,7 +38,7 @@ export function FeedList({ posts: initial, showLikes = true }: { posts: FeedPost
                 {(post.payload.message as string) ?? post.type}
               </p>
             </div>
-            {showLikes && token && (
+            {token && (
               <button
                 onClick={() => handleLike(post.id)}
                 className={`flex items-center gap-1 rounded-lg px-2 py-1 text-sm hover:bg-bg ${post.liked ? "text-danger" : "text-fg-muted"}`}

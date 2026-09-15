@@ -12,7 +12,6 @@ const providers = ["zepp", "whoop", "garmin", "apple_health", "strava"];
 
 export default function DispositivosPage() {
   const { token } = useAuth();
-  const [msg, setMsg] = useState("");
   const [actionError, setActionError] = useState("");
 
   const { data, loading, error, refetch } = useApiData(
@@ -34,22 +33,18 @@ export default function DispositivosPage() {
     }
   };
 
-  const sync = async (provider: string) => {
-    if (!token) return;
-    setActionError("");
-    try {
-      const r = await api.syncWearable(token, provider);
-      setMsg(r.message);
-      refetch();
-    } catch (err) {
-      setActionError(err instanceof Error ? err.message : "No se pudo sincronizar el dispositivo");
-    }
-  };
-
   return (
     <div>
       <PageHeader title="Dispositivos" subtitle="Conecta tus wearables" />
-      {msg && <p className="mb-3 text-sm text-accent">{msg}</p>}
+      {/* El botón "Sincronizar" se retiró: el endpoint que lo respaldaba fabricaba
+          lecturas con rand() y las persistía como datos reales. La integración OAuth
+          real no existe todavía; esta página se elimina junto al endpoint. */}
+      <Card className="mb-4 border-warning/40">
+        <p className="text-sm text-muted">
+          La sincronización con wearables todavía no está disponible. Registra tus
+          métricas manualmente desde las páginas de biométricos mientras tanto.
+        </p>
+      </Card>
       {actionError && <p className="mb-3 text-sm text-danger">{actionError}</p>}
       {loading && <SkeletonList count={5} />}
       {error && <ErrorState message={error} onRetry={refetch} />}
@@ -66,7 +61,6 @@ export default function DispositivosPage() {
                   </div>
                   <div className="flex gap-2">
                     <Button onClick={() => connect(p)} variant="secondary">Conectar</Button>
-                    {conn && <Button onClick={() => sync(p)}>Sincronizar</Button>}
                   </div>
                 </div>
               </Card>
