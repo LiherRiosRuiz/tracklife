@@ -1,43 +1,18 @@
 "use client";
 
 import { useMemo } from "react";
+import Link from "next/link";
 import { useAuth } from "@/lib/auth";
 import { api } from "@/lib/api";
-import { Button, Card, MacroBar, PageHeader } from "@/components/ui";
+import { Button, Card, EmptyState, MacroBar, PageHeader } from "@/components/ui";
 import { useApiData } from "@/hooks/use-api-data";
-import { SkeletonList } from "@/components/Skeleton";
+import { SkeletonCard, SkeletonList } from "@/components/Skeleton";
 import { ErrorState } from "@/components/ErrorState";
 
-// Tipos de día en el plan semanal del coach
-// TODO: reemplazar por endpoint /api/coach/plan cuando se implemente en backend
-type DayPlan = {
-  day: string;
-  label: string;
-  type: "strength" | "cardio" | "rest";
-  detail: string;
-};
+// El plan semanal se construye desde los planes de entrenamiento reales del
+// usuario (GET /api/workout-plans). Antes era un array fijo de 7 días pintado
+// como si fuera suyo, bajo un subtítulo que promete "basado en tus datos".
 
-const WEEKLY_PLAN: DayPlan[] = [
-  { day: "L", label: "Lunes",    type: "strength", detail: "Tren superior — pecho, espalda, hombros" },
-  { day: "M", label: "Martes",   type: "cardio",   detail: "Cardio moderado 30 min" },
-  { day: "X", label: "Miércoles",type: "strength", detail: "Tren inferior — cuádriceps, isquios, glúteos" },
-  { day: "J", label: "Jueves",   type: "rest",     detail: "Descanso activo — movilidad o paseo" },
-  { day: "V", label: "Viernes",  type: "strength", detail: "Full body — empuje + tirón + bisagra" },
-  { day: "S", label: "Sábado",   type: "cardio",   detail: "Actividad libre — senderismo, ciclismo..." },
-  { day: "D", label: "Domingo",  type: "rest",     detail: "Descanso completo — recuperación" },
-];
-
-const DAY_COLORS: Record<DayPlan["type"], string> = {
-  strength: "bg-accent text-black",
-  cardio:   "bg-protein text-white",
-  rest:     "bg-border text-muted",
-};
-
-const DAY_BADGE: Record<DayPlan["type"], string> = {
-  strength: "Fuerza",
-  cardio:   "Cardio",
-  rest:     "Descanso",
-};
 
 const INSIGHT_COLORS: Record<string, string> = {
   warning: "border-warning/30 bg-warning/10 text-warning",
@@ -77,6 +52,13 @@ export default function CoachPlanPage() {
     { enabled: !!token },
   );
 
+  const { data: plansData, loading: plansLoading } = useApiData(
+    () => api.workoutPlans(token!),
+    [token],
+    { enabled: !!token },
+  );
+
+  const workoutPlans = plansData?.workoutPlans ?? [];
   const insights = insightsData?.insights ?? [];
   const goal = user?.transformation_goal as Record<string, unknown> | undefined;
   const targets = user?.macro_targets;
@@ -238,32 +220,43 @@ export default function CoachPlanPage() {
             </Card>
           </section>
 
-          {/* SECCIÓN 3: Plan semanal */}
-          {/* TODO: reemplazar datos estáticos por /api/coach/plan cuando exista el endpoint */}
+          {/* SECCIÓN 3: Tus planes de entrenamiento (reales, del usuario) */}
           <section>
             <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted">
-              Plan semanal
+              Tu plan de entrenamiento
             </h2>
-            <Card className="p-0 overflow-hidden">
-              <div className="divide-y divide-border">
-                {WEEKLY_PLAN.map((d) => (
-                  <div key={d.day} className="flex items-center gap-4 px-5 py-3">
-                    <span
-                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold ${DAY_COLORS[d.type]}`}
+            {plansLoading ? (
+              <SkeletonCard />
+            ) : workoutPlans.length === 0 ? (
+              <EmptyState
+                title="Todavía no tienes un plan"
+                message="Crea uno y aparecerá aquí junto a tus objetivos."
+                action={<Button href="/app/entrenamiento/planes/nuevo">Crear un plan</Button>}
+              />
+            ) : (
+              <Card className="p-0 overflow-hidden">
+                <div className="divide-y divide-border">
+                  {workoutPlans.map((plan) => (
+                    <Link
+                      key={plan.id}
+                      href={`/app/entrenamiento/planes/${plan.id}`}
+                      className="flex items-center gap-4 px-5 py-3 transition-colors hover:bg-surface-2"
                     >
-                      {d.day}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium">{d.label}</p>
-                      <p className="truncate text-xs text-muted">{d.detail}</p>
-                    </div>
-                    <span className="shrink-0 text-xs text-muted">
-                      {DAY_BADGE[d.type]}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </Card>
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-bold text-black">
+                        {plan.days_per_week ?? "—"}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium">{plan.name}</p>
+                        <p className="truncate text-xs text-muted">
+                          {plan.exercises?.length ?? 0} ejercicios
+                          {plan.days_per_week ? ` · ${plan.days_per_week} días/semana` : ""}
+                        </p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </Card>
+            )}
           </section>
 
           {/* SECCIÓN 4: Recomendaciones activas del coach */}
