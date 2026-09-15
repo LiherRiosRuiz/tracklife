@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { api, type FeedPost } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { FeedList } from "@/components/FeedList";
+import { StatusComposer } from "@/components/StatusComposer";
 import { Button, PageHeader } from "@/components/ui";
 import { useApiData } from "@/hooks/use-api-data";
 import { SkeletonList } from "@/components/Skeleton";
@@ -16,7 +18,11 @@ export default function ComunidadPage() {
     { enabled: !!token },
   );
 
-  const posts: FeedPost[] = data?.feed ?? [];
+  const [extraPosts, setExtraPosts] = useState<FeedPost[]>([]);
+
+  // Newly composed posts are prepended locally instead of refetching, which
+  // would flip loading back to true and blank the whole feed after every post.
+  const posts: FeedPost[] = [...extraPosts, ...(data?.feed ?? [])];
 
   return (
     <div>
@@ -26,9 +32,10 @@ export default function ComunidadPage() {
         <Button href="/app/comunidad/clubs" variant="secondary">Clubs</Button>
         <Button href="/app/comunidad/buscar" variant="secondary">Buscar</Button>
       </div>
+      {token && <StatusComposer onPosted={(post) => setExtraPosts((prev) => [post, ...prev])} />}
       {loading && <SkeletonList />}
       {error && <ErrorState message={error} onRetry={refetch} />}
-      {!loading && !error && <FeedList posts={posts} />}
+      {!loading && !error && <FeedList key={posts.length} posts={posts} />}
     </div>
   );
 }

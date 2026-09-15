@@ -237,6 +237,14 @@ export const api = {
 
   feed: (token?: string) => request<{ feed: FeedPost[] }>("/api/feed", {}, token),
 
+  /** Plain text only. Every metric-bearing post type is created server-side from
+   *  a real record — see StoreFeedPostRequest. */
+  createStatusPost: (token: string, message: string) =>
+    request<{ post: FeedPost }>("/api/feed", {
+      method: "POST",
+      body: JSON.stringify({ type: "status_update", payload: { message } }),
+    }, token),
+
   like: (token: string, postId: string) =>
     request<{ liked: boolean; likes_count: number; post: FeedPost }>(`/api/feed/${postId}/like`, { method: "POST" }, token),
 
