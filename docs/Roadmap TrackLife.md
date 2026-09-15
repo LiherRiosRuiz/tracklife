@@ -15,11 +15,11 @@ Sprints futuros de TRACKLIFE. Actualizado: 2026-08-29.
 | P3.3 — Búsqueda usuarios real | [x] Completado 2026-06-25 | 79/79 |
 | P3.4 — Página perfil usuario | [x] Completado 2026-06-29 | 84/84 |
 | **UX — Overhaul "Bioluminiscencia"** | [x] Completado y mergeado a `master` 2026-08-29 | 85/85 |
-| P4.1 — Plan nutricional real | [ ] Pendiente | — |
+| P4.1 — Plan nutricional real | [x] Hecho | Ya estaba implementado; la ruta que figuraba aqui era erronea |
 | P4.2 — Favoritos persistentes | [x] Completado 2026-07-22 | — |
 | P4.3 — Feed de comunidad real | [x] Completado 2026-08-29 | 217/217 |
-| P4.4 — Coach IA básico | [ ] Pendiente | — |
-| P4.5 — Plan semanal del coach | [ ] Pendiente | — |
+| P4.4 — Coach IA básico | [x] Hecho | CoachService consulta datos reales; no era mock |
+| P4.5 — Plan semanal del coach | [~] Replanteado | El plan falso se sustituyo por los planes reales del usuario; un plan GENERADO por el coach sigue sin existir |
 | P5 — Producción y Play Store | [~] En curso (prep completa) | — |
 
 > **Nota de merge (2026-08-29)**: el overhaul UX y P4.3 llegaron a `master` a través de una cadena de 5 PRs apilados (#14→#18), mergeados en orden el 2026-08-29.
@@ -113,7 +113,7 @@ Prep técnica **completa** (CORS por env, `.env.production.example`, `assetlinks
 
 ### P4.1 Plan nutricional real
 
-- `nutricion/plan/page.tsx` guarda macro targets via `PUT /api/user/macro-targets`
+- `nutricion/plan/page.tsx` guarda macro targets via `PUT /api/macros/targets` (la ruta `/api/user/macro-targets` nunca existio)
 - Form ya tiene Zod (`macroTargetsSchema`) — conectar al API real
 - Mostrar confirmación de guardado
 
@@ -146,7 +146,7 @@ Prep técnica **completa** (CORS por env, `.env.production.example`, `assetlinks
 
 - `GET /api/coach/plan` — nuevo endpoint
 - Genera plan basado en `transformation_goal` del usuario
-- Reemplazar `WEEKLY_PLAN` estático en `coach/plan/page.tsx`
+- ~~Reemplazar `WEEKLY_PLAN` estático~~ HECHO (2026-09-15): ahora lista los planes reales del usuario
 
 ---
 
@@ -167,7 +167,7 @@ Prep técnica **completa** (CORS por env, `.env.production.example`, `assetlinks
 
 ### P5.3 Perfil real
 
-- `PUT /api/user/profile` conectado al formulario de `/app/perfil`
+- `PUT /api/profile` conectado a `/app/ajustes` (la ruta `/api/user/profile` nunca existio; `/app/perfil` se elimino por duplicar ajustes)
 - Upload de avatar (Laravel + almacenamiento local o S3)
 
 ### P5.4 Tests E2E
@@ -186,8 +186,8 @@ Prep técnica **completa** (CORS por env, `.env.production.example`, `assetlinks
 
 | Item | Archivo | Notas |
 |------|---------|-------|
-| Plan semanal estático | `coach/plan/page.tsx` L20-28 | TODO: endpoint /api/coach/plan (P4.5) |
-| Coach insights mock | `api-laravel/CoachController.php` | TODO: basado en datos reales (P4.4) |
+| ~~Plan semanal estático~~ | RESUELTO 2026-09-15 | Sustituido por los planes reales del usuario |
+| ~~Coach insights mock~~ | ERA FALSO | CoachService siempre consulto MealEntry/Workout/Activity/BiometricReading reales |
 | Deltas biométricos | `BiometricController::today()` | Gap documentado — decidir P3 vs P4 |
 | Feed público sin auth vacío | `web3-next/app/explorar/page.tsx` | `api.feed()` se llama sin token pero `GET /api/feed` requiere `auth:sanctum` → 401 silencioso, feed público siempre vacío. Descopeado a propósito en P4.3 (ver proposal), sigue pendiente como ticket separado |
 

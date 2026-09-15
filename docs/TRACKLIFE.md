@@ -49,8 +49,8 @@ Inspirado en Yuka + MyFitnessPal.
 - **Escáner de código de barras**: html5-qrcode → Open Food Facts → perfil nutricional
 - **Health Score**: puntuación 0-100 basada en azúcares, sal, grasas saturadas, fibra, proteína, NOVA group y aditivos
 - **Recetas**: biblioteca personal con totales por ración
-- **Plan semanal**: (UI placeholder, pendiente backend)
-- **Favoritos**: (UI placeholder)
+- **Plan semanal**: muestra los planes de entrenamiento reales del usuario (antes era un array fijo de 7 dias)
+- **Favoritos**: real via /api/favorites (change favoritos-nutricion-api)
 
 ### Entrenamiento
 Inspirado en Hevi / Strong.
@@ -58,8 +58,8 @@ Inspirado en Hevi / Strong.
 - **Log de gym**: sesiones con nombre + sets (ejercicio, peso, reps), volumen total calculado automáticamente
 - **Biblioteca de ejercicios**: catálogo personalizable con muscle_group
 - **Actividad cardio**: tipo + título + distancia (km) + duración (min) — inspirado en Strava
-- **Calendario**: vista de historial (UI placeholder, backend listo)
-- **Progreso**: (UI placeholder)
+- **Calendario**: vista de historial real (api.workouts + api.meals)
+- **Progreso**: real; racha, volumen semanal y PRs derivados de los workouts
 
 ### Biométricos
 Inspirado en Whoop / Zepp Health.
@@ -79,8 +79,10 @@ Inspirado en Whoop / Zepp Health.
 
 - **Resumen de hoy**: últimos valores de los 5 tipos clave
 - **Histórico**: gráficos por tipo (recharts), configurable por días
-- **Wearables**: integración con Zepp, Whoop, etc. via `WearableConnection` (connect + sync)
-- **Subtemas en UI**: Corazón, Cuerpo, Sueño, HRV, Dispositivos
+- **Registro manual**: todas las métricas se introducen a mano (`LogBiometricForm`).
+  No hay integración con wearables — los endpoints se eliminaron porque `sync`
+  fabricaba lecturas con `rand()` y las guardaba como reales.
+- **Subtemas en UI**: Corazón, Cuerpo, Sueño, HRV
 
 ### Coach IA
 Sistema de insights automáticos basado en datos del día.
@@ -99,11 +101,11 @@ Inspirado en Strava feed social.
 
 - **Feed**: posts automáticos al compartir workout, actividad o biométrico destacado
   - Tipos: `workout_completed`, `activity_completed`, `recovery_milestone`
-- **Kudos**: like en posts del feed
+- **Likes** y **comentarios**: en posts del feed (el endpoint se llamaba kudos)
 - **Comentarios**: hilo de comentarios por post
 - **Retos**: challenges con participant_ids y leaderboard (seeded: "7 días registrando comida", "30 días sin ultraprocesados")
 - **Clubs**: grupos de usuarios (seeded: "TRACKLIFE Transformación")
-- **Explorar** / **Buscar**: (UI placeholder)
+- **Buscar**: busqueda real de usuarios (/api/users/search). **Explorar** se elimino: era huerfana y redirigia a /login
 
 ### Racha (Streak)
 `StreakService` actualiza `streak_days` en el User:
@@ -154,12 +156,23 @@ Se activa al registrar cualquier comida. Se muestra en dashboard y header.
 
 ## Autenticación
 
-Sanctum token-based authentication.
+Sanctum por debajo, pero **el token nunca llega a JavaScript**. Reescrito en el
+change `remove-token-localstorage` (2026-09-02); lo que decía antes esta sección
+—token en `localStorage` bajo `tracklife_token`, cabecera `Authorization` puesta
+por el cliente— describe una arquitectura **eliminada**. No la restaures.
 
-- Token almacenado en `localStorage` bajo la clave `tracklife_token`
-- `AuthProvider` context (React): user + token + loading + login/register/logout
-- `AuthGuard` component: redirige a `/login` si no autenticado (mientras carga, spinner)
-- Token enviado como `Authorization: Bearer <token>` en cada request API
+- Cookie httpOnly (`tracklife_session`) puesta por los Route Handlers de Next
+  (`app/api/auth/{login,register,logout}`), que hablan con Laravel server-to-server.
+- Todo el tráfico de cliente va same-origin a `/api/proxy/...`
+  (`app/api/proxy/[...path]/route.ts`), que adjunta el `Bearer` del lado servidor
+  leyendo la cookie. El navegador nunca ve el token, así que un XSS no puede robarlo.
+- `AuthProvider` expone `user`, `token` (un centinela no-secreto: `"cookie"`),
+  `loading`, `login`/`register`/`logout` y `refreshUser()` — este último hay que
+  llamarlo tras escribir en el perfil, o el contexto queda viejo hasta recargar.
+- `AuthGuard` redirige a `/login` si no hay sesión; además `lib/api.ts` hace un
+  redirect global ante cualquier 401.
+- Avatares: se sirven vía `/api/avatar/[userId]` (same-origin) en vez de pintar
+  `avatar_url` directo, para que la URL de un tercero no reciba la IP de quien mira.
 
 ---
 
@@ -267,7 +280,7 @@ Sanctum token-based authentication.
 **Pendiente:**
 - Onboarding post-registro (`/onboarding`) — enlazado pero no implementado aún
 - Migración SQLite → MongoDB (package instalado, config lista)
-- Providers de wearables reales (Zepp, Whoop OAuth)
+- Wearables: los endpoints se ELIMINARON (sync fabricaba lecturas con rand() y las persistia). Si se implementa OAuth real, cualquier token DEBE guardarse con el cast `encrypted`
 - Tests frontend (Vitest)
 - Auth cookie-only sin localStorage (P5.1)
 - Páginas con datos reales (calendario, progreso, plan nutricional, favoritos)
