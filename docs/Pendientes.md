@@ -1,6 +1,8 @@
 # Pendientes
 
-Tareas abiertas del workspace. Actualizado: 2026-06-29.
+Tareas abiertas del workspace. Actualizado: 2026-06-29 (revisión de vigencia: 2026-09-15 —
+ver notas `[revisado 2026-09-15]` en los ítems verificados contra el estado real del repo;
+el resto del documento no se tocó, así que puede seguir desactualizado en partes no revisadas).
 
 Para el roadmap detallado de sprints futuros ver [[Roadmap TrackLife]].
 
@@ -8,7 +10,7 @@ Para el roadmap detallado de sprints futuros ver [[Roadmap TrackLife]].
 
 ## Infraestructura
 
-- [ ] **web1-astro crash-loop** — Contenedor Landing en estado `Restarting` desde 2026-06-25 apertura P3.1. Causas probables: dependencia faltante, error en build, incompatibilidad Astro 6. Impacto: landing no accesible, app funcional. Scope diferido a sesion dedicada.
+- [x] **web1-astro crash-loop** — `[revisado 2026-09-15]` Ya no reproduce: `docker ps` muestra el contenedor `Up 2 weeks`, y `npm run build` corre limpio (4 páginas + sitemap + robots.txt). No se identificó cuándo se resolvió; puede haber sido incidental a trabajo posterior. Sin acción pendiente.
 - [ ] **Automatizar portproxy WSL2 con Task Scheduler** — la IP de WSL2 cambia en cada reinicio. Automatizacion ya construida (2026-06-08, recomendacion #5 de [[Skills Pendientes]]): `infra/scripts/portproxy.sh` + `infra/scripts/install-portproxy-task.ps1` + target `make portproxy-install`. Falta la primera ejecucion manual con permisos de Administrador para registrar la tarea programada
 - [ ] **Certificados SSL** — si el stack se abre a internet, usar Let's Encrypt vía Traefik ACME
 - [ ] **Backups automáticos de MongoDB** — automatizacion ya construida (2026-06-08, recomendacion #5 de [[Skills Pendientes]]): `infra/mongodb/backup.sh` (`mongodump --gzip --archive`, rotacion configurable, restore documentado) + target `make mongo-backup`. Falta la primera corrida manual de verificacion antes de confiar en el flujo de forma rutinaria
@@ -23,10 +25,10 @@ Para el roadmap detallado de sprints futuros ver [[Roadmap TrackLife]].
 - [ ] **Deltas biométricos** — `BiometricController::today()` no calcula deltas. Gap documentado en P3.1; si se requieren, abrir sub-sprint aparte
 - [ ] **Providers de wearables** — Zepp y Whoop OAuth2. La infraestructura de `WearableConnection` está lista, falta el flujo OAuth y el sync real
 - [ ] **Versionado de API** — cuando haya >10 endpoints estables, considerar `/api/v1/`
-- [ ] **CLAUDE.md de projects/web/api-laravel/ desactualizado** — Afirma "no routes/api.php" y "MongoDB no cableado", pero el codigo real tiene API completa (~20 controladores) + Mongo activo. Tarea mantenimiento documentacion.
+- [x] **CLAUDE.md de projects/web/api-laravel/ desactualizado** — `[revisado 2026-09-15]` Ya corregido: el archivo actual describe correctamente `routes/api.php` (~15 controllers) y MongoDB como "live default connection — fully wired, not a pending integration". No quedan las afirmaciones falsas.
 - [x] **Fix crítico aislamiento de tests** — 2026-06-29: los tests corrían contra la BD producción `tracklife` y borraban la colección `users` en cada `php artisan test` (las env reales de Docker ensombrecían `phpunit.xml`, ni `force="true"` se aplicaba). Sintoma: usuarios desaparecían y el login daba "Credenciales incorrectas". Resuelto: `TestCase::setUp()` fuerza BD `_testing` + `DB::purge` + guardia allowlist en `MongoTestCleanup` + test de regresión. Verificado: sentinela en producción sobrevive a la suite completa. commit `eca9b52`.
 - [x] **Fix higiene APP_KEY** — 2026-06-29: `docker-entrypoint.sh` regeneraba la APP_KEY en cada arranque (rotándola). Ahora solo se genera si no existe (idempotente). No era la causa del bug de persistencia pero es un footgun real.
-- [ ] **Mensaje de login ambiguo** — `AuthController::login` devuelve "Credenciales incorrectas" tanto si el email no existe como si la contraseña es errónea. Decisión pendiente: el mensaje genérico es buena práctica anti-enumeración de usuarios, así que probablemente dejarlo; documentar la decisión. Baja prioridad.
+- [x] **Mensaje de login ambiguo** — `[revisado 2026-09-15]` Decisión tomada y documentada acá: se deja el mensaje genérico "Credenciales incorrectas" a propósito (`AuthController.php:65`, confirmado sin cambios) — es buena práctica anti-enumeración de usuarios, no un bug de UX. No hay acción pendiente.
 
 ---
 
@@ -44,14 +46,16 @@ Para el roadmap detallado de sprints futuros ver [[Roadmap TrackLife]].
 - [x] **Sub-sprint perfil usuario** — completado 2026-06-29: página perfil [id], endpoint protegido (fix seguridad), UserProfileTest 5 tests. 84/84 verdes.
 - [~] **Overhaul estético "Bioluminiscencia"** — grueso COMPLETADO (rama `feature/ui-overhaul`, 2026-06-30, sin merge). Hecho: 4 skills de diseño en SDD; F1 design system (tokens OKLCH, Sora+JetBrains, primitivos Stat/Ring/Badge/EmptyState/Input/Brand); dashboard; login/registro/AppNav; **F3 consistencia total (deuda de color a 0 en 14 páginas + 6 componentes)**; **F4 motion CSS (ring-fill, fade-in, active:scale; sin framer-motion)**; **F5 PWA (manifest, iconos SVG+maskable, SW, theme)**; **landing web1-astro en lockstep**. Base a11y (focus-visible, reduced-motion). Cada commit build OK + lint 0. Pendiente: onboarding dedicado, F4 avanzado (framer-motion + celebraciones), PNG icons 192/512 + empaquetado TWA. Plan: Platón (crónica 2026-06-30).
 - [x] **"Recuérdame" verificado + cookie 30 días** — 2026-06-30: el "no recuerda usuarios" era residuo del wipe de tests (cuenta borrada). Verificado end-to-end que registro/login/sesión persisten. Cookie de sesión extendida 7→30 días (`SESSION_MAX_AGE`). Cuenta demo: `demo@tracklife.test` / `password123`.
-- [ ] **Auth cookie-only (sin localStorage)** — DIRECCIÓN A LARGO PLAZO. Hoy hay dos fuentes de verdad (cookie httpOnly para SSR + localStorage para client). Migrar TODAS las llamadas API a route handlers same-origin (BFF) que adjunten el token desde la cookie server-side → eliminar token de JS (cierra superficie XSS) + sliding refresh (middleware) para que usuarios activos nunca caduquen. Es el P5.1 "retirar localStorage" + "migrar 18 páginas client". Sprint dedicado.
+- [x] **Auth cookie-only (sin localStorage)** — `[revisado 2026-09-15]` Completado (SDD change `remove-token-localstorage`, mergeado 2026-09-02): `lib/api.ts` retarget a `/api/proxy/...` (BFF same-origin, adjunta el Bearer server-side desde la cookie httpOnly), token eliminado de JS por completo, redirect global 401→`/login`. Verificado: `rg "localStorage"` sin hits de auth token.
 - [ ] **Páginas con datos reales** — calendario, progreso (recharts), plan nutricional, favoritos, comunidad (P4 en [[Roadmap TrackLife]])
 - [x] **PWA instalable** — 2026-06-30/07-01: manifest standalone, service worker, iconos SVG + **PNG 192/512/maskable** (`scripts/gen-icons.mjs`), theme color. Ver [[Deploy TrackLife]].
 - [x] **Onboarding de activación** — 2026-07-01: `/app/onboarding` (bienvenida → objetivo → macros → listo) + celebración de logro (confetti/haptic). Registro redirige aquí.
 - [x] **Merge overhaul → master + push** — 2026-07-01: todo el overhaul (F1–F5 + landing + onboarding + PWA + prep deploy) mergeado a `master` y empujado a GitHub (`e572de5`). Rama de producción lista para desplegar.
 - [x] **Prep de deploy completa** — 2026-07-01: CORS por env, `.env.production.example` (front y API), `assetlinks.template.json`, y CHECKLIST EXACTO en [[Deploy TrackLife]]. Solo falta pegar valores.
 - [ ] **Deploy público (bloqueante = usuario, gratis)** — 3 altas: MongoDB Atlas + Railway/Render (API) + Vercel (front), conectar repo, pegar env. En cuanto haya URLs públicas, LIHER valida el flujo y hace el empaquetado TWA (Bubblewrap → AAB) para Play Store. Pasos exactos en [[Deploy TrackLife]].
-- [ ] **Tests frontend** — instalar Vitest + @testing-library/react + Playwright para web3-next (F0 del overhaul)
+- [x] **Ronda de hardening pre-lanzamiento (2026-09-04/06)** — `[revisado 2026-09-15]` No estaba registrada acá. Resumen: (1) 6 sitios de errores silenciosos (`console.error`-only) migrados a feedback visible — change `silent-error-handling`, 6 PRs (#31-#36), archivado en `openspec/changes/archive/`; (2) auditoría de `authorize()` en los 22 FormRequests de Laravel — sin IDOR explotable hoy, 3 FormRequests huérfanos cableados (PR #37); (3) `avatar_url` endurecido a `url` válida (PR #38) y proxeado same-origin (`/api/avatar/[userId]`) para cerrar un vector real de tracking-pixel de terceros; (4) `composer audit`/`npm audit` — CVEs reales en guzzle/commonmark corregidas (PR #39), Next.js bump 16.2.7→16.3.4 + audit fix (0 vulnerabilidades en web3-next); web1-astro quedó con 2 CVEs de bajo riesgo real pendientes de un Astro 6→7 (breaking, diferido a propósito — ver nota abajo); (5) `next/image` en los 5 sitios de imágenes; (6) 404 personalizadas, `sitemap.xml`, `robots.txt` y metadata real en login/registro para ambos front-ends. Todo mergeado a `master`, tests/lint/build verdes en los 3 subproyectos.
+- [ ] **Astro 6 → 7 (web1-astro)** — `[agregado 2026-09-15]` Bump mayor pendiente para cerrar 2 CVEs de `esbuild`/`sharp` en `npm audit`. Diferido a propósito: ambas CVEs tienen exposición real ~nula en este deploy (esbuild es dev-server-Windows-only; sharp solo importa si se usa `astro:assets`, que no se usa acá). Requiere su propia pasada de QA visual/funcional antes de intentarlo, no meterlo en un sweep de dependencias de rutina.
+- [x] **Tests frontend** — `[revisado 2026-09-15]` Vitest + @testing-library/react instalados y en uso (Strict TDD activo desde entonces); 70/70 tests verdes al día de hoy en web3-next. Playwright no se instaló como dependencia del proyecto — se usó puntualmente vía CDP/Chromium del sistema para smoke tests manuales, no como parte del suite automatizado.
 
 ---
 
@@ -63,10 +67,17 @@ Para el roadmap detallado de sprints futuros ver [[Roadmap TrackLife]].
 
 ## Framework Platón SDD
 
-- [ ] **Guardian Angel instalado** — ejecutar `bash .sdd/guard/install.sh` para activar el pre-commit hook
-- [ ] **Tests Vitest** — script de bootstrap ya construido (2026-06-08, recomendación #3 de [[Skills Pendientes]]): `make test-setup PROJECT=<web1-astro|web2-nuxt|web3-next>` instala vitest + config + test ejemplo en cada contenedor. Falta ejecutarlo con el stack arriba (`make up`) y, tras verificar, marcar `test_ready: true` en `config.yaml`
-- [ ] **Calibración formal** — runner ya construido (2026-06-08, recomendación #2 de [[Skills Pendientes]]): `make calibrate [PROJECT=...]` ejecuta los 6 bloques de checks y persiste `last_run`/`result`/`blockers`/`warnings` en `calibration.status`. Falta ejecutarlo con el stack arriba para obtener la primera medición real
-- [ ] **tmux integration** — launcher Platón con múltiples paneles (CLI + make ps + logs)
+`[revisado 2026-09-15]` Esta sección quedó obsoleta: `.sdd/` ya no existe en el repo.
+El flujo SDD actual lo aporta `gentle-ai` (skills `sdd-*` en `.claude/`, ver CLAUDE.md
+raíz) — un framework distinto, no una evolución de Platón. Los ítems de abajo
+(Guardian Angel, calibración, tmux launcher) no tienen equivalente directo conocido
+en gentle-ai; no se investigó si hace falta reemplazarlos. Dejados sin marcar por
+las dudas, pero ya no son accionables tal como están escritos.
+
+- [ ] ~~**Guardian Angel instalado** — ejecutar `bash .sdd/guard/install.sh` para activar el pre-commit hook~~ (`.sdd/` no existe)
+- [ ] ~~**Tests Vitest** — script de bootstrap `make test-setup`~~ (superado: Vitest ya está instalado y en uso en web3-next, ver sección App)
+- [ ] ~~**Calibración formal** — `make calibrate`~~ (`.sdd/` no existe)
+- [ ] ~~**tmux integration** — launcher Platón~~ (`.sdd/` no existe)
 - [x] **Skills pendientes** — las 7 recomendaciones de [[Skills Pendientes]] completadas el 2026-06-08: skill MongoDB, calibration runner, test bootstrap, skill DevOps, portproxy/backup automatizados, `/decide`, skill de seguridad. Quedan acciones de seguimiento humano (ver puntos de Calibración formal, Tests Vitest e Infraestructura arriba)
 
 ---
