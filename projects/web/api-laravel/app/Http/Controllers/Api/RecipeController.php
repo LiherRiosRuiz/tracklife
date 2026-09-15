@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreRecipeRequest;
+use App\Http\Resources\RecipeResource;
 use App\Models\Recipe;
 use App\Services\FeedService;
 use Illuminate\Http\JsonResponse;
@@ -20,7 +21,7 @@ class RecipeController extends Controller
                 ->orWhere('user_id', (string) $request->user()->_id);
         })->orderBy('created_at', 'desc')->limit(50)->get();
 
-        return response()->json(['recipes' => $recipes]);
+        return response()->json(['recipes' => RecipeResource::collection($recipes)]);
     }
 
     public function store(StoreRecipeRequest $request): JsonResponse
@@ -41,7 +42,7 @@ class RecipeController extends Controller
             ]);
         }
 
-        return response()->json(['recipe' => $recipe], 201);
+        return response()->json(['recipe' => new RecipeResource($recipe)], 201);
     }
 
     public function show(Request $request, string $id): JsonResponse
@@ -53,6 +54,6 @@ class RecipeController extends Controller
             })
             ->firstOrFail();
 
-        return response()->json(['recipe' => $recipe]);
+        return response()->json(['recipe' => new RecipeResource($recipe)]);
     }
 }

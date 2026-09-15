@@ -14,6 +14,7 @@ class WorkoutPlanResource extends JsonResource
             'name'         => $this->name,
             'description'  => $this->description,
             'days_per_week' => $this->days_per_week,
+            'is_public'    => (bool) $this->is_public,
             'exercises'    => $this->exercises,
         ];
     }

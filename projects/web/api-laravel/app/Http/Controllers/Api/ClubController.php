@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreClubRequest;
+use App\Http\Resources\ClubResource;
 use App\Models\Club;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -14,7 +15,7 @@ class ClubController extends Controller
     {
         $clubs = Club::where('is_public', true)->orderBy('created_at', 'desc')->get();
 
-        return response()->json(['clubs' => $clubs]);
+        return response()->json(['clubs' => ClubResource::collection($clubs)]);
     }
 
     public function store(StoreClubRequest $request): JsonResponse
@@ -31,7 +32,7 @@ class ClubController extends Controller
             'is_public' => $data['is_public'] ?? true,
         ]);
 
-        return response()->json(['club' => $club], 201);
+        return response()->json(['club' => new ClubResource($club)], 201);
     }
 
     public function show(Request $request, string $id): JsonResponse
@@ -43,7 +44,7 @@ class ClubController extends Controller
             abort(404);
         }
 
-        return response()->json(['club' => $club]);
+        return response()->json(['club' => new ClubResource($club)]);
     }
 
     public function join(Request $request, string $id): JsonResponse
@@ -63,7 +64,7 @@ class ClubController extends Controller
             $club->save();
         }
 
-        return response()->json(['club' => $club->fresh()]);
+        return response()->json(['club' => new ClubResource($club->fresh())]);
     }
 
     private function canAccess(Club $club, string $userId): bool

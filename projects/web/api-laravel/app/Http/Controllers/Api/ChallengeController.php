@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\ChallengeResource;
 use App\Models\Challenge;
 use App\Services\FeedService;
 use Illuminate\Http\JsonResponse;
@@ -16,7 +17,7 @@ class ChallengeController extends Controller
     {
         $challenges = Challenge::orderBy('start_date', 'desc')->limit(50)->get();
 
-        return response()->json(['challenges' => $challenges]);
+        return response()->json(['challenges' => ChallengeResource::collection($challenges)]);
     }
 
     public function join(Request $request, string $id): JsonResponse
@@ -37,11 +38,11 @@ class ChallengeController extends Controller
             ]);
         }
 
-        return response()->json(['challenge' => $challenge->fresh()]);
+        return response()->json(['challenge' => new ChallengeResource($challenge->fresh())]);
     }
 
     public function show(string $id): JsonResponse
     {
-        return response()->json(['challenge' => Challenge::findOrFail($id)]);
+        return response()->json(['challenge' => new ChallengeResource(Challenge::findOrFail($id))]);
     }
 }

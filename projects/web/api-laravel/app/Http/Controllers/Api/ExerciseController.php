@@ -51,7 +51,7 @@ class ExerciseController extends Controller
             })
             ->firstOrFail();
 
-        return response()->json(['exercise' => $exercise]);
+        return response()->json(['exercise' => new ExerciseResource($exercise)]);
     }
 
     public function store(StoreExerciseRequest $request): JsonResponse
@@ -63,7 +63,7 @@ class ExerciseController extends Controller
             'is_custom' => true,
         ]));
 
-        return response()->json(['exercise' => $exercise], 201);
+        return response()->json(['exercise' => new ExerciseResource($exercise)], 201);
     }
 
     public function update(UpdateExerciseRequest $request, string $id): JsonResponse
@@ -77,6 +77,6 @@ class ExerciseController extends Controller
 
         $exercise->update($data);
 
-        return response()->json(['exercise' => $exercise]);
+        return response()->json(['exercise' => new ExerciseResource($exercise)]);
     }
 }
