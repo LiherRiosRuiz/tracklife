@@ -18,7 +18,6 @@ use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\RecipeController;
 use App\Http\Controllers\Api\UserProfileController;
 use App\Http\Controllers\Api\UserSearchController;
-use App\Http\Controllers\Api\WearableController;
 use App\Http\Controllers\Api\WorkoutController;
 use App\Http\Controllers\Api\WorkoutPlanController;
 use Illuminate\Support\Facades\Route;
@@ -110,10 +109,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/biometrics', [BiometricController::class, 'store']);
     Route::get('/biometrics/today', [BiometricController::class, 'today']);
 
-    Route::get('/wearables', [WearableController::class, 'index']);
-    Route::post('/wearables/connect', [WearableController::class, 'connect']);
-    Route::post('/wearables/{provider}/sync', [WearableController::class, 'sync']);
-
+    // Las rutas de wearables se eliminaron: sync() fabricaba lecturas con rand()
+    // y las persistía como reales, alimentando biométricos y los consejos del
+    // coach. Cuando exista OAuth real, cualquier token DEBE guardarse con el cast
+    // `encrypted` (o un almacén de secretos), nunca como string plano.
     Route::get('/coach/daily', [CoachController::class, 'daily']);
 
     Route::post('/clubs', [ClubController::class, 'store']);

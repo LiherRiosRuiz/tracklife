@@ -8,10 +8,10 @@ connection — fully wired, not a pending integration.
 
 - `routes/api.php` — toda la superficie REST (~15 controllers, auth/feed/
   workouts/meals/recipes/clubs/challenges/biometrics/exercises/favorites/
-  wearables/coach/profile/search/dashboard). `routes/web.php` no se usa.
-- `app/Models/` — 14 modelos Eloquent-Mongo (User, Workout, WorkoutPlan,
+  coach/profile/search/dashboard). `routes/web.php` no se usa.
+- `app/Models/` — 13 modelos Eloquent-Mongo (User, Workout, WorkoutPlan,
   MealEntry, Recipe, Club, Challenge, Exercise, BiometricReading, Activity,
-  Product, Favorite, SocialPost, WearableConnection).
+  Product, Favorite, SocialPost).
 - `app/Http/Requests/` — un FormRequest por endpoint de escritura; toda
   validacion pasa por aca, nunca `$request->all()` directo a un modelo.
 - `bootstrap/app.php` — config de middleware (Laravel 11+/13 style, no
