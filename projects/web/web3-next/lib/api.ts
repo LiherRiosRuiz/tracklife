@@ -192,6 +192,18 @@ export const api = {
       body: JSON.stringify(data),
     }, token),
 
+  /** Laravel recalculates totals server-side whenever items change. */
+  updateMeal: (token: string, id: string, data: Partial<MealEntry>) =>
+    request<{ meal: MealEntry }>(`/api/meals/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }, token),
+
+  deleteMeal: (token: string, id: string) =>
+    request<{ message: string }>(`/api/meals/${id}`, {
+      method: "DELETE",
+    }, token),
+
   searchFoods: (token: string, q: string) =>
     request<{ foods: FoodItem[] }>(`/api/foods/search?q=${encodeURIComponent(q)}`, {}, token),
 
