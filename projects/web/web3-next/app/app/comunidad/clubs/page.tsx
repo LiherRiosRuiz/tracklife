@@ -33,6 +33,7 @@ export default function ClubsPage() {
   return (
     <div>
       <PageHeader title="Clubs" />
+      <Button href="/app/comunidad/clubs/nuevo" className="mb-4">+ Crear club</Button>
       {loading && <SkeletonList />}
       {error && <ErrorState message={error} onRetry={refetch} />}
       {joinError && <p className="mb-3 text-sm text-danger">{joinError}</p>}

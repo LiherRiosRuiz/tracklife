@@ -392,6 +392,12 @@ export const api = {
   joinClub: (token: string, id: string) =>
     request<{ club: Club }>(`/api/clubs/${id}/join`, { method: "POST" }, token),
 
+  createClub: (token: string, data: { name: string; description?: string; is_public?: boolean }) =>
+    request<{ club: Club }>("/api/clubs", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }, token),
+
   updateProfile: (token: string, data: Record<string, unknown>) =>
     request<{ user: User }>("/api/profile", {
       method: "PUT",
