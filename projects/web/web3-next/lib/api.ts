@@ -350,22 +350,6 @@ export const api = {
       body: JSON.stringify(data),
     }, token),
 
-  wearables: (token: string) =>
-    request<{ connections: WearableConnection[] }>("/api/wearables", {}, token),
-
-  connectWearable: (token: string, provider: string) =>
-    request<{ connection: WearableConnection }>("/api/wearables/connect", {
-      method: "POST",
-      body: JSON.stringify({ provider }),
-    }, token),
-
-  syncWearable: (token: string, provider: string) =>
-    request<{ message: string; readings_imported: number }>(
-      `/api/wearables/${provider}/sync`,
-      { method: "POST" },
-      token,
-    ),
-
   coachDaily: (token: string) =>
     request<{ insights: Array<{ type: string; severity: string; message: string }> }>(
       "/api/coach/daily",
@@ -532,8 +516,3 @@ export type BiometricReading = {
   timestamp?: string;
 };
 
-export type WearableConnection = {
-  provider: string;
-  status: string;
-  last_sync_at?: string;
-};

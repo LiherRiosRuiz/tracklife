@@ -1,18 +1,17 @@
 import { Button, Card, PageHeader } from "@/components/ui";
 
 const links = [
-  { href: "/app/biometricos/hoy", title: "Hoy", desc: "Readiness y strain" },
-  { href: "/app/biometricos/sueno", title: "Sueño", desc: "Calidad y fases" },
+  { href: "/app/biometricos/hoy", title: "Hoy", desc: "Recuperación y strain" },
+  { href: "/app/biometricos/sueno", title: "Sueño", desc: "Calidad del sueño" },
   { href: "/app/biometricos/hrv", title: "HRV", desc: "Tendencias" },
-  { href: "/app/biometricos/corazon", title: "Corazón", desc: "FC y zonas" },
+  { href: "/app/biometricos/corazon", title: "Corazón", desc: "FC en reposo" },
   { href: "/app/biometricos/cuerpo", title: "Cuerpo", desc: "Peso y medidas" },
-  { href: "/app/biometricos/dispositivos", title: "Dispositivos", desc: "Zepp, Whoop, Garmin" },
 ];
 
 export default function BiometricosHubPage() {
   return (
     <div>
-      <PageHeader title="Biométricos" subtitle="Whoop + Zepp en un solo lugar" />
+      <PageHeader title="Biométricos" subtitle="Tus métricas de recuperación y composición corporal" />
       <div className="grid gap-3 sm:grid-cols-2">
         {links.map((l) => (
           <Card key={l.href}>
