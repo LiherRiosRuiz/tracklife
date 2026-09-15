@@ -460,7 +460,9 @@ export type Challenge = {
   id?: string;
   title: string;
   description?: string;
-  participant_ids?: string[];
+  /** Count only; participant_ids is never sent — see ChallengeResource. */
+  participants_count?: number;
+  is_participant?: boolean;
   is_active?: boolean;
 };
 
@@ -468,7 +470,11 @@ export type Club = {
   id?: string;
   name: string;
   description?: string;
-  member_ids?: string[];
+  is_public?: boolean;
+  cover_url?: string;
+  /** The API returns a count, never the member list — see ClubResource. */
+  members_count?: number;
+  is_member?: boolean;
 };
 
 export type Workout = {

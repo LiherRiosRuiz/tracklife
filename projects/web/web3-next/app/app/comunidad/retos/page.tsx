@@ -40,7 +40,7 @@ export default function RetosPage() {
         <Card key={c.id ?? i} className="mb-3">
           <h3 className="font-semibold">{c.title}</h3>
           <p className="mt-1 text-sm text-muted">{c.description}</p>
-          <p className="mt-2 text-xs text-muted">{c.participant_ids?.length ?? 0} participantes</p>
+          <p className="mt-2 text-xs text-muted">{c.participants_count ?? 0} participantes</p>
           <Button onClick={() => join(String(c.id))} className="mt-3" variant="secondary">
             Unirse
           </Button>

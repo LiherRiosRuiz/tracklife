@@ -41,7 +41,7 @@ export default function ClubsPage() {
         <Card key={c.id ?? i} className="mb-3">
           <h3 className="font-semibold">{c.name}</h3>
           <p className="mt-1 text-sm text-muted">{c.description}</p>
-          <p className="mt-2 text-xs text-muted">{c.member_ids?.length ?? 0} miembros</p>
+          <p className="mt-2 text-xs text-muted">{c.members_count ?? 0} miembros</p>
           <Button onClick={() => join(String(c.id))} className="mt-3" variant="secondary">
             Unirse al club
           </Button>
