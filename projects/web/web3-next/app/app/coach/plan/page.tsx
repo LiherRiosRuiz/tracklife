@@ -58,7 +58,8 @@ export default function CoachPlanPage() {
     { enabled: !!token },
   );
 
-  const workoutPlans = plansData?.workoutPlans ?? [];
+  // La API devuelve { plans }, no { workoutPlans } — igual que lo lee planes/page.tsx.
+  const workoutPlans = plansData?.plans ?? [];
   const insights = insightsData?.insights ?? [];
   const goal = user?.transformation_goal as Record<string, unknown> | undefined;
   const targets = user?.macro_targets;

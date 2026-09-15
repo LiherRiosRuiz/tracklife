@@ -32,8 +32,11 @@ beforeEach(() => {
 
 describe("coach/plan — plan semanal real", () => {
   it("C1: renders the user's own workout plans, not a hardcoded template", async () => {
+    // The API's real key is `plans` (see WorkoutPlanController@index and how
+    // planes/page.tsx reads it). Mocking `workoutPlans` here originally encoded
+    // my own mistake instead of the contract, and passed while the page was broken.
     vi.mocked(api.workoutPlans).mockResolvedValue({
-      workoutPlans: [
+      plans: [
         { id: "p1", name: "Push Pull Legs", days_per_week: 5, exercises: [] },
       ],
     } as never);
@@ -48,7 +51,7 @@ describe("coach/plan — plan semanal real", () => {
   });
 
   it("C2: with no plans, offers a way to create one instead of inventing a plan", async () => {
-    vi.mocked(api.workoutPlans).mockResolvedValue({ workoutPlans: [] } as never);
+    vi.mocked(api.workoutPlans).mockResolvedValue({ plans: [] } as never);
 
     render(<CoachPlanPage />);
 

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { api, type Exercise } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useApiData } from "@/hooks/use-api-data";
@@ -96,7 +97,15 @@ export function ExercisePickerModal({
             </button>
           ))}
           {!error && exercises.length === 0 && (
-            <p className="py-8 text-center text-sm text-muted">No se encontraron ejercicios</p>
+            <div className="py-8 text-center">
+              <p className="text-sm text-muted">No se encontraron ejercicios</p>
+              <Link
+                href="/app/entrenamiento/gym/ejercicios/nuevo"
+                className="mt-2 inline-block text-sm font-semibold text-accent hover:underline"
+              >
+                Crear ejercicio
+              </Link>
+            </div>
           )}
         </div>
       </div>

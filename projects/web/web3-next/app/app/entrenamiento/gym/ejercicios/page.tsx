@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { api, type Exercise } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useApiData } from "@/hooks/use-api-data";
-import { Card, PageHeader } from "@/components/ui";
+import { Button, Card, PageHeader } from "@/components/ui";
 import { SkeletonGrid } from "@/components/Skeleton";
 import { ErrorState } from "@/components/ErrorState";
 import { MUSCLE_GROUPS, EQUIPMENT_TYPES, muscleLabel, equipmentLabel } from "@/lib/muscles";
@@ -49,6 +49,7 @@ export default function EjerciciosPage() {
   return (
     <div>
       <PageHeader title="Biblioteca de ejercicios" subtitle={`${exercises.length} ejercicios`} />
+      <Button href="/app/entrenamiento/gym/ejercicios/nuevo" className="mb-4">+ Nuevo ejercicio</Button>
       <input
         value={search}
         onChange={(e) => setSearch(e.target.value)}

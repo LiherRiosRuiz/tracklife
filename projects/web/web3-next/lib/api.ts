@@ -254,6 +254,14 @@ export const api = {
   recipes: (token: string) =>
     request<{ recipes: Recipe[] }>("/api/recipes", {}, token),
 
+  /** is_premium/price exist server-side but are deliberately not sent: no
+   *  monetization ships pre-launch, and an unused field invites misuse. */
+  createRecipe: (token: string, data: Partial<Recipe>) =>
+    request<{ recipe: Recipe }>("/api/recipes", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }, token),
+
   favorites: (token: string) =>
     request<{ favorites: Favorite[] }>("/api/favorites", {}, token),
 
@@ -292,6 +300,20 @@ export const api = {
 
   exerciseDetail: (token: string, id: string) =>
     request<{ exercise: Exercise }>(`/api/exercises/${id}`, {}, token),
+
+  /** Custom exercises carry no image_url: StoreExerciseRequest doesn't accept one,
+   *  and every render site already guards on it, so they degrade cleanly. */
+  createExercise: (token: string, data: Partial<Exercise>) =>
+    request<{ exercise: Exercise }>("/api/exercises", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }, token),
+
+  updateExercise: (token: string, id: string, data: Partial<Exercise>) =>
+    request<{ exercise: Exercise }>(`/api/exercises/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }, token),
 
   workoutPlans: (token: string) =>
     request<{ plans: WorkoutPlan[] }>("/api/workout-plans", {}, token),
@@ -406,6 +428,10 @@ export type Recipe = {
   id?: string;
   title: string;
   description?: string;
+  ingredients?: string[];
+  steps?: string[];
+  servings?: number;
+  is_public?: boolean;
   totals_per_serving?: MacroTargets;
 };
 

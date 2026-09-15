@@ -2,7 +2,7 @@
 
 import { api, type Recipe } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
-import { Card, PageHeader } from "@/components/ui";
+import { Button, Card, EmptyState, PageHeader } from "@/components/ui";
 import { useApiData } from "@/hooks/use-api-data";
 import { SkeletonGrid } from "@/components/Skeleton";
 import { ErrorState } from "@/components/ErrorState";
@@ -21,11 +21,17 @@ export default function RecetasPage() {
   return (
     <div>
       <PageHeader title="Recetas" subtitle="Comunidad TRACKLIFE" />
+      <Button href="/app/nutricion/recetas/nueva" className="mb-4">+ Nueva receta</Button>
       {loading && <SkeletonGrid />}
       {error && <ErrorState message={error} onRetry={refetch} />}
       {!loading && !error && (
         recipes.length === 0 ? (
-          <Card><p className="text-sm text-muted">Aún no hay recetas. ¡Comparte la primera!</p></Card>
+          // The old empty state said "¡Comparte la primera!" with no way to do it.
+          <EmptyState
+            title="Aún no hay recetas"
+            message="Comparte la primera con la comunidad."
+            action={<Button href="/app/nutricion/recetas/nueva">Crear receta</Button>}
+          />
         ) : (
           <div className="grid gap-3 sm:grid-cols-2">
             {recipes.map((r, i) => (
