@@ -3,16 +3,16 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\SearchUsersRequest;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use MongoDB\BSON\Regex;
 
 class UserSearchController extends Controller
 {
-    public function search(Request $request): JsonResponse
+    public function search(SearchUsersRequest $request): JsonResponse
     {
-        $q = $request->validate(['q' => 'required|string|min:2'])['q'];
+        $q = $request->validated()['q'];
 
         $pattern = new Regex(preg_quote($q, '/'), 'i');
 

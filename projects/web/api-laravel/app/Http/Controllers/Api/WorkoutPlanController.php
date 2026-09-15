@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreWorkoutPlanRequest;
 use App\Http\Requests\UpdateWorkoutPlanRequest;
+use App\Http\Resources\WorkoutPlanResource;
 use App\Models\WorkoutPlan;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -17,7 +18,7 @@ class WorkoutPlanController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return response()->json(['plans' => $plans]);
+        return response()->json(['plans' => WorkoutPlanResource::collection($plans)]);
     }
 
     public function store(StoreWorkoutPlanRequest $request): JsonResponse
@@ -33,7 +34,7 @@ class WorkoutPlanController extends Controller
             'is_public' => false,
         ]);
 
-        return response()->json(['plan' => $plan], 201);
+        return response()->json(['plan' => new WorkoutPlanResource($plan)], 201);
     }
 
     public function show(Request $request, string $id): JsonResponse
@@ -42,7 +43,7 @@ class WorkoutPlanController extends Controller
             ->where('user_id', (string) $request->user()->_id)
             ->firstOrFail();
 
-        return response()->json(['plan' => $plan]);
+        return response()->json(['plan' => new WorkoutPlanResource($plan)]);
     }
 
     public function update(UpdateWorkoutPlanRequest $request, string $id): JsonResponse
@@ -55,7 +56,7 @@ class WorkoutPlanController extends Controller
 
         $plan->update($data);
 
-        return response()->json(['plan' => $plan->fresh()]);
+        return response()->json(['plan' => new WorkoutPlanResource($plan->fresh())]);
     }
 
     public function destroy(Request $request, string $id): JsonResponse
