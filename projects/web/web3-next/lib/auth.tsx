@@ -10,6 +10,13 @@ type AuthContextType = {
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
+  /**
+   * Re-reads the session user from the server. Pages that write to the profile
+   * (objetivo, ajustes) must call this after saving: otherwise the context keeps
+   * the pre-save user and the change looks reverted everywhere else until a full
+   * page reload.
+   */
+  refreshUser: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -89,6 +96,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     persist(data.user);
   };
 
+  const refreshUser = async () => {
+    try {
+      const { user } = await api.me(SESSION_SENTINEL);
+      setUser(user);
+    } catch {
+      // A failed refresh must not log the user out or blank the UI: the save it
+      // follows already succeeded. Worst case the context stays stale until the
+      // next reload, which is exactly the old behaviour.
+    }
+  };
+
   const logout = () => {
     // El route handler de Next revoca el token en Laravel y limpia la cookie httpOnly.
     // Se ignoran errores de red — el usuario cierra sesión de todas formas.
@@ -100,7 +118,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, token, loading, login, register, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

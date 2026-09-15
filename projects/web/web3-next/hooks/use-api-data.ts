@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
+import { toErrorMessage } from "@/lib/api-error";
 
 type UseApiDataOptions = {
   enabled?: boolean;
@@ -41,7 +42,11 @@ export function useApiData<T>(
       })
       .catch((e: unknown) => {
         if (currentFetch !== fetchCountRef.current) return;
-        setError(e instanceof Error ? e.message : "Error desconocido");
+        // Raw e.message leaks api.ts's res.statusText fallback — a non-JSON 500
+        // rendered the English "Internal Server Error" into a Spanish UI on every
+        // page using this hook. toErrorMessage keeps API text only for 4xx, and
+        // returns null on 401 so no red flash precedes the /login redirect.
+        setError(toErrorMessage(e, "Error al cargar los datos"));
       })
       .finally(() => {
         if (currentFetch !== fetchCountRef.current) return;

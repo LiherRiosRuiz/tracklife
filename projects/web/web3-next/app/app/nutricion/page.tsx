@@ -4,8 +4,7 @@ const links = [
   { href: "/app/nutricion/diario", title: "Diario", desc: "Comidas del día" },
   { href: "/app/nutricion/registrar", title: "Registrar", desc: "Añadir comida" },
   { href: "/app/nutricion/escaner", title: "Escáner", desc: "Escanear producto" },
-  { href: "/app/nutricion/macros", title: "Macros", desc: "Objetivos calóricos" },
-  { href: "/app/nutricion/plan", title: "Plan", desc: "Plan semanal" },
+  { href: "/app/nutricion/plan", title: "Macros", desc: "Objetivos calóricos" },
   { href: "/app/nutricion/recetas", title: "Recetas", desc: "Biblioteca" },
   { href: "/app/nutricion/favoritos", title: "Favoritos", desc: "Guardados" },
 ];

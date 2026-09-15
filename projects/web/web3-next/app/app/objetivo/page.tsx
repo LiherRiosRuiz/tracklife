@@ -4,13 +4,24 @@ import { useState } from "react";
 import { Check, Target } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { api } from "@/lib/api";
+import { toErrorMessage } from "@/lib/api-error";
 import { Button, Card, Input, PageHeader } from "@/components/ui";
+import { SkeletonCard } from "@/components/Skeleton";
 
-export default function ObjetivoPage() {
-  const { token } = useAuth();
-  const [weight, setWeight] = useState("");
-  const [bodyFat, setBodyFat] = useState("");
-  const [deadline, setDeadline] = useState("");
+type Goal = { target_weight?: number | null; target_body_fat?: number | null; deadline?: string | null };
+
+/** "" for a missing value — an empty input is honest, a 0 would not be. */
+function initial(value: number | string | null | undefined): string {
+  return value === null || value === undefined ? "" : String(value);
+}
+
+function ObjetivoForm({ token, goal }: { token: string; goal: Goal }) {
+  const { refreshUser } = useAuth();
+  // Seeded from the saved goal: rendering an empty form over an existing goal
+  // invited the user to silently overwrite it with blanks.
+  const [weight, setWeight] = useState(initial(goal.target_weight));
+  const [bodyFat, setBodyFat] = useState(initial(goal.target_body_fat));
+  const [deadline, setDeadline] = useState(initial(goal.deadline));
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
@@ -29,8 +40,12 @@ export default function ObjetivoPage() {
         },
       });
       setSaved(true);
+      // Without this the context keeps the pre-save user, so coach/plan and any
+      // other reader show the old goal until a full reload.
+      await refreshUser();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "No se pudo guardar el objetivo");
+      const msg = toErrorMessage(e, "No se pudo guardar el objetivo");
+      if (msg) setError(msg);
     } finally {
       setSaving(false);
     }
@@ -58,4 +73,22 @@ export default function ObjetivoPage() {
       </Card>
     </div>
   );
+}
+
+export default function ObjetivoPage() {
+  const { user, token, loading } = useAuth();
+
+  // Mounting the form before the user resolves would seed it from an absent goal
+  // and then never re-seed — the stale-empty-form bug in a different disguise.
+  if (loading || !user || !token) {
+    return (
+      <div>
+        <PageHeader title="Objetivo de transformación" subtitle="Define tu meta y el coach adapta el plan" />
+        <SkeletonCard />
+      </div>
+    );
+  }
+
+  const goal = (user.transformation_goal ?? {}) as Goal;
+  return <ObjetivoForm token={token} goal={goal} />;
 }

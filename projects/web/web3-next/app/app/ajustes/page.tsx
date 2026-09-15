@@ -47,7 +47,7 @@ const selectClass =
   "rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent";
 
 // Inner component receives user as non-null prop to allow direct state initialization
-function AjustesForm({ user, token, onLogout }: { user: User; token: string; onLogout: () => void }) {
+function AjustesForm({ user, token, onLogout, onSaved }: { user: User; token: string; onLogout: () => void; onSaved: () => Promise<void> }) {
   const [name, setName] = useState(user.name ?? "");
   const [bio, setBio] = useState((user as User & { bio?: string }).bio ?? "");
   const [profileStatus, setProfileStatus] = useState<"idle" | "saving" | "ok" | "error">("idle");
@@ -66,6 +66,8 @@ function AjustesForm({ user, token, onLogout }: { user: User; token: string; onL
     try {
       await api.updateProfile(token, { name: name.trim(), bio: bio.trim() });
       setProfileStatus("ok");
+      // Keeps the header name (AppNav) and every other reader in sync with the save.
+      await onSaved();
       setTimeout(() => setProfileStatus("idle"), 3000);
     } catch (err) {
       setProfileError(err instanceof Error ? err.message : "Error al guardar");
@@ -218,7 +220,7 @@ function AjustesForm({ user, token, onLogout }: { user: User; token: string; onL
 }
 
 export default function AjustesPage() {
-  const { user, token, logout } = useAuth();
+  const { user, token, logout, refreshUser } = useAuth();
   const router = useRouter();
 
   function handleLogout() {
@@ -238,7 +240,7 @@ export default function AjustesPage() {
   return (
     <div>
       <PageHeader title="Ajustes" />
-      <AjustesForm user={user} token={token} onLogout={handleLogout} />
+      <AjustesForm user={user} token={token} onLogout={handleLogout} onSaved={refreshUser} />
     </div>
   );
 }

@@ -6,11 +6,10 @@ import { useAuth } from "@/lib/auth";
 import { Button, Card, MacroBar, PageHeader } from "@/components/ui";
 import { useApiData } from "@/hooks/use-api-data";
 import { SkeletonCard } from "@/components/Skeleton";
+import { ErrorState } from "@/components/ErrorState";
 import { macroTargetsSchema } from "@/lib/schemas";
 
 // ── Constantes ─────────────────────────────────────────────────────────────
-
-const DEFAULTS: MacroTargets = { calories: 2000, protein: 150, carbs: 200, fat: 65 };
 
 const FIELD_LABELS: Record<keyof MacroTargets, string> = {
   calories: "Calorías (kcal)",
@@ -284,13 +283,11 @@ function PlanForm({ initialTargets, token }: { initialTargets: MacroTargets; tok
 export default function PlanPage() {
   const { token } = useAuth();
 
-  const { data, loading, error } = useApiData(
+  const { data, loading, error, refetch } = useApiData(
     () => api.getMacroTargets(token!),
     [token],
     { enabled: !!token },
   );
-
-  const initialTargets: MacroTargets = data?.targets ?? DEFAULTS;
 
   if (loading) return <SkeletonCard />;
 
@@ -301,18 +298,17 @@ export default function PlanPage() {
         subtitle="Define tus objetivos y revisa la distribución de macros"
       />
 
-      {error && (
-        <p className="mb-4 text-sm text-danger">
-          No se pudieron cargar los objetivos actuales: {error}
-        </p>
-      )}
-
       {!token ? (
         <Card>
           <p className="text-sm text-muted">Inicia sesión para ver tu plan nutricional.</p>
         </Card>
+      ) : error || !data ? (
+        // Deliberately NOT falling back to invented defaults here. Rendering a
+        // prefilled form over a failed read invites the user to overwrite the very
+        // targets the app just failed to load.
+        <ErrorState message={error || "No se pudieron cargar tus objetivos"} onRetry={refetch} />
       ) : (
-        <PlanForm initialTargets={initialTargets} token={token} />
+        <PlanForm initialTargets={data.targets} token={token} />
       )}
     </div>
   );
