@@ -1,6 +1,6 @@
 ---
 import Layout from "../layouts/Layout.astro";
-const appUrl = "http://app.tracklife.test";
+import { APP_URL as appUrl } from "../config";
 
 const features = [
   { svg: '<path d="M11 2a9 9 0 0 0-3 17.5c1 .5 2 .5 4 .5s3 0 4-.5A9 9 0 0 0 13 2"/><path d="M12 7v5l3 2"/>', title: "Nutrición", desc: "Diario alimentario, macros en tiempo real, escáner de código de barras y recetas personalizadas." },

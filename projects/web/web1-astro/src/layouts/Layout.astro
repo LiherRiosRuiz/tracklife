@@ -1,5 +1,6 @@
 ---
 import "../styles/global.css";
+import { APP_URL as appUrl, SITE_URL } from "../config";
 
 interface Props {
   title: string;
@@ -8,9 +9,8 @@ interface Props {
 }
 
 const { title, description, ogImage = "/favicon.svg" } = Astro.props;
-const siteBase = Astro.site?.toString() ?? 'http://www.tracklife.test';
+const siteBase = Astro.site?.toString() ?? SITE_URL;
 const canonicalURL = new URL(Astro.url.pathname, siteBase);
-const appUrl = "http://app.tracklife.test";
 ---
 
 <!doctype html>

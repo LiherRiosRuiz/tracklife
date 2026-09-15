@@ -77,6 +77,17 @@ son dos rutas de publicación independientes.
    - `API_INTERNAL_URL` y `NEXT_PUBLIC_API_URL` = la URL de la API del paso 2.
    - Deploy → anota la URL, p.ej. `https://tracklife.vercel.app`.
 
+**3b) Landing en Vercel** (gratis, faltaba en esta guía): Add New Project → mismo repo → **Root Directory** `projects/web/web1-astro`. Es un build estático de Astro, sin servidor.
+
+⚠️ **Dos variables OBLIGATORIAS en el build** (añadidas 2026-09-15, `src/config.ts`). Sin ellas la landing compila igual, pero **todos sus CTA** ("Empezar gratis", "Entrar") apuntan a `app.tracklife.test`, que solo resuelve en la máquina de desarrollo — el embudo de conversión entero muerto, y el canonical/sitemap anunciando el dominio local a Google:
+
+```
+PUBLIC_APP_URL=https://<la URL del paso 3>      # a dónde van los CTA
+PUBLIC_SITE_URL=https://<la URL de esta landing> # canonical + sitemap
+```
+
+Se leen en tiempo de build: si las cambias, hay que **redesplegar**, no basta con reiniciar. Para comprobar que quedó bien, busca `tracklife.test` en el HTML publicado — debe dar cero resultados.
+
 **4) Cerrar el círculo**: pon la URL de Vercel del paso 3 en `CORS_ALLOWED_ORIGINS` del paso 2 (redeploy API). Listo: app pública con HTTPS.
 
 > Cuando tengas las 3 URLs, pásamelas y valido el flujo (registro/login/persistencia) y sigo con el empaquetado TWA.
