@@ -14,6 +14,28 @@ class FeedTest extends TestCase
 
     protected array $mongoCollections = ['users', 'personal_access_tokens', 'social_posts', 'follows'];
 
+    /**
+     * Seeds a post the way the server itself does.
+     *
+     * The visibility and pagination tests below used POST /api/feed as a fixture
+     * factory, but that endpoint now only accepts `status_update` — the other
+     * types are created server-side from real records. Since feed visibility is
+     * keyed by type (privacy_settings has per-type entries like meals/workouts),
+     * switching these fixtures to status_update would silently change what they
+     * assert. Creating the model directly preserves both the type and the intent.
+     */
+    private function seedPost(User $user, string $type, string $message): SocialPost
+    {
+        return SocialPost::create([
+            'user_id' => (string) $user->_id,
+            'type' => $type,
+            'payload' => ['message' => $message],
+            'kudos_count' => 0,
+            'kudos_user_ids' => [],
+            'comments' => [],
+        ]);
+    }
+
     // ─── Helpers ─────────────────────────────────────────────────────────────
 
     private function createTestUser(array $privacyOverrides = []): User
@@ -47,15 +69,17 @@ class FeedTest extends TestCase
             ->assertJsonValidationErrors(['type']);
     }
 
-    public function test_feed_post_store_accepts_known_type(): void
+    public function test_feed_post_store_accepts_a_status_update(): void
     {
+        // status_update is the only type a client may post; the rest are created
+        // server-side from real records (see FeedPostSpoofingTest).
         $response = $this->actingAsTestUser()->postJson('/api/feed', [
-            'type' => 'workout_completed',
+            'type' => 'status_update',
             'payload' => ['message' => 'Finished leg day'],
         ]);
 
         $response->assertStatus(201)
-            ->assertJsonPath('post.type', 'workout_completed')
+            ->assertJsonPath('post.type', 'status_update')
             ->assertJsonPath('post.likes_count', 0)
             ->assertJsonPath('post.liked', false)
             ->assertJsonMissingPath('post.kudos_count');
@@ -64,7 +88,7 @@ class FeedTest extends TestCase
     public function test_feed_post_store_requires_authentication(): void
     {
         $response = $this->postJson('/api/feed', [
-            'type' => 'workout_completed',
+            'type' => 'status_update',
             'payload' => ['message' => 'hi'],
         ]);
 
@@ -89,10 +113,7 @@ class FeedTest extends TestCase
 
         // Default privacy for 'meals' is 'followers'. userB does not follow
         // userA, so this post must stay invisible to userB.
-        $this->actingAs($userA, 'sanctum')->postJson('/api/feed', [
-            'type' => 'meal_logged',
-            'payload' => ['message' => 'private meal from A'],
-        ])->assertStatus(201);
+        $this->seedPost($userA, 'meal_logged', 'private meal from A');
 
         $response = $this->actingAs($userB, 'sanctum')->getJson('/api/feed');
 
@@ -108,16 +129,10 @@ class FeedTest extends TestCase
         $userB = $this->createTestUser();
 
         // userA's own followers-visibility post: always visible to herself.
-        $this->actingAs($userA, 'sanctum')->postJson('/api/feed', [
-            'type' => 'meal_logged',
-            'payload' => ['message' => 'my own meal'],
-        ])->assertStatus(201);
+        $this->seedPost($userA, 'meal_logged', 'my own meal');
 
         // userB's product_scanned post defaults to 'public' visibility.
-        $this->actingAs($userB, 'sanctum')->postJson('/api/feed', [
-            'type' => 'product_scanned',
-            'payload' => ['message' => 'public scan from B'],
-        ])->assertStatus(201);
+        $this->seedPost($userB, 'product_scanned', 'public scan from B');
 
         $response = $this->actingAs($userA, 'sanctum')->getJson('/api/feed');
 
@@ -141,15 +156,9 @@ class FeedTest extends TestCase
         // privacy rules, so we make B's post public.
         $userB = $this->createTestUser(['meals' => 'public']);
 
-        $this->actingAs($userA, 'sanctum')->postJson('/api/feed', [
-            'type' => 'workout_completed',
-            'payload' => ['message' => 'from A'],
-        ])->assertStatus(201);
+        $this->seedPost($userA, 'workout_completed', 'from A');
 
-        $this->actingAs($userB, 'sanctum')->postJson('/api/feed', [
-            'type' => 'meal_logged',
-            'payload' => ['message' => 'from B'],
-        ])->assertStatus(201);
+        $this->seedPost($userB, 'meal_logged', 'from B');
 
         $response = $this->actingAs($userA, 'sanctum')->getJson('/api/feed');
 
@@ -176,10 +185,7 @@ class FeedTest extends TestCase
         $user = $this->createTestUser();
 
         foreach (range(1, 55) as $i) {
-            $this->actingAs($user, 'sanctum')->postJson('/api/feed', [
-                'type' => 'workout_completed',
-                'payload' => ['message' => "post {$i}"],
-            ])->assertStatus(201);
+            $this->seedPost($user, 'workout_completed', "post {$i}");
         }
 
         $firstPage = $this->actingAs($user, 'sanctum')->getJson('/api/feed');
@@ -397,10 +403,7 @@ class FeedTest extends TestCase
         $liker = $this->createTestUser();
         $nonLiker = $this->createTestUser();
 
-        $this->actingAs($poster, 'sanctum')->postJson('/api/feed', [
-            'type' => 'product_scanned',
-            'payload' => ['message' => 'public scan to like'],
-        ])->assertStatus(201);
+        $this->seedPost($poster, 'product_scanned', 'public scan to like');
 
         $post = SocialPost::where('user_id', (string) $poster->_id)->firstOrFail();
 
@@ -454,10 +457,7 @@ class FeedTest extends TestCase
 
         Follow::create(['follower_id' => (string) $follower->_id, 'followed_id' => (string) $poster->_id]);
 
-        $this->actingAs($poster, 'sanctum')->postJson('/api/feed', [
-            'type' => 'meal_logged',
-            'payload' => ['message' => 'followers-only meal from poster'],
-        ])->assertStatus(201);
+        $this->seedPost($poster, 'meal_logged', 'followers-only meal from poster');
 
         $response = $this->actingAs($follower, 'sanctum')->getJson('/api/feed');
 
@@ -503,10 +503,7 @@ class FeedTest extends TestCase
         // This must NOT grant A visibility into D's followers-only content.
         Follow::create(['follower_id' => (string) $userD->_id, 'followed_id' => (string) $userA->_id]);
 
-        $this->actingAs($userD, 'sanctum')->postJson('/api/feed', [
-            'type' => 'meal_logged',
-            'payload' => ['message' => 'followers-only meal from D'],
-        ])->assertStatus(201);
+        $this->seedPost($userD, 'meal_logged', 'followers-only meal from D');
 
         $response = $this->actingAs($userA, 'sanctum')->getJson('/api/feed');
 

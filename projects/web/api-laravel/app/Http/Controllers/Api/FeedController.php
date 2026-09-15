@@ -40,7 +40,14 @@ class FeedController extends Controller
     {
         $data = $request->validated();
 
-        $post = $this->feedService->createPost($request->user(), $data['type'], $data['payload']);
+        // Rebuilt rather than passed through: validation guarantees `message`
+        // exists, but the raw payload array could still carry extra keys that
+        // would be stored verbatim and rendered later.
+        $post = $this->feedService->createPost(
+            $request->user(),
+            $data['type'],
+            ['message' => $data['payload']['message']],
+        );
 
         return response()->json(['post' => $this->feedService->formatPost($post, $request->user(), $request->user())], 201);
     }
