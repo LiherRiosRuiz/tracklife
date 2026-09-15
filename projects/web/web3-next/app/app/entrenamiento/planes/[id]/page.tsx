@@ -108,6 +108,9 @@ export default function PlanDetailPage() {
         {starting ? "Preparando..." : "Iniciar Workout"}
       </Button>
       {startError && <p className="mt-2 text-sm text-danger">{startError}</p>}
+      <Button href={`/app/entrenamiento/planes/${id}/editar`} variant="secondary" className="mt-2 w-full">
+        Editar plan
+      </Button>
     </div>
   );
 }

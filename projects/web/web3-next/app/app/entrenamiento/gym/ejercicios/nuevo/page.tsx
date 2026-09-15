@@ -18,8 +18,10 @@ export default function NuevoEjercicioPage() {
   const { token } = useAuth();
   const router = useRouter();
   const [name, setName] = useState("");
-  const [muscleGroup, setMuscleGroup] = useState(MUSCLE_GROUPS[0]?.value ?? "");
-  const [equipment, setEquipment] = useState(EQUIPMENT_TYPES[0]?.value ?? "");
+  // Explicitly string: the option lists are `as const`, so inference would pin
+  // these to the first entry's literal type and reject every other option.
+  const [muscleGroup, setMuscleGroup] = useState<string>(MUSCLE_GROUPS[0]?.value ?? "");
+  const [equipment, setEquipment] = useState<string>(EQUIPMENT_TYPES[0]?.value ?? "");
   const [instructions, setInstructions] = useState("");
   const [tips, setTips] = useState("");
   const [saving, setSaving] = useState(false);
