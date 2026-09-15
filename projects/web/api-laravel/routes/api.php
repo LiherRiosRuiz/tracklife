@@ -20,9 +20,27 @@ use App\Http\Controllers\Api\UserProfileController;
 use App\Http\Controllers\Api\UserSearchController;
 use App\Http\Controllers\Api\WorkoutController;
 use App\Http\Controllers\Api\WorkoutPlanController;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/health', fn () => response()->json(['status' => 'ok', 'app' => 'TRACKLIFE API']));
+// Liveness + dependency check. It used to return a fixed 'ok' literal, so an
+// uptime monitor would report green while MongoDB was unreachable and every
+// real endpoint was failing — the probe's whole job, unmet. Matters more once
+// the database is a separate network service (Atlas) rather than a sibling
+// container.
+Route::get('/health', function () {
+    try {
+        DB::connection('mongodb')->getMongoClient()->selectDatabase(
+            config('database.connections.mongodb.database')
+        )->command(['ping' => 1]);
+    } catch (Throwable $e) {
+        // 503 so monitors and load balancers act on it; no exception detail in
+        // the body — this endpoint is public.
+        return response()->json(['status' => 'degraded', 'app' => 'TRACKLIFE API', 'database' => 'unreachable'], 503);
+    }
+
+    return response()->json(['status' => 'ok', 'app' => 'TRACKLIFE API', 'database' => 'ok']);
+});
 
 // Stricter throttle on top of the api-wide baseline: brute-force/enumeration
 // protection for the two unauthenticated auth endpoints.
