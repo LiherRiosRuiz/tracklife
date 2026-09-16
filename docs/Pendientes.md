@@ -110,4 +110,6 @@ las dudas, pero ya no son accionables tal como están escritos.
 
 ---
 
-Ver también: [[Home]], [[TRACKLIFE]], [[Roadmap TrackLife]], [[Platon SDD]], [[Skills Pendientes]]
+- [ ] **Borrado de cuenta y consentimiento (RGPD)** — `[agregado 2026-09-16]` Bloqueantes para aceptar usuarios reales, detallados en [[Inventario de datos (privacidad)]]: (1) **no existe endpoint de borrado de cuenta**, así que el derecho de supresión (art. 17) no se puede atender; (2) **no se pide ni se guarda consentimiento explícito** para tratar datos de salud, que son categoría especial (art. 9). Menos urgentes pero pendientes: exportación de datos (art. 20) y política de conservación — hoy nada caduca nunca.
+
+Ver también: [[Home]], [[TRACKLIFE]], [[Roadmap TrackLife]], [[Inventario de datos (privacidad)]], [[Skills Pendientes]]
