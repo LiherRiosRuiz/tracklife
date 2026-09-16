@@ -22,7 +22,7 @@ class ResourceShapeTest extends TestCase
 {
     use MongoTestCleanup;
 
-    protected array $mongoCollections = ['users', 'personal_access_tokens', 'clubs', 'challenges', 'recipes', 'workout_plans'];
+    protected array $mongoCollections = ['users', 'personal_access_tokens', 'clubs', 'challenges', 'recipes', 'workout_plans', 'exercises'];
 
     private function createTestUser(): User
     {
@@ -132,5 +132,37 @@ class ResourceShapeTest extends TestCase
         $this->assertSame('Empuje', $plan['description']);
         $this->assertSame(4, $plan['days_per_week']);
         $this->assertCount(1, $plan['exercises']);
+    }
+
+    public function test_exercise_ships_the_fields_the_ui_renders_including_the_image(): void
+    {
+        $user = $this->createTestUser();
+        \App\Models\Exercise::create([
+            'name' => 'Press banca',
+            'muscle_group' => 'chest',
+            'equipment' => 'barbell',
+            'instructions' => ['baja', 'empuja'],
+            'tips' => ['no rebotes'],
+            'image_url' => 'https://example.com/press.jpg',
+            'muscles_primary' => ['chest'],
+            'force' => 'push',
+            'level' => 'beginner',
+            'is_custom' => false,
+        ]);
+
+        $exercise = $this->actingAs($user)->getJson('/api/exercises')->assertOk()->json('exercises.0');
+
+        // image_url was missing from the Resource, so every
+        // `{exercise.image_url && <Image …>}` guard in the app silently rendered
+        // nothing — exercise thumbnails never displayed at all.
+        $this->assertSame('https://example.com/press.jpg', $exercise['image_url']);
+        $this->assertSame(['chest'], $exercise['muscles_primary']);
+        $this->assertSame('push', $exercise['force']);
+        $this->assertSame('beginner', $exercise['level']);
+        // Needed so the client only offers editing where the API allows it.
+        $this->assertFalse($exercise['is_custom']);
+        // `description` is not a field on Exercise; emitting it always produced null.
+        $this->assertArrayNotHasKey('description', $exercise);
+        $this->assertArrayNotHasKey('user_id', $exercise);
     }
 }
