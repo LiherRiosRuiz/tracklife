@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
+import Link from "next/link";
 import { api, type Workout } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { Card, MacroBar, PageHeader } from "@/components/ui";
@@ -76,7 +77,6 @@ function computeStreak(dates: string[]): number {
 
 export default function ProgresoPage() {
   const { token } = useAuth();
-  const [expanded, setExpanded] = useState<string | null>(null);
 
   const { data, loading, error, refetch } = useApiData(
     () => api.workouts(token!),
@@ -231,15 +231,12 @@ export default function ProgresoPage() {
           ) : (
             recentWorkouts.map((w, i) => {
               const id = w.id ?? String(i);
-              const isOpen = expanded === id;
               const tipo = deriveWorkoutType(w);
+              // Was an inline accordion duplicating the whole per-set breakdown.
+              // Now links to the workout detail page instead of keeping both.
               return (
-                <Card key={id} className="cursor-pointer" >
-                  <button
-                    type="button"
-                    onClick={() => setExpanded(isOpen ? null : id)}
-                    className="w-full text-left"
-                  >
+                <Link key={id} href={`/app/entrenamiento/workouts/${w.id}`}>
+                  <Card className="transition hover:border-accent">
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
                         <p className="truncate font-semibold">{w.name}</p>
@@ -250,37 +247,10 @@ export default function ProgresoPage() {
                           {tipo}
                         </p>
                       </div>
-                      <span className="mt-0.5 shrink-0 text-muted">{isOpen ? "▲" : "▼"}</span>
+                      <span className="mt-0.5 shrink-0 text-muted">›</span>
                     </div>
-                  </button>
-
-                  {isOpen && (
-                    <div className="mt-3 border-t border-border pt-3">
-                      {/* Group sets by exercise */}
-                      {[...new Set(w.sets.map((s) => s.exercise))].map((exName) => {
-                        const exSets = w.sets.filter((s) => s.exercise === exName);
-                        return (
-                          <div key={exName} className="mb-3 last:mb-0">
-                            <p className="mb-1 text-sm font-medium">{exName}</p>
-                            <div className="space-y-1">
-                              {exSets.map((s, si) => (
-                                <p key={si} className="text-xs text-muted">
-                                  Serie {s.set_number ?? si + 1} — {s.weight} kg × {s.reps} reps
-                                  {s.type && s.type !== "normal" ? ` (${s.type})` : ""}
-                                </p>
-                              ))}
-                            </div>
-                          </div>
-                        );
-                      })}
-                      {w.duration_minutes != null && (
-                        <p className="mt-2 text-xs text-muted">
-                          Duración: {w.duration_minutes} min
-                        </p>
-                      )}
-                    </div>
-                  )}
-                </Card>
+                  </Card>
+                </Link>
               );
             })
           )}

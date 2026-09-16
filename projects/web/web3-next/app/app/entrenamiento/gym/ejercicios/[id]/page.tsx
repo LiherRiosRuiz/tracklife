@@ -38,6 +38,17 @@ export default function ExerciseDetailPage() {
         ← Volver
       </Button>
       <PageHeader title={exercise.name} />
+      {/* Only your own custom exercises are editable — the API enforces the same
+          rule, so showing this on a catalog exercise would just 404 on save. */}
+      {exercise.is_custom && (
+        <Button
+          href={`/app/entrenamiento/gym/ejercicios/${exercise.id}/editar`}
+          variant="secondary"
+          className="mb-4"
+        >
+          Editar ejercicio
+        </Button>
+      )}
       {exercise.image_url && (
         <Card className="mb-4">
           <Image

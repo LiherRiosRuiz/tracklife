@@ -294,6 +294,9 @@ export const api = {
       body: JSON.stringify(data),
     }, token),
 
+  workoutDetail: (token: string, id: string) =>
+    request<{ workout: Workout }>(`/api/workouts/${id}`, {}, token),
+
   exercises: (token: string, filters?: { q?: string; muscle_group?: string }) => {
     const params = new URLSearchParams();
     if (filters?.q) params.set("q", filters.q);
