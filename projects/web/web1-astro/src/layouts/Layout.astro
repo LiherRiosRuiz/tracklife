@@ -8,7 +8,10 @@ interface Props {
   ogImage?: string;
 }
 
-const { title, description, ogImage = "/favicon.svg" } = Astro.props;
+// Defaulted to /favicon.svg and then never rendered into a meta tag at all, so
+// the cards went out imageless — and SVG wouldn't have worked anyway: Twitter,
+// Facebook, WhatsApp and LinkedIn all reject it for og:image. PNG, absolute URL.
+const { title, description, ogImage = "/og-image.png" } = Astro.props;
 const siteBase = Astro.site?.toString() ?? SITE_URL;
 const canonicalURL = new URL(Astro.url.pathname, siteBase);
 ---
@@ -30,9 +33,15 @@ const canonicalURL = new URL(Astro.url.pathname, siteBase);
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonicalURL} />
-    <meta name="twitter:card" content="summary_large_image" />
+    <meta property="og:site_name" content="TRACKLIFE" />
+    <meta property="og:locale" content="es_ES" />
+    <meta property="og:image" content={new URL(ogImage, siteBase)} />
+    {/* `summary`, not `summary_large_image`: the brand mark is square, and a wide
+        card rendering a square image crops it badly. */}
+    <meta name="twitter:card" content="summary" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={new URL(ogImage, siteBase)} />
   </head>
   <body class="bg-bg text-fg antialiased min-h-screen">
     <nav class="flex items-center justify-between px-6 py-4 max-w-6xl mx-auto border-b border-border">
