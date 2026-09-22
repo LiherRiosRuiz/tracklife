@@ -11,8 +11,8 @@ const plans = [
     features: [
       "Diario nutricional completo",
       "Registro de entrenamientos",
-      "Biométricos básicos (peso)",
-      "Coach IA con insights diarios",
+      "Biométricos completos (peso, HRV, sueño, recuperación)",
+      "Coach con recomendaciones diarias",
       "Comunidad y feed social",
       "Sin límite de datos",
     ],
@@ -25,16 +25,20 @@ const plans = [
     price: "Próximamente",
     period: "",
     desc: "Funcionalidades avanzadas para atletas y coaches.",
+    // OJO: la exportación de datos NO puede listarse aquí. La portabilidad es el
+    // art. 20 del RGPD — un derecho, no un producto — así que ponerla tras un muro
+    // de pago sería ilícito. Tampoco se mueve a Gratis hasta que exista de verdad.
     features: [
       "Todo lo de Gratis",
       "Wearables (Garmin, Apple Watch)",
       "Análisis avanzado de HRV",
-      "Planes de entrenamiento IA",
-      "Exportación de datos (CSV/PDF)",
+      "Análisis de tendencias a largo plazo",
       "Soporte prioritario",
     ],
-    cta: "Notificarme",
-    href: "#",
+    // href a null: el botón "Notificarme" era un <a href="#"> que no notificaba a
+    // nadie — no hay captura de emails ni lista de espera en ninguna parte.
+    cta: null,
+    href: null,
     highlighted: true,
   },
 ];
@@ -66,23 +70,31 @@ const plans = [
         <ul class="space-y-3 mb-8 flex-1">
           {plan.features.map((f) => (
             <li class="flex items-center gap-2 text-sm">
-              <span class={plan.highlighted ? 'text-fg-muted' : 'text-accent'}>✓</span>
+              <span class={plan.highlighted ? 'text-fg-muted' : 'text-accent'} aria-hidden="true">✓</span>
               <span>{f}</span>
             </li>
           ))}
         </ul>
-        <a href={plan.href}
-           class={`block rounded-xl py-3 text-center font-bold transition-colors ${plan.highlighted ? 'border border-border text-fg-muted cursor-not-allowed' : 'bg-accent text-on-accent hover:bg-accent-strong'}`}>
-          {plan.cta}
-        </a>
+        {plan.href ? (
+          <a href={plan.href}
+             class="block rounded-xl bg-accent py-3 text-center font-bold text-on-accent transition-colors hover:bg-accent-strong">
+            {plan.cta}
+          </a>
+        ) : (
+          /* Sin href no se renderiza un enlace: un <a href="#"> deshabilitado sigue
+             siendo enfocable con el teclado y activable, y no llevaba a ningún sitio. */
+          <p class="block rounded-xl border border-border py-3 text-center font-bold text-fg-muted">
+            Disponible más adelante
+          </p>
+        )}
       </div>
     ))}
   </section>
 
   <section class="max-w-2xl mx-auto px-6 pb-20 text-center">
     <p class="text-fg-muted text-sm">
-      ¿Preguntas? El proyecto es open source —
-      <a href="https://github.com/LiherRiosRuiz/tracklife" class="text-accent hover:underline">revisa el código</a>.
+      ¿Preguntas? El código de TRACKLIFE es público —
+      <a href="https://github.com/LiherRiosRuiz/tracklife" class="text-accent hover:underline">revísalo tú mismo</a>.
     </p>
   </section>
 </Layout>

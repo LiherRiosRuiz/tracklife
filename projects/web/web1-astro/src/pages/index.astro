@@ -4,20 +4,23 @@ import { APP_URL as appUrl } from "../config";
 
 const features = [
   { svg: '<path d="M11 2a9 9 0 0 0-3 17.5c1 .5 2 .5 4 .5s3 0 4-.5A9 9 0 0 0 13 2"/><path d="M12 7v5l3 2"/>', title: "Nutrición", desc: "Diario alimentario, macros en tiempo real, escáner de código de barras y recetas personalizadas." },
-  { svg: '<path d="m6.5 6.5 11 11"/><path d="m21 21-1-1"/><path d="m3 3 1 1"/><path d="m18 22 4-4"/><path d="m2 6 4-4"/><path d="m3 10 7-7"/><path d="m14 21 7-7"/>', title: "Entrenamiento", desc: "Sesiones de gym, planes personalizados, cardio y calendario semanal con seguimiento de PRs." },
-  { svg: '<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>', title: "Biométricos", desc: "Peso, composición corporal, frecuencia cardíaca, HRV y calidad del sueño en un solo historial." },
-  { svg: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>', title: "Comunidad", desc: "Feed social, clubs, retos activos y un sistema de rachas para no perder la motivación." },
+  { svg: '<path d="m6.5 6.5 11 11"/><path d="m21 21-1-1"/><path d="m3 3 1 1"/><path d="m18 22 4-4"/><path d="m2 6 4-4"/><path d="m3 10 7-7"/><path d="m14 21 7-7"/>', title: "Entrenamiento", desc: "Sesiones de gym con series y pesos, planes reutilizables, cardio y calendario semanal." },
+  { svg: '<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>', title: "Biométricos", desc: "Peso, composición corporal, frecuencia cardíaca, HRV y sueño. Registro manual, historial completo." },
+  { svg: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>', title: "Comunidad", desc: "Feed con lo que compartes, clubs, retos y una racha que te empuja a registrar cada día." },
+  { svg: '<path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="m19 9-5 5-4-4-3 3"/>', title: "Coach", desc: "Recomendaciones diarias calculadas sobre tus datos: proteína, días sin entrenar, cardio, recuperación." },
 ];
 
 const steps = [
   { num: "01", title: "Regístrate gratis", desc: "Crea tu cuenta en segundos. Sin tarjeta de crédito, sin compromisos." },
-  { num: "02", title: "Define tu objetivo", desc: "Peso objetivo, porcentaje de grasa, fecha límite. El coach IA adapta el plan a ti." },
+  { num: "02", title: "Define tu objetivo", desc: "Peso objetivo, porcentaje de grasa, fecha límite. Todo lo que registres se mide contra ese objetivo." },
   { num: "03", title: "Registra y mide", desc: "Cada comida, cada entreno, cada métrica. Todo en un lugar, todo conectado." },
 ];
 
+// Cada cifra es verificable. "0 rastreadores" lo es literalmente: no hay ni un
+// script de analítica en el repo — ni Google Analytics, ni Plausible, ni nada.
 const stats = [
-  { value: "4", label: "Módulos integrados" },
-  { value: "100%", label: "Open source" },
+  { value: "5", label: "Módulos integrados" },
+  { value: "0", label: "Rastreadores de terceros" },
   { value: "∞", label: "Datos sin límite" },
   { value: "0€", label: "Para empezar" },
 ];
@@ -25,7 +28,7 @@ const stats = [
 
 <Layout
   title="TRACKLIFE — Tu cuerpo. Tus datos. Tu control."
-  description="Plataforma integral de fitness: nutrición, entrenamiento, biométricos y comunidad. Todo conectado, todo medible, todo tuyo."
+  description="Plataforma integral de fitness: nutrición, entrenamiento, biométricos, comunidad y coach. Todo conectado, todo medible, todo tuyo."
 >
   <!-- Hero (energy: única zona con tratamiento La Velada) -->
   <section class="energy energy-sheen relative overflow-hidden">
@@ -34,7 +37,7 @@ const stats = [
     <div class="relative max-w-5xl mx-auto px-6 pt-24 pb-20 text-center">
       <div class="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-4 py-1.5 text-xs text-fg-muted mb-8">
         <span class="h-1.5 w-1.5 rounded-full bg-accent animate-pulse"></span>
-        Plataforma fitness open source
+        Plataforma fitness con código público
       </div>
       <h1 class="text-6xl md:text-display font-extrabold tracking-tight leading-none mb-6">
         Tu cuerpo.<br />
@@ -74,13 +77,13 @@ const stats = [
   <section class="max-w-5xl mx-auto px-6 py-24">
     <div class="text-center mb-16">
       <h2 class="text-3xl md:text-5xl font-extrabold mb-4">Todo lo que necesitas</h2>
-      <p class="text-fg-muted max-w-xl mx-auto">Cuatro módulos diseñados para trabajar juntos y darte una visión completa de tu salud.</p>
+      <p class="text-fg-muted max-w-xl mx-auto">Cinco módulos diseñados para trabajar juntos y darte una visión completa de tu salud.</p>
     </div>
-    <div class="grid md:grid-cols-2 gap-6">
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
       {features.map((f) => (
         <div class="rounded-2xl border border-border bg-surface p-8 hover:border-accent/40 transition-colors group cursor-default">
           <div class="mb-5 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-accent-dim">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6 text-accent" set:html={f.svg}></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6 text-accent" aria-hidden="true" focusable="false" set:html={f.svg}></svg>
           </div>
           <h3 class="text-xl font-bold mb-3 group-hover:text-accent transition-colors">{f.title}</h3>
           <p class="text-fg-muted text-sm leading-relaxed">{f.desc}</p>
