@@ -3,12 +3,22 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { api, SESSION_SENTINEL, type User } from "./api";
 
+/** Objeto en vez de posicionales: cinco argumentos de los que dos son booleanos
+ *  (`register(n, e, p, true, true)`) es un bug esperando a pasar. */
+export type RegisterPayload = {
+  name: string;
+  email: string;
+  password: string;
+  acceptTerms: boolean;
+  acceptHealthData: boolean;
+};
+
 type AuthContextType = {
   user: User | null;
   token: string | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
+  register: (input: RegisterPayload) => Promise<void>;
   logout: () => void;
   /**
    * Re-reads the session user from the server. Pages that write to the profile
@@ -85,11 +95,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     persist(data.user);
   };
 
-  const register = async (name: string, email: string, password: string) => {
+  const register = async ({ name, email, password, acceptTerms, acceptHealthData }: RegisterPayload) => {
     const res = await fetch("/api/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, password }),
+      // El backend espera afirmaciones `accept_*`; los timestamps los pone él.
+      body: JSON.stringify({
+        name,
+        email,
+        password,
+        accept_terms: acceptTerms,
+        accept_health_data: acceptHealthData,
+      }),
     });
     const data = await res.json().catch(() => ({ message: "Error al registrarse" }));
     if (!res.ok) throw new Error(data.message ?? "Error al registrarse");
