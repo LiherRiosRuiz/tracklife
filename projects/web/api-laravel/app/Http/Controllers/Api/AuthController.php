@@ -7,6 +7,7 @@ use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
+use App\Support\LegalVersions;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -30,7 +31,7 @@ class AuthController extends Controller
             $username .= '-'.Str::lower(Str::random(4));
         }
 
-        $user = User::create([
+        $user = new User([
             'name' => $data['name'],
             'email' => $data['email'],
             'username' => $username,
@@ -39,6 +40,17 @@ class AuthController extends Controller
             'privacy_settings' => User::defaultPrivacySettings(),
             'streak_days' => 0,
         ]);
+
+        // Consent is recorded here, server-side, and never through mass
+        // assignment — the request only carries the `accept_*` assertions, which
+        // the FormRequest has already validated as accepted. The timestamp comes
+        // from the server clock so it cannot be backdated by a client.
+        $user->forceFill([
+            'terms_accepted_at' => now(),
+            'terms_version' => LegalVersions::TERMS,
+            'health_data_consent_at' => now(),
+            'health_data_consent_version' => LegalVersions::PRIVACY,
+        ])->save();
 
         $token = $user->createToken('tracklife')->plainTextToken;
 
@@ -84,5 +96,4 @@ class AuthController extends Controller
 
         return response()->json(['message' => 'Sesión cerrada']);
     }
-
 }

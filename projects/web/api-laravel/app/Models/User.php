@@ -44,6 +44,13 @@ class User extends Authenticatable
             'privacy_settings' => 'array',
             'streak_days' => 'integer',
             'last_meal_log_date' => 'date',
+            // Consent records. Deliberately absent from $fillable: they are
+            // written with forceFill() in AuthController::register so that no
+            // mass-assignment path can ever accept a client-supplied consent
+            // timestamp. A consent record the user can backdate is worse than
+            // none — it looks like proof.
+            'terms_accepted_at' => 'datetime',
+            'health_data_consent_at' => 'datetime',
         ];
     }
 

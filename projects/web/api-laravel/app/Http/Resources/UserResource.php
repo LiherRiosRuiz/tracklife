@@ -11,16 +11,22 @@ class UserResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id'                  => (string) $this->_id,
-            'name'                => $this->name,
-            'username'            => $this->username,
-            'email'               => $this->email,
-            'bio'                 => $this->bio,
-            'avatar_url'          => $this->avatar_url,
-            'streak_days'         => $this->streak_days ?? 0,
-            'macro_targets'       => $this->macro_targets ?? User::defaultMacroTargets(),
+            'id' => (string) $this->_id,
+            'name' => $this->name,
+            'username' => $this->username,
+            'email' => $this->email,
+            'bio' => $this->bio,
+            'avatar_url' => $this->avatar_url,
+            'streak_days' => $this->streak_days ?? 0,
+            'macro_targets' => $this->macro_targets ?? User::defaultMacroTargets(),
             'transformation_goal' => $this->transformation_goal,
-            'privacy_settings'    => $this->privacy_settings ?? User::defaultPrivacySettings(),
+            'privacy_settings' => $this->privacy_settings ?? User::defaultPrivacySettings(),
+            // Self-only endpoint (/auth/me, /profile), so exposing the consent
+            // record is safe — and Ajustes needs it to show "aceptaste el ...".
+            'terms_accepted_at' => $this->terms_accepted_at?->toIso8601String(),
+            'terms_version' => $this->terms_version,
+            'health_data_consent_at' => $this->health_data_consent_at?->toIso8601String(),
+            'health_data_consent_version' => $this->health_data_consent_version,
         ];
     }
 }

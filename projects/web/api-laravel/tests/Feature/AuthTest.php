@@ -22,6 +22,8 @@ class AuthTest extends TestCase
             'name' => 'Test User',
             'email' => 'register@test.com',
             'password' => 'password123',
+            'accept_terms' => true,
+            'accept_health_data' => true,
         ]);
 
         $response->assertStatus(201)
@@ -50,6 +52,8 @@ class AuthTest extends TestCase
             'name' => 'Another User',
             'email' => 'duplicate@test.com',
             'password' => 'password123',
+            'accept_terms' => true,
+            'accept_health_data' => true,
         ]);
 
         // AuthController throws ValidationException for duplicate email → 422
@@ -59,6 +63,7 @@ class AuthTest extends TestCase
 
     public function test_register_fails_without_required_fields(): void
     {
+        // Payload vacío a propósito: no se le añaden los consentimientos.
         $response = $this->postJson('/api/auth/register', []);
 
         $response->assertStatus(422)
@@ -233,7 +238,9 @@ class AuthTest extends TestCase
         $response = $this->postJson('/api/auth/register', [
             'name' => 'Short Pass User',
             'email' => 'shortpass@test.com',
-            'password' => 'short', // 5 caracteres — mínimo es 8
+            'password' => 'short', // 5 caracteres — mínimo es 8,
+            'accept_terms' => true,
+            'accept_health_data' => true,
         ]);
 
         $response->assertStatus(422)
@@ -246,6 +253,8 @@ class AuthTest extends TestCase
             'name' => 'Long Pass User',
             'email' => 'longpass@test.com',
             'password' => str_repeat('a', 256),
+            'accept_terms' => true,
+            'accept_health_data' => true,
         ]);
 
         $response->assertStatus(422)
@@ -258,6 +267,8 @@ class AuthTest extends TestCase
             'name' => 'Max Pass User',
             'email' => 'maxpass@test.com',
             'password' => str_repeat('a', 255),
+            'accept_terms' => true,
+            'accept_health_data' => true,
         ]);
 
         $response->assertStatus(201);
@@ -290,6 +301,8 @@ class AuthTest extends TestCase
             'name' => 'Bad Email User',
             'email' => 'not-an-email',
             'password' => 'password123',
+            'accept_terms' => true,
+            'accept_health_data' => true,
         ]);
 
         $response->assertStatus(422)
@@ -310,7 +323,9 @@ class AuthTest extends TestCase
             'name' => 'John Doe',
             'email' => 'johndoe@test.com',
             'password' => 'password123',
-            // sin username
+            // sin username,
+            'accept_terms' => true,
+            'accept_health_data' => true,
         ]);
 
         $response->assertStatus(201);
@@ -335,7 +350,9 @@ class AuthTest extends TestCase
             'name' => 'Another John',
             'email' => 'johndoe@other.com',
             'password' => 'password123',
-            // sin username → generaría 'johndoe' → colisión → sufijo
+            // sin username → generaría 'johndoe' → colisión → sufijo,
+            'accept_terms' => true,
+            'accept_health_data' => true,
         ]);
 
         $response->assertStatus(201);
