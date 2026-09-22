@@ -128,11 +128,10 @@ async function request<T>(
 }
 
 export const api = {
-  register: (data: { name: string; email: string; password: string }) =>
-    request<{ user: User; token: string }>("/api/auth/register", {
-      method: "POST",
-      body: JSON.stringify(data),
-    }),
+  // Nota: no hay `register` aquí. El registro pasa por auth.tsx, que es quien
+  // envía los consentimientos (accept_terms / accept_health_data). Un atajo que
+  // POSTee a /api/auth/register sin ellos hoy recibe un 422 — y mañana, si
+  // alguien relajara la validación, crearía cuentas sin consentimiento.
 
   login: (data: { email: string; password: string }) =>
     request<{ user: User; token: string }>("/api/auth/login", {

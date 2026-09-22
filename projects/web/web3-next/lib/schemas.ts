@@ -12,6 +12,11 @@ export const registerSchema = z.object({
   email: z.string().email("Email no válido").max(255),
   password: z.string().min(8, "Mínimo 8 caracteres"),
   username: z.string().max(60).optional(),
+  // Dos consentimientos separados, igual que RegisterRequest en el backend: los
+  // datos de salud son categoría especial (RGPD art. 9) y exigen consentimiento
+  // explícito e independiente del contractual que cubre los términos.
+  acceptTerms: z.literal(true, { error: "Debes aceptar los términos y la política de privacidad." }),
+  acceptHealthData: z.literal(true, { error: "Debes dar tu consentimiento explícito para tratar tus datos de salud." }),
 });
 
 // ── Meals ───────────────────────────────────────────────────────────────────

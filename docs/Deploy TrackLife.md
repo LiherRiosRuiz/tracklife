@@ -55,6 +55,7 @@ son dos rutas de publicación independientes.
 1. **MongoDB Atlas**: crear cluster free M0, usuario DB, copiar la connection string.
 2. **API (Railway/Render)**: conectar repo, root `projects/web/api-laravel`, variables `APP_KEY`, `MONGODB_URI` (la de Atlas), `DB_CONNECTION=mongodb`. Deploy → te da `https://<algo>.up.railway.app`.
 3. **Front (Vercel)**: conectar repo `LiherRiosRuiz/tracklife`, root `projects/web/web3-next`, env `API_INTERNAL_URL` y `NEXT_PUBLIC_API_URL` = URL de la API, `SESSION_*` por defecto. Deploy → `https://<algo>.vercel.app`.
+   - ⚠️ `NEXT_PUBLIC_SITE_URL` = URL de la landing (web1-astro). El formulario de registro enlaza ahí las casillas de consentimiento (`/terminos`, `/privacidad`). Si apunta mal, el usuario acepta unos términos que no puede leer — y un consentimiento no informado no es consentimiento.
 
 ## Lo que LIHER deja preparado (autónomo) — TODO listo
 
